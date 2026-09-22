@@ -1,0 +1,16 @@
+# Apache Rewrite Rules for Public Directory
+# Directs all requests to index.php for front-controller routing
+
+<IfModule mod_rewrite.c>
+    Options -Multiviews
+    Options -Indexes
+    RewriteEngine On
+
+    # Prevent direct access to hidden files
+    RewriteRule "(^|/)\.(?!well-known)" - [F]
+
+    # If the requested file or directory does not exist, route to index.php
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+</IfModule>
