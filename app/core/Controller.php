@@ -36,13 +36,23 @@ class Controller
      */
     public function model(string $model): object
     {
-        $modelFile = __DIR__ . '/../models/' . $model . '.php';
+        // Check for direct name, then _model suffix (e.g., Post -> Post_model)
+        $candidates = [
+            $model,
+            $model . '_model',
+            $model . 'Model'
+        ];
 
-        if (file_exists($modelFile)) {
-            require_once $modelFile;
-            return new $model();
+        foreach ($candidates as $className) {
+            $modelFile = __DIR__ . '/../models/' . $className . '.php';
+            if (file_exists($modelFile)) {
+                require_once $modelFile;
+                if (class_exists($className)) {
+                    return new $className();
+                }
+            }
         }
 
-        die("Model file [{$model}] does not exist at {$modelFile}");
+        die("Model file for [{$model}] does not exist in app/models/");
     }
 }
