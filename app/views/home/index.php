@@ -76,6 +76,18 @@
             <div>✓ Database Wrapper (Database.php) ready</div>
             <div>✓ Environment: <?= htmlspecialchars(BASEURL) ?></div>
         </div>
+
+        <div style="margin-top: 1.75rem; display: flex; gap: 0.75rem; justify-content: center;">
+            <?php if (isset($_SESSION['user_id'])): ?>
+                <span style="display: flex; align-items: center; color: #a5b4fc; font-size: 0.95rem;">
+                    Hello, <strong>&nbsp;<?= htmlspecialchars($_SESSION['username'] ?? '') ?></strong>!
+                </span>
+                <a href="<?= BASEURL ?>/auth/logout" style="background: #ef4444; color: #fff; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-size: 0.875rem; font-weight: 600;">Logout</a>
+            <?php else: ?>
+                <a href="<?= BASEURL ?>/auth" style="background: #3b82f6; color: #fff; padding: 0.5rem 1.25rem; border-radius: 6px; text-decoration: none; font-size: 0.875rem; font-weight: 600;">Sign In</a>
+                <a href="<?= BASEURL ?>/auth/register" style="background: #334155; color: #fff; padding: 0.5rem 1.25rem; border-radius: 6px; text-decoration: none; font-size: 0.875rem; font-weight: 600;">Create Account</a>
+            <?php endif; ?>
+        </div>
     </div>
 </body>
 </html>

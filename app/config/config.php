@@ -6,15 +6,19 @@
  */
 
 // Application URL Root
-// Update this to match your local virtual host or server domain
-// Example for built-in PHP server (php -S localhost:8000 -t public): http://localhost:8000
-// Example for Apache/XAMPP: http://localhost/socialblog-php/public
-define('BASEURL', 'http://localhost:8000');
+// Automatically detects protocol, host/port (e.g., localhost:8080), and subdirectory
+if (!defined('BASEURL')) {
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost:8000';
+    $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '');
+    $basePath = ($scriptDir === '/' || $scriptDir === '\\') ? '' : $scriptDir;
+    define('BASEURL', rtrim($protocol . $host . $basePath, '/'));
+}
 
 // Database Configuration
-define('DB_HOST', 'localhost');
+define('DB_HOST', '127.0.0.1');
 define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_PASS', 'root');
 define('DB_NAME', 'ccit_socialblog');
 define('DB_PORT', '3306');
 define('DB_CHARSET', 'utf8mb4');

@@ -1,0 +1,6 @@
+# Mengabaikan file konfigurasi database asli
+app/config/config.php
+
+# Mengabaikan file sistem OS (opsional tapi disarankan)
+.DS_Store
+Thumbs.db
