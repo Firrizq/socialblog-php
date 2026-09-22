@@ -68,6 +68,16 @@ class App
             return explode('/', $url);
         }
 
+        // Support PHP built-in web server or direct REQUEST_URI routing
+        if (isset($_SERVER['REQUEST_URI'])) {
+            $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '';
+            $path = trim($path, '/');
+            if (!empty($path)) {
+                $path = filter_var($path, FILTER_SANITIZE_URL);
+                return explode('/', $path);
+            }
+        }
+
         return [];
     }
 }
