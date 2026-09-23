@@ -66,9 +66,8 @@
                             </h2>
                         <?php endif; ?>
                         
-                        <div class="font-body-md text-on-surface-variant leading-relaxed quill-content">
-                            <!-- Raw HTML dari editor Quill -->
-                            <?= $post['content'] ?>
+                        <div class="font-body-md text-on-surface-variant leading-relaxed text-sm sm:text-base line-clamp-3">
+                            <?= htmlspecialchars(strip_tags((string)($post['content'] ?? ''))) ?>
                         </div>
                     </a>
 

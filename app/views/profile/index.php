@@ -183,8 +183,8 @@ $user = $data['profile_user'] ?? null;
                                     <?= htmlspecialchars($post['title']) ?>
                                 </h3>
                             <?php endif; ?>
-                            <div class="font-body-md text-on-surface-variant leading-relaxed quill-content text-sm sm:text-base">
-                                <?= $post['content'] ?>
+                            <div class="font-body-md text-on-surface-variant leading-relaxed text-sm sm:text-base line-clamp-3">
+                                <?= htmlspecialchars(strip_tags((string)($post['content'] ?? ''))) ?>
                             </div>
                         </a>
 
