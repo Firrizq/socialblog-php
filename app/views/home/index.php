@@ -1,108 +1,111 @@
 <?php require_once __DIR__ . '/../templates/header.php'; ?>
 
-<!-- Feed Header / Actions Banner -->
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-    <div>
-        <h1 style="font-size: 1.85rem; font-weight: 700; color: #ffffff;">Community Feed</h1>
-        <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 0.25rem;">Discover recent articles and updates from authors</p>
+<div class="flex flex-col w-full">
+    <!-- Feed Header Navigation Tabs -->
+    <div class="sticky top-16 z-30 bg-surface/90 backdrop-blur-md pb-space-xs pt-space-xs mb-space-lg flex items-center justify-between">
+        <nav class="flex items-center gap-space-lg">
+            <button class="relative pb-space-sm font-title-md text-primary transition-colors flex items-center gap-space-xs">
+                <span>For You</span>
+                <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full shadow-[0_0_8px_rgba(78,222,163,0.6)]"></span>
+            </button>
+            <button class="relative pb-space-sm font-title-md text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-space-xs">
+                <span>Following</span>
+            </button>
+        </nav>
+        <div class="flex items-center gap-space-xs">
+            <button class="w-9 h-9 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-primary flex items-center justify-center transition-all"><span class="material-symbols-outlined text-xl">refresh</span></button>
+        </div>
     </div>
-    <?php if (isset($_SESSION['user_id'])): ?>
-        <a href="<?= BASEURL ?>/post/create" class="btn-nav" style="padding: 0.65rem 1.25rem; font-size: 0.95rem;">
-            + Write a Post
-        </a>
-    <?php endif; ?>
-</div>
 
-<!-- Feed Loop -->
-<?php if (!empty($data['posts']) && is_array($data['posts'])): ?>
-    <?php foreach ($data['posts'] as $post): ?>
-        <article class="card" style="transition: border-color 0.2s;">
-            <!-- Post Meta (Author & Timestamp) -->
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; border-bottom: 1px solid #334155; padding-bottom: 0.75rem;">
-                <div style="display: flex; align-items: center; gap: 0.65rem;">
-                    <div style="width: 34px; height: 34px; border-radius: 50%; background: #3b82f6; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; color: #ffffff; text-transform: uppercase;">
-                        <?= htmlspecialchars(substr($post['username'] ?? 'U', 0, 1)) ?>
-                    </div>
-                    <div>
-                        <div style="font-weight: 600; font-size: 0.95rem; color: #f1f5f9;">
-                            @<?= htmlspecialchars($post['username'] ?? 'Anonymous') ?>
+    <!-- Quick Composer Strip -->
+    <?php if (isset($_SESSION['user_id'])): ?>
+    <section class="bg-surface-container-low rounded-xl p-space-md mb-space-lg shadow-md hover:shadow-xl transition-shadow relative overflow-hidden cursor-text" onclick="window.location.href='<?= BASEURL ?>/post/create'">
+        <div class="flex items-start gap-space-md">
+            <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center font-bold text-on-primary shrink-0">
+                <?= strtoupper(substr($_SESSION['username'], 0, 1)) ?>
+            </div>
+            <div class="flex-1 min-w-0 pt-2">
+                <p class="text-on-surface-variant font-body-md">Share a perspective, insight, or draft snippet...</p>
+            </div>
+        </div>
+    </section>
+    <?php endif; ?>
+
+    <!-- Feed Post Stream -->
+    <div class="flex flex-col gap-space-lg">
+        <?php if (!empty($data['posts']) && is_array($data['posts'])): ?>
+            <?php foreach ($data['posts'] as $post): ?>
+                
+                <!-- Dynamic Card -->
+                <article class="bg-surface-container-low rounded-xl p-space-lg shadow-md hover:bg-surface-container transition-colors flex flex-col gap-space-md">
+                    <!-- Header Meta -->
+                    <div class="flex items-center justify-between gap-space-md">
+                        <div class="flex items-center gap-space-sm min-w-0">
+                            <div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary shrink-0">
+                                <?= htmlspecialchars(substr($post['username'] ?? 'U', 0, 1)) ?>
+                            </div>
+                            <div class="flex flex-col min-w-0">
+                                <div class="flex items-center gap-1 min-w-0">
+                                    <span class="font-title-md text-on-surface truncate"><?= htmlspecialchars($post['username'] ?? 'Anonymous') ?></span>
+                                    <span class="font-caption text-on-surface-variant whitespace-nowrap"> • <?= date('M j, Y', strtotime($post['created_at'])) ?></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-space-xs">
+                            <span class="px-space-sm py-0.5 rounded-full bg-surface-container font-caption text-on-surface-variant"><?= $post['read_time_minutes'] ?? 1 ?> min read</span>
                         </div>
                     </div>
-                </div>
-                <time style="font-size: 0.8rem; color: #64748b;">
-                    <?= date('M j, Y • g:i A', strtotime($post['created_at'])) ?>
-                </time>
-            </div>
 
-            <!-- Post Title -->
-            <h2 style="font-size: 1.45rem; font-weight: 700; color: #ffffff; margin-bottom: 1rem; line-height: 1.3;">
-                <?= htmlspecialchars($post['title'] ?? '') ?>
-            </h2>
+                    <!-- Content -->
+                    <div class="flex flex-col gap-space-xs cursor-pointer group">
+                        <?php if(!empty($post['title'])): ?>
+                            <h2 class="font-headline-sm text-on-surface group-hover:text-primary transition-colors tracking-tight">
+                                <?= htmlspecialchars($post['title']) ?>
+                            </h2>
+                        <?php endif; ?>
+                        
+                        <div class="font-body-md text-on-surface-variant leading-relaxed quill-content">
+                            <!-- Raw HTML dari editor Quill -->
+                            <?= $post['content'] ?>
+                        </div>
+                    </div>
 
-            <!-- Post Content (Rendered from Quill.js HTML) -->
-            <div class="post-content" style="color: #cbd5e1; font-size: 1rem; line-height: 1.7; word-break: break-word;">
-                <?= $post['content'] ?>
-            </div>
-        </article>
-    <?php endforeach; ?>
-<?php else: ?>
-    <!-- Empty State -->
-    <div class="card" style="text-align: center; padding: 4rem 2rem;">
-        <div style="font-size: 3rem; margin-bottom: 1rem;">📝</div>
-        <h2 style="font-size: 1.35rem; color: #ffffff; margin-bottom: 0.5rem;">No posts published yet</h2>
-        <p style="color: #94a3b8; font-size: 0.95rem; max-width: 440px; margin: 0 auto 1.75rem auto;">
-            Be the first person to share an article or thoughts on the platform!
-        </p>
-        <?php if (isset($_SESSION['user_id'])): ?>
-            <a href="<?= BASEURL ?>/post/create" class="btn-nav" style="padding: 0.75rem 1.5rem; font-size: 0.95rem;">
-                Create the First Post
-            </a>
+                    <!-- Actions -->
+                    <div class="flex items-center justify-between pt-space-xs text-on-surface-variant">
+                        <button class="flex items-center gap-1.5 hover:text-on-surface transition-colors">
+                            <span class="material-symbols-outlined text-lg">chat_bubble</span>
+                            <span class="font-caption text-caption"><?= $post['comment_count'] ?? 0 ?></span>
+                        </button>
+                        <button class="flex items-center gap-1.5 hover:text-primary transition-colors">
+                            <span class="material-symbols-outlined text-lg">sync_alt</span>
+                            <span class="font-caption text-caption"><?= $post['repost_count'] ?? 0 ?></span>
+                        </button>
+                        <button class="flex items-center gap-1.5 text-primary transition-colors">
+                            <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">favorite</span>
+                            <span class="font-caption text-caption font-semibold"><?= $post['like_count'] ?? 0 ?></span>
+                        </button>
+                        <button class="hover:text-primary transition-colors">
+                            <span class="material-symbols-outlined text-lg">bookmark</span>
+                        </button>
+                    </div>
+                </article>
+
+            <?php endforeach; ?>
         <?php else: ?>
-            <a href="<?= BASEURL ?>/auth/login" class="btn-nav" style="padding: 0.75rem 1.5rem; font-size: 0.95rem;">
-                Sign In to Publish
-            </a>
+            <div class="text-center p-10 bg-surface-container-low rounded-xl">
+                <h2 class="text-xl font-bold text-on-surface">Belum ada postingan</h2>
+                <p class="text-on-surface-variant mt-2">Jadilah yang pertama membuat cerita!</p>
+            </div>
         <?php endif; ?>
     </div>
-<?php endif; ?>
+</div>
 
-<!-- Styling for Rich Post Content -->
 <style>
-    .post-content p {
-        margin-bottom: 0.9rem;
-    }
-    .post-content h1, .post-content h2, .post-content h3 {
-        color: #f8fafc;
-        margin-top: 1.25rem;
-        margin-bottom: 0.6rem;
-    }
-    .post-content blockquote {
-        border-left: 3px solid #3b82f6;
-        padding-left: 1rem;
-        margin: 1rem 0;
-        color: #94a3b8;
-        font-style: italic;
-    }
-    .post-content pre {
-        background: #0f172a;
-        border: 1px solid #334155;
-        border-radius: 6px;
-        padding: 0.75rem 1rem;
-        overflow-x: auto;
-        font-family: monospace;
-        color: #38bdf8;
-        margin: 1rem 0;
-    }
-    .post-content ul, .post-content ol {
-        margin-left: 1.5rem;
-        margin-bottom: 0.9rem;
-    }
-    .post-content li {
-        margin-bottom: 0.25rem;
-    }
-    .post-content a {
-        color: #38bdf8;
-        text-decoration: underline;
-    }
+    /* Mengatasi gaya dasar Quill HTML di Feed */
+    .quill-content p { margin-bottom: 0.75rem; }
+    .quill-content a { color: #4edea3; text-decoration: underline; }
+    .quill-content strong { color: #dae2fd; }
+    .quill-content blockquote { border-left: 3px solid #10b981; padding-left: 1rem; margin: 1rem 0; font-style: italic; }
 </style>
 
 <?php require_once __DIR__ . '/../templates/footer.php'; ?>
