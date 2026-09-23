@@ -1,6 +1,6 @@
 <?php require_once __DIR__ . '/../templates/header.php'; ?>
 
-<div class="flex flex-col w-full pb-16">
+<div class="flex flex-col w-full px-4 sm:px-6 py-4 pb-16">
     <!-- Top Action Bar -->
     <div class="flex items-center justify-between mb-6 pt-2">
         <div class="flex items-center gap-2">

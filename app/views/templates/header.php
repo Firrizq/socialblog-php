@@ -101,7 +101,7 @@ tailwind.config = {
                 <a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-title-md" href="#">
                     <span class="material-symbols-outlined text-xl">bookmark</span><span>Bookmarks</span>
                 </a>
-                <a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-title-md" href="#">
+                <a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-title-md" href="<?= BASEURL ?>/profile">
                     <span class="material-symbols-outlined text-xl">account_circle</span><span>Profile</span>
                 </a>
             </nav>
@@ -113,7 +113,7 @@ tailwind.config = {
         </div>
         
         <?php if (isset($_SESSION['user_id'])): ?>
-        <div class="flex items-center gap-space-sm p-space-sm rounded-xl bg-surface-container border border-outline-variant/20">
+        <a href="<?= BASEURL ?>/profile" class="flex items-center gap-space-sm p-space-sm rounded-xl bg-surface-container border border-outline-variant/20 hover:border-primary/40 transition-colors">
             <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center font-bold text-on-primary">
                 <?= strtoupper(substr($_SESSION['username'], 0, 1)) ?>
             </div>
@@ -121,12 +121,12 @@ tailwind.config = {
                 <span class="font-label-md text-label-md text-on-surface truncate"><?= htmlspecialchars($_SESSION['username']) ?></span>
                 <span class="font-caption text-caption text-on-surface-variant truncate">User</span>
             </div>
-        </div>
+        </a>
         <?php endif; ?>
     </aside>
 
     <!-- Main Content Wrapper -->
-    <div class="md:pl-60">
+    <div class="md:pl-60 pt-16">
         <div class="max-w-7xl mx-auto flex flex-col xl:flex-row justify-between">
-            <!-- TAHAP 1: BAGIAN TENGAH (Feed) -->
-            <main class="flex-1 min-w-0 pt-16 px-gutter md:px-margin max-w-3xl mx-auto w-full">
+            <!-- TAHAP 1: BAGIAN TENGAH (Feed / Profile / Content) -->
+            <main class="flex-1 min-w-0 max-w-3xl mx-auto w-full border-x border-outline-variant/30 min-h-screen">

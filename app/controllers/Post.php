@@ -4,27 +4,22 @@ declare(strict_types=1);
 
 /**
  * Post Controller
- * Handles authoring and publishing blog posts.
- * Protected: Requires authenticated user session.
+ * Handles post authoring, publishing, single post detail viewing, and commenting.
  */
 class Post extends Controller
 {
     private object $postModel;
+    private object $commentModel;
 
     public function __construct()
     {
-        // Enforce authentication
-        if (!isset($_SESSION['user_id'])) {
-            header('Location: ' . BASEURL . '/auth');
-            exit;
-        }
-
         $this->postModel = $this->model('Post_model');
+        $this->commentModel = $this->model('Comment_model');
     }
 
     /**
      * Default Post route
-     * Redirects to create post
+     * Redirects to create post or home
      */
     public function index(): void
     {
@@ -38,6 +33,12 @@ class Post extends Controller
      */
     public function create(): void
     {
+        // Enforce authentication for post creation
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: ' . BASEURL . '/auth');
+            exit;
+        }
+
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             $title = trim($_POST['title'] ?? '');
             $rawContent = trim($_POST['content'] ?? '');
@@ -47,7 +48,7 @@ class Post extends Controller
             $content = strip_tags($rawContent, $allowedTags);
 
             $data = [
-                'title' => 'Create New Post - Social Blog',
+                'title' => 'Create New Post - EmeraldInk',
                 'post_title' => $title,
                 'content' => $content,
                 'error' => ''
@@ -79,12 +80,148 @@ class Post extends Controller
 
         // GET request: show creation view
         $data = [
-            'title' => 'Create New Post - Social Blog',
+            'title' => 'Create New Post - EmeraldInk',
             'post_title' => '',
             'content' => '',
             'error' => ''
         ];
 
         $this->view('post/create', $data);
+    }
+
+    /**
+     * Single Post Detail Page
+     * GET /post/detail/{id}
+     *
+     * @param string|int $id
+     */
+    public function detail(string|int $id = 0): void
+    {
+        $id = (int)$id;
+
+        if ($id <= 0) {
+            header('Location: ' . BASEURL . '/home');
+            exit;
+        }
+
+        $post = $this->postModel->getPostById($id);
+
+        if (!$post) {
+            http_response_code(404);
+            $data = [
+                'title' => 'Post Not Found - EmeraldInk',
+                'post' => null,
+                'comments' => []
+            ];
+            $this->view('post/detail', $data);
+            return;
+        }
+
+        $comments = $this->commentModel->getCommentsByPostId($id);
+
+        $data = [
+            'title' => ($post['title'] ?? 'Story') . ' - EmeraldInk',
+            'post' => $post,
+            'comments' => $comments
+        ];
+
+        $this->view('post/detail', $data);
+    }
+
+    /**
+     * Add a comment or reply to a post
+     * POST /post/comment/{post_id}
+     *
+     * @param string|int $post_id
+     */
+    public function comment(string|int $post_id = 0): void
+    {
+        $post_id = (int)$post_id;
+
+        // Ensure user is authenticated
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: ' . BASEURL . '/auth');
+            exit;
+        }
+
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && $post_id > 0) {
+            $commentText = trim($_POST['comment'] ?? '');
+            $parentId = !empty($_POST['parent_id']) ? (int)$_POST['parent_id'] : null;
+            $redirectTo = trim($_POST['redirect_to'] ?? '');
+            
+            // Plain text only for comments
+            $commentText = strip_tags($commentText);
+
+            if (!empty($commentText)) {
+                $this->commentModel->addComment([
+                    'post_id' => $post_id,
+                    'user_id' => (int)$_SESSION['user_id'],
+                    'comment' => $commentText,
+                    'parent_id' => $parentId
+                ]);
+            }
+
+            // Redirect back to specific thread view if requested
+            if (!empty($redirectTo)) {
+                header('Location: ' . $redirectTo);
+                exit;
+            }
+        }
+
+        header('Location: ' . BASEURL . '/post/detail/' . $post_id);
+        exit;
+    }
+
+    /**
+     * Single Comment / Thread Focus View
+     * GET /post/commentDetail/{id}
+     *
+     * @param string|int $id
+     */
+    public function commentDetail(string|int $id = 0): void
+    {
+        $id = (int)$id;
+
+        if ($id <= 0) {
+            header('Location: ' . BASEURL . '/home');
+            exit;
+        }
+
+        $comment = $this->commentModel->getCommentById($id);
+
+        if (!$comment) {
+            http_response_code(404);
+            $data = [
+                'title' => 'Thread Not Found - EmeraldInk',
+                'comment' => null,
+                'post' => null,
+                'parent_comment' => null,
+                'replies' => []
+            ];
+            $this->view('post/comment_detail', $data);
+            return;
+        }
+
+        // Fetch the parent story
+        $post = $this->postModel->getPostById((int)$comment['post_id']);
+
+        // Fetch direct child replies to this focused comment
+        $replies = $this->commentModel->getRepliesByCommentId($id);
+
+        // If this comment itself is a reply, fetch parent comment for conversation context
+        $parentComment = null;
+        if (!empty($comment['parent_id'])) {
+            $parentComment = $this->commentModel->getCommentById((int)$comment['parent_id']);
+        }
+
+        $data = [
+            'title' => 'Thread by @' . htmlspecialchars($comment['username']) . ' - EmeraldInk',
+            'comment' => $comment,
+            'post' => $post,
+            'parent_comment' => $parentComment,
+            'replies' => $replies
+        ];
+
+        $this->view('post/comment_detail', $data);
     }
 }

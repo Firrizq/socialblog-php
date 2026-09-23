@@ -57,4 +57,55 @@ class Post_model
 
         return $this->db->execute();
     }
+
+    /**
+     * Fetch all posts for a specific user, ordered by newest first
+     *
+     * @param int $user_id
+     * @return array
+     */
+    public function getPostsByUser(int $user_id): array
+    {
+        $query = "SELECT 
+                    posts.id,
+                    posts.user_id,
+                    posts.title,
+                    posts.content,
+                    posts.created_at,
+                    users.username,
+                    users.email
+                  FROM {$this->table}
+                  INNER JOIN users ON posts.user_id = users.id
+                  WHERE posts.user_id = :user_id
+                  ORDER BY posts.created_at DESC";
+
+        $this->db->query($query);
+        $this->db->bind(':user_id', $user_id);
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Fetch a single post by its ID, joined with author information
+     *
+     * @param int $id
+     * @return array|false
+     */
+    public function getPostById(int $id): array|false
+    {
+        $query = "SELECT 
+                    posts.*,
+                    users.username,
+                    users.profile_picture,
+                    users.email
+                  FROM {$this->table}
+                  INNER JOIN users ON posts.user_id = users.id
+                  WHERE posts.id = :id
+                  LIMIT 1";
+
+        $this->db->query($query);
+        $this->db->bind(':id', $id);
+        $row = $this->db->single();
+
+        return $row ?: false;
+    }
 }

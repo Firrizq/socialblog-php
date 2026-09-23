@@ -1,6 +1,6 @@
 <?php require_once __DIR__ . '/../templates/header.php'; ?>
 
-<div class="flex flex-col w-full">
+<div class="flex flex-col w-full px-4 sm:px-6 py-2">
     <!-- Feed Header Navigation Tabs -->
     <div class="sticky top-16 z-30 bg-surface/90 backdrop-blur-md pb-space-xs pt-space-xs mb-space-lg flex items-center justify-between">
         <nav class="flex items-center gap-space-lg">
@@ -41,12 +41,14 @@
                     <!-- Header Meta -->
                     <div class="flex items-center justify-between gap-space-md">
                         <div class="flex items-center gap-space-sm min-w-0">
-                            <div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary shrink-0">
+                            <a href="<?= BASEURL ?>/profile/user/<?= urlencode($post['username'] ?? '') ?>" class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary shrink-0 hover:ring-2 hover:ring-primary transition-all">
                                 <?= htmlspecialchars(substr($post['username'] ?? 'U', 0, 1)) ?>
-                            </div>
+                            </a>
                             <div class="flex flex-col min-w-0">
                                 <div class="flex items-center gap-1 min-w-0">
-                                    <span class="font-title-md text-on-surface truncate"><?= htmlspecialchars($post['username'] ?? 'Anonymous') ?></span>
+                                    <a href="<?= BASEURL ?>/profile/user/<?= urlencode($post['username'] ?? '') ?>" class="font-title-md text-on-surface hover:text-primary transition-colors truncate">
+                                        <?= htmlspecialchars($post['username'] ?? 'Anonymous') ?>
+                                    </a>
                                     <span class="font-caption text-on-surface-variant whitespace-nowrap"> • <?= date('M j, Y', strtotime($post['created_at'])) ?></span>
                                 </div>
                             </div>
@@ -57,7 +59,7 @@
                     </div>
 
                     <!-- Content -->
-                    <div class="flex flex-col gap-space-xs cursor-pointer group">
+                    <a href="<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>" class="flex flex-col gap-space-xs cursor-pointer group text-decoration-none">
                         <?php if(!empty($post['title'])): ?>
                             <h2 class="font-headline-sm text-on-surface group-hover:text-primary transition-colors tracking-tight">
                                 <?= htmlspecialchars($post['title']) ?>
@@ -68,14 +70,14 @@
                             <!-- Raw HTML dari editor Quill -->
                             <?= $post['content'] ?>
                         </div>
-                    </div>
+                    </a>
 
                     <!-- Actions -->
                     <div class="flex items-center justify-between pt-space-xs text-on-surface-variant">
-                        <button class="flex items-center gap-1.5 hover:text-on-surface transition-colors">
+                        <a href="<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>" class="flex items-center gap-1.5 hover:text-on-surface transition-colors">
                             <span class="material-symbols-outlined text-lg">chat_bubble</span>
                             <span class="font-caption text-caption"><?= $post['comment_count'] ?? 0 ?></span>
-                        </button>
+                        </a>
                         <button class="flex items-center gap-1.5 hover:text-primary transition-colors">
                             <span class="material-symbols-outlined text-lg">sync_alt</span>
                             <span class="font-caption text-caption"><?= $post['repost_count'] ?? 0 ?></span>

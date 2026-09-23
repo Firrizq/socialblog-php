@@ -85,4 +85,19 @@ class User
 
         return false;
     }
+
+    /**
+     * Fetch user profile data by username
+     *
+     * @param string $username
+     * @return array|false
+     */
+    public function getUserProfile(string $username): array|false
+    {
+        $this->db->query("SELECT id, username, bio, profile_picture, banner_picture, location, profile_link, tipping_link, follower_count, following_count, created_at FROM {$this->table} WHERE username = :username LIMIT 1");
+        $this->db->bind(':username', $username);
+        $row = $this->db->single();
+
+        return $row ?: false;
+    }
 }
