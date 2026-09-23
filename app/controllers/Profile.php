@@ -62,10 +62,23 @@ class Profile extends Controller
 
         $posts = $this->postModel->getPostsByUser((int)$profileUser['id']);
 
+        $isFollowing = false;
+        $likedPosts = [];
+        $bookmarkedPosts = [];
+        if (!empty($_SESSION['user_id'])) {
+            $interactionModel = $this->model('Interaction_model');
+            $isFollowing = $interactionModel->isFollowing((int)$_SESSION['user_id'], (int)$profileUser['id']);
+            $likedPosts = $interactionModel->getUserLikedPostIds((int)$_SESSION['user_id']);
+            $bookmarkedPosts = $interactionModel->getUserBookmarkedPostIds((int)$_SESSION['user_id']);
+        }
+
         $data = [
             'title' => '@' . $profileUser['username'] . ' - Profile | EmeraldInk',
             'profile_user' => $profileUser,
-            'posts' => $posts
+            'posts' => $posts,
+            'is_following' => $isFollowing,
+            'liked_posts' => $likedPosts,
+            'bookmarked_posts' => $bookmarkedPosts
         ];
 
         $this->view('profile/index', $data);

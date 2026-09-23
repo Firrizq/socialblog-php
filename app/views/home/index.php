@@ -19,7 +19,7 @@
 
     <!-- Quick Composer Strip -->
     <?php if (isset($_SESSION['user_id'])): ?>
-    <section class="bg-surface-container-low rounded-xl p-space-md mb-space-lg shadow-md hover:shadow-xl transition-shadow relative overflow-hidden cursor-text" onclick="window.location.href='<?= BASEURL ?>/post/create'">
+    <section class="bg-surface-container-low rounded-xl p-space-md mb-space-lg shadow-md hover:shadow-xl transition-shadow relative overflow-hidden cursor-text" onclick="openNoteModal()">
         <div class="flex items-start gap-space-md">
             <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center font-bold text-on-primary shrink-0">
                 <?= strtoupper(substr($_SESSION['username'], 0, 1)) ?>
@@ -81,12 +81,16 @@
                             <span class="material-symbols-outlined text-lg">sync_alt</span>
                             <span class="font-caption text-caption"><?= $post['repost_count'] ?? 0 ?></span>
                         </button>
-                        <button class="flex items-center gap-1.5 text-primary transition-colors">
-                            <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">favorite</span>
-                            <span class="font-caption text-caption font-semibold"><?= $post['like_count'] ?? 0 ?></span>
+                        <?php 
+                            $isLiked = in_array((int)$post['id'], $data['liked_posts'] ?? []);
+                            $isBookmarked = in_array((int)$post['id'], $data['bookmarked_posts'] ?? []);
+                        ?>
+                        <button class="btn-like flex items-center gap-1.5 transition-colors <?= $isLiked ? 'text-primary' : 'hover:text-primary' ?> active:scale-95" data-id="<?= (int)$post['id'] ?>" title="Like">
+                            <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' <?= $isLiked ? 1 : 0 ?>;">favorite</span>
+                            <span class="like-count font-caption text-caption font-semibold"><?= (int)($post['like_count'] ?? 0) ?></span>
                         </button>
-                        <button class="hover:text-primary transition-colors">
-                            <span class="material-symbols-outlined text-lg">bookmark</span>
+                        <button class="btn-bookmark transition-colors <?= $isBookmarked ? 'text-primary' : 'hover:text-primary' ?> active:scale-95" data-id="<?= (int)$post['id'] ?>" title="Bookmark">
+                            <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' <?= $isBookmarked ? 1 : 0 ?>;">bookmark</span>
                         </button>
                     </div>
                 </article>
@@ -100,6 +104,109 @@
         <?php endif; ?>
     </div>
 </div>
+
+<!-- Short-form Note Modal (Substack / Twitter Style) -->
+<?php if (isset($_SESSION['user_id'])): ?>
+<div id="noteModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4" onclick="if(event.target === this) closeNoteModal();">
+    <div class="w-full max-w-lg bg-surface-container-highest border border-outline-variant/30 rounded-2xl p-5 shadow-2xl relative">
+        <form action="<?= BASEURL ?>/post/createNote" method="POST" class="flex flex-col gap-4">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center font-bold text-on-primary shrink-0 shadow-inner">
+                        <?= strtoupper(substr($_SESSION['username'] ?? 'U', 0, 1)) ?>
+                    </div>
+                    <span class="font-bold text-on-surface text-base">
+                        <?= htmlspecialchars($_SESSION['username'] ?? 'User') ?>
+                    </span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Drafts</span>
+                    <button type="button" onclick="closeNoteModal()" class="w-7 h-7 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors ml-1" title="Close">
+                        <span class="material-symbols-outlined text-base">close</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body (Transparent Textarea) -->
+            <div>
+                <textarea 
+                    name="content" 
+                    id="noteModalTextarea"
+                    rows="4" 
+                    placeholder="What's on your mind?" 
+                    required 
+                    class="bg-transparent border-none outline-none focus:ring-0 text-on-surface text-lg placeholder:text-outline-variant resize-none w-full p-0 leading-relaxed"
+                ></textarea>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="flex items-center justify-between pt-2 border-t border-outline-variant/20">
+                <!-- Left side: Dummy Material Icons -->
+                <div class="flex items-center gap-1.5 sm:gap-2 text-outline">
+                    <button type="button" class="p-1 rounded-full hover:bg-surface-container hover:text-primary transition-colors" title="Add Image">
+                        <span class="material-symbols-outlined text-xl">image</span>
+                    </button>
+                    <button type="button" class="p-1 rounded-full hover:bg-surface-container hover:text-primary transition-colors" title="Add Video">
+                        <span class="material-symbols-outlined text-xl">videocam</span>
+                    </button>
+                    <button type="button" class="p-1 rounded-full hover:bg-surface-container hover:text-primary transition-colors" title="Add Emoji">
+                        <span class="material-symbols-outlined text-xl">mood</span>
+                    </button>
+                    <button type="button" class="p-1 rounded-full hover:bg-surface-container hover:text-primary transition-colors" title="Schedule">
+                        <span class="material-symbols-outlined text-xl">calendar_month</span>
+                    </button>
+                </div>
+
+                <!-- Right side: Cancel & Post Buttons -->
+                <div class="flex items-center gap-2">
+                    <button 
+                        type="button" 
+                        onclick="closeNoteModal()" 
+                        class="text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors px-3 py-1.5 rounded-lg hover:bg-surface-container"
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        type="submit" 
+                        class="bg-primary-container text-on-primary-container hover:bg-primary rounded-full px-6 py-2 font-bold shadow-md transition-all active:scale-95 text-sm"
+                    >
+                        Post
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<?php endif; ?>
+
+<script>
+/**
+ * Short-form Note Modal controls
+ */
+function openNoteModal() {
+    const modal = document.getElementById('noteModal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    const textarea = document.getElementById('noteModalTextarea');
+    if (textarea) {
+        setTimeout(() => textarea.focus(), 50);
+    }
+}
+
+function closeNoteModal() {
+    const modal = document.getElementById('noteModal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeNoteModal();
+    }
+});
+</script>
 
 <style>
     /* Mengatasi gaya dasar Quill HTML di Feed */

@@ -164,22 +164,6 @@ class Comment_model
         $this->db->bind(':comment', $data['comment']);
         $this->db->bind(':parent_id', $parentId);
 
-        $inserted = $this->db->execute();
-
-        if ($inserted) {
-            // Keep comment count in sync on posts table
-            $this->db->query("UPDATE posts SET comment_count = comment_count + 1 WHERE id = :post_id");
-            $this->db->bind(':post_id', $data['post_id']);
-            $this->db->execute();
-
-            // If it is a reply, update reply_count on the parent comment
-            if ($parentId !== null) {
-                $this->db->query("UPDATE comments SET reply_count = reply_count + 1 WHERE id = :parent_id");
-                $this->db->bind(':parent_id', $parentId);
-                $this->db->execute();
-            }
-        }
-
-        return $inserted;
+        return $this->db->execute();
     }
 }

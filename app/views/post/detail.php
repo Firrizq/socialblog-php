@@ -78,9 +78,13 @@ $comments = $data['comments'] ?? [];
             <!-- Action Metrics Bar -->
             <div class="flex items-center justify-between pt-4 mt-2 border-t border-outline-variant/30 text-on-surface-variant text-sm">
                 <div class="flex items-center gap-6">
-                    <button class="flex items-center gap-1.5 text-primary transition-colors hover:opacity-80">
-                        <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">favorite</span>
-                        <span class="font-caption text-xs font-semibold"><?= $post['like_count'] ?? 0 ?></span>
+                    <?php 
+                        $isLiked = !empty($data['is_liked']); 
+                        $isBookmarked = !empty($data['is_bookmarked']);
+                    ?>
+                    <button class="btn-like flex items-center gap-1.5 <?= $isLiked ? 'text-primary' : 'hover:text-primary' ?> transition-colors active:scale-95" data-id="<?= (int)$post['id'] ?>" title="Like">
+                        <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' <?= $isLiked ? 1 : 0 ?>;">favorite</span>
+                        <span class="like-count font-caption text-xs font-semibold"><?= (int)($post['like_count'] ?? 0) ?></span>
                     </button>
                     <div class="flex items-center gap-1.5 hover:text-on-surface transition-colors">
                         <span class="material-symbols-outlined text-xl">chat_bubble</span>
@@ -93,8 +97,8 @@ $comments = $data['comments'] ?? [];
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <button class="hover:text-primary transition-colors" title="Bookmark">
-                        <span class="material-symbols-outlined text-xl">bookmark</span>
+                    <button class="btn-bookmark <?= $isBookmarked ? 'text-primary' : 'hover:text-primary' ?> transition-colors active:scale-95" data-id="<?= (int)$post['id'] ?>" title="Bookmark">
+                        <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' <?= $isBookmarked ? 1 : 0 ?>;">bookmark</span>
                     </button>
                     <button class="hover:text-primary transition-colors" title="Share" onclick="navigator.clipboard.writeText(window.location.href); alert('Link copied to clipboard!');">
                         <span class="material-symbols-outlined text-xl">share</span>

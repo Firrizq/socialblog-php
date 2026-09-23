@@ -66,8 +66,9 @@ $user = $data['profile_user'] ?? null;
                             Edit profile
                         </button>
                     <?php else: ?>
-                        <button class="px-6 py-1.5 rounded-full bg-primary-container text-on-primary-container hover:bg-primary font-title-md text-sm font-semibold transition-all shadow-[0_0_0_1px_rgba(16,185,129,0.3)] active:scale-95">
-                            Follow
+                        <?php $isFollowing = !empty($data['is_following']); ?>
+                        <button class="btn-follow <?= $isFollowing ? 'px-5 py-1.5 rounded-full border border-outline-variant font-title-md text-sm font-semibold text-on-surface hover:border-error hover:text-error hover:bg-error-container/20 transition-all' : 'px-6 py-1.5 rounded-full bg-primary-container text-on-primary-container hover:bg-primary font-title-md text-sm font-semibold transition-all shadow-[0_0_0_1px_rgba(16,185,129,0.3)] active:scale-95' ?>" data-id="<?= (int)$user['id'] ?>">
+                            <?= $isFollowing ? 'Following' : 'Follow' ?>
                         </button>
                     <?php endif; ?>
                 </div>
@@ -130,7 +131,7 @@ $user = $data['profile_user'] ?? null;
                     <span class="text-on-surface-variant font-body-md text-xs sm:text-sm">Following</span>
                 </div>
                 <div class="flex items-center gap-1">
-                    <span class="font-bold text-on-surface font-title-md"><?= (int)($user['follower_count'] ?? 0) ?></span>
+                    <span class="font-bold text-on-surface font-title-md" id="profile-follower-count"><?= (int)($user['follower_count'] ?? 0) ?></span>
                     <span class="text-on-surface-variant font-body-md text-xs sm:text-sm">Followers</span>
                 </div>
             </div>
@@ -198,12 +199,16 @@ $user = $data['profile_user'] ?? null;
                                 <span class="material-symbols-outlined text-lg">sync_alt</span>
                                 <span class="font-caption text-xs"><?= $post['repost_count'] ?? 0 ?></span>
                             </button>
-                            <button class="flex items-center gap-1.5 text-primary transition-colors">
-                                <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">favorite</span>
-                                <span class="font-caption text-xs font-semibold"><?= $post['like_count'] ?? 0 ?></span>
+                            <?php 
+                                $isLiked = in_array((int)$post['id'], $data['liked_posts'] ?? []);
+                                $isBookmarked = in_array((int)$post['id'], $data['bookmarked_posts'] ?? []);
+                            ?>
+                            <button class="btn-like flex items-center gap-1.5 transition-colors <?= $isLiked ? 'text-primary' : 'hover:text-primary' ?> active:scale-95" data-id="<?= (int)$post['id'] ?>" title="Like">
+                                <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' <?= $isLiked ? 1 : 0 ?>;">favorite</span>
+                                <span class="like-count font-caption text-xs font-semibold"><?= (int)($post['like_count'] ?? 0) ?></span>
                             </button>
-                            <button class="hover:text-primary transition-colors">
-                                <span class="material-symbols-outlined text-lg">bookmark</span>
+                            <button class="btn-bookmark transition-colors <?= $isBookmarked ? 'text-primary' : 'hover:text-primary' ?> active:scale-95" data-id="<?= (int)$post['id'] ?>" title="Bookmark">
+                                <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' <?= $isBookmarked ? 1 : 0 ?>;">bookmark</span>
                             </button>
                         </div>
                     </article>

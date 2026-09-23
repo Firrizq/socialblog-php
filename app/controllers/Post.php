@@ -90,6 +90,37 @@ class Post extends Controller
     }
 
     /**
+     * Create a short-form note (Substack / Twitter style)
+     * POST /post/createNote
+     */
+    public function createNote(): void
+    {
+        // Enforce authentication
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: ' . BASEURL . '/auth');
+            exit;
+        }
+
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+            $rawContent = trim($_POST['content'] ?? '');
+
+            if (!empty($rawContent)) {
+                // Sanitize plain text and convert line breaks
+                $content = nl2br(htmlspecialchars($rawContent, ENT_QUOTES, 'UTF-8'));
+
+                $this->postModel->createPost([
+                    'user_id' => (int)$_SESSION['user_id'],
+                    'title' => null,
+                    'content' => $content
+                ]);
+            }
+        }
+
+        header('Location: ' . BASEURL . '/home');
+        exit;
+    }
+
+    /**
      * Single Post Detail Page
      * GET /post/detail/{id}
      *
@@ -119,10 +150,20 @@ class Post extends Controller
 
         $comments = $this->commentModel->getCommentsByPostId($id);
 
+        $isLiked = false;
+        $isBookmarked = false;
+        if (!empty($_SESSION['user_id'])) {
+            $interactionModel = $this->model('Interaction_model');
+            $isLiked = $interactionModel->isLiked((int)$_SESSION['user_id'], $id);
+            $isBookmarked = $interactionModel->isBookmarked((int)$_SESSION['user_id'], $id);
+        }
+
         $data = [
             'title' => ($post['title'] ?? 'Story') . ' - EmeraldInk',
             'post' => $post,
-            'comments' => $comments
+            'comments' => $comments,
+            'is_liked' => $isLiked,
+            'is_bookmarked' => $isBookmarked
         ];
 
         $this->view('post/detail', $data);
