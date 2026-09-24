@@ -126,18 +126,56 @@ class Post_model
     /**
      * Fetch popular published stories ordered by like count and creation date
      *
+     * @param int $limit
      * @return array
      */
-    public function getPopularPosts(): array
+    public function getPopularPosts(int $limit = 10): array
     {
-        $query = "SELECT posts.id, posts.title, posts.read_time_minutes, users.username 
+        $query = "SELECT posts.*, users.username, users.name, users.profile_picture 
                   FROM {$this->table} 
                   INNER JOIN users ON posts.user_id = users.id 
                   WHERE posts.status = 'published' AND posts.title IS NOT NULL AND posts.title != '' 
                   ORDER BY posts.like_count DESC, posts.created_at DESC 
-                  LIMIT 4";
+                  LIMIT " . (int)$limit;
 
         $this->db->query($query);
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Fetch trending published posts for Explore feed
+     *
+     * @return array
+     */
+    public function getTrendingPosts(): array
+    {
+        $query = "SELECT posts.*, users.username, users.name, users.profile_picture, users.email 
+                  FROM {$this->table} 
+                  INNER JOIN users ON posts.user_id = users.id 
+                  WHERE posts.status = 'published' 
+                  ORDER BY posts.like_count DESC, posts.created_at DESC";
+
+        $this->db->query($query);
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Search published posts by keyword matching title, content, author username, or display name
+     *
+     * @param string $keyword
+     * @return array
+     */
+    public function searchPosts(string $keyword): array
+    {
+        $query = "SELECT posts.*, users.username, users.name, users.profile_picture 
+                  FROM {$this->table} 
+                  INNER JOIN users ON posts.user_id = users.id 
+                  WHERE (posts.title LIKE :keyword OR posts.content LIKE :keyword OR users.username LIKE :keyword OR users.name LIKE :keyword) 
+                  AND posts.status = 'published' 
+                  ORDER BY posts.created_at DESC";
+
+        $this->db->query($query);
+        $this->db->bind(':keyword', "%{$keyword}%");
         return $this->db->resultSet();
     }
 }

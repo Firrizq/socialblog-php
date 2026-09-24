@@ -7,13 +7,13 @@
                 require_once __DIR__ . '/../../models/Post_model.php';
                 $currentUserId = $_SESSION['user_id'] ?? 0;
                 $suggestedWriters = (new User())->getSuggestedWriters((int)$currentUserId);
-                $popularPosts = (new Post_model())->getPopularPosts();
+                $popularPosts = array_slice((new Post_model())->getPopularPosts(), 0, 4);
                 ?>
                 <div class="flex flex-col gap-space-lg">
-                    <div class="relative flex items-center">
-                        <span class="material-symbols-outlined absolute left-space-md text-outline text-lg">search</span>
-                        <input class="w-full pl-10 pr-space-md py-space-xs bg-surface-container-lowest border border-outline-variant/40 rounded-full font-body-md text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container" placeholder="Search Blogggle..." type="text"/>
-                    </div>
+                    <form action="<?= BASEURL ?>/explore" method="GET" class="relative flex items-center w-full">
+                        <span class="material-symbols-outlined absolute left-space-md text-outline text-lg pointer-events-none">search</span>
+                        <input name="q" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>" class="w-full pl-10 pr-space-md py-space-xs bg-surface-container-lowest border border-outline-variant/40 rounded-full font-body-md text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container" placeholder="Search Blogggle..." type="search"/>
+                    </form>
                     
                     <div class="flex flex-col gap-space-md">
                         <span class="font-title-md text-on-surface">Popular Stories</span>

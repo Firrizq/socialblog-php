@@ -118,7 +118,7 @@ tailwind.config = {
                 <a class="<?= ($activePage === 'home' || $activePage === '') ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/home">
                     <span class="material-symbols-outlined text-xl">home</span><span>Home</span>
                 </a>
-                <a class="<?= ($activePage === 'explore') ? $activeNav : $inactiveNav ?>" href="#">
+                <a class="<?= ($activePage === 'explore') ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/explore">
                     <span class="material-symbols-outlined text-xl">explore</span><span>Explore</span>
                 </a>
                 <a class="<?= ($activePage === 'bookmarks') ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/bookmarks">
@@ -143,7 +143,7 @@ tailwind.config = {
                 </a>
             <?php endif; ?>
         </div>
-        
+
         <?php if (isset($_SESSION['user_id'])): ?>
         <a href="<?= BASEURL ?>/profile" class="flex items-center gap-space-sm p-space-sm rounded-xl bg-surface-container border border-outline-variant/20 hover:border-primary/40 transition-colors">
             <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center font-bold text-on-primary overflow-hidden shrink-0">
