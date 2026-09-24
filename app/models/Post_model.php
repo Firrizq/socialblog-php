@@ -102,4 +102,25 @@ class Post_model
 
         return $row ?: false;
     }
+
+    /**
+     * Fetch all posts bookmarked by a specific user, ordered by bookmark date newest first
+     *
+     * @param int $userId
+     * @return array
+     */
+    public function getBookmarkedPosts(int $userId): array
+    {
+        $query = "SELECT posts.*, users.username, users.profile_picture, users.email, bookmarks.created_at AS bookmarked_at 
+                  FROM posts 
+                  INNER JOIN bookmarks ON posts.id = bookmarks.post_id 
+                  INNER JOIN users ON posts.user_id = users.id 
+                  WHERE bookmarks.user_id = :user_id 
+                  ORDER BY bookmarks.created_at DESC";
+
+        $this->db->query($query);
+        $this->db->bind(':user_id', $userId);
+        return $this->db->resultSet();
+    }
 }
+

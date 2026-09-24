@@ -117,7 +117,7 @@ tailwind.config = {
                 <a class="<?= ($activePage === 'explore') ? $activeNav : $inactiveNav ?>" href="#">
                     <span class="material-symbols-outlined text-xl">explore</span><span>Explore</span>
                 </a>
-                <a class="<?= ($activePage === 'bookmarks') ? $activeNav : $inactiveNav ?>" href="#">
+                <a class="<?= ($activePage === 'bookmarks') ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/bookmarks">
                     <span class="material-symbols-outlined text-xl">bookmark</span><span>Bookmarks</span>
                 </a>
                 <a class="<?= ($activePage === 'profile') ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/profile">
