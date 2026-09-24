@@ -122,5 +122,24 @@ class Post_model
         $this->db->bind(':user_id', $userId);
         return $this->db->resultSet();
     }
+
+    /**
+     * Fetch popular published stories ordered by like count and creation date
+     *
+     * @return array
+     */
+    public function getPopularPosts(): array
+    {
+        $query = "SELECT posts.id, posts.title, posts.read_time_minutes, users.username 
+                  FROM {$this->table} 
+                  INNER JOIN users ON posts.user_id = users.id 
+                  WHERE posts.status = 'published' AND posts.title IS NOT NULL AND posts.title != '' 
+                  ORDER BY posts.like_count DESC, posts.created_at DESC 
+                  LIMIT 4";
+
+        $this->db->query($query);
+        return $this->db->resultSet();
+    }
 }
+
 

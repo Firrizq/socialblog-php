@@ -158,6 +158,20 @@ class User
 
         return $this->db->execute();
     }
+
+    /**
+     * Get suggested community writers ordered by follower count
+     *
+     * @param int $currentUserId
+     * @return array
+     */
+    public function getSuggestedWriters(int $currentUserId): array
+    {
+        $this->db->query("SELECT id, username, profile_picture, bio, follower_count FROM {$this->table} WHERE id != :current_user_id ORDER BY follower_count DESC, created_at DESC LIMIT 4");
+        $this->db->bind(':current_user_id', $currentUserId);
+        return $this->db->resultSet();
+    }
 }
+
 
 

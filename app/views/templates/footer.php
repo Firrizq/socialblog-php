@@ -2,6 +2,13 @@
 
             <!-- TAHAP 3: Right Sidebar -->
             <aside class="hidden xl:block w-80 sticky top-16 h-[calc(100vh-4rem)] p-gutter border-l border-outline-variant/30 overflow-y-auto">
+                <?php
+                require_once __DIR__ . '/../../models/User.php';
+                require_once __DIR__ . '/../../models/Post_model.php';
+                $currentUserId = $_SESSION['user_id'] ?? 0;
+                $suggestedWriters = (new User())->getSuggestedWriters((int)$currentUserId);
+                $popularPosts = (new Post_model())->getPopularPosts();
+                ?>
                 <div class="flex flex-col gap-space-lg">
                     <div class="relative flex items-center">
                         <span class="material-symbols-outlined absolute left-space-md text-outline text-lg">search</span>
@@ -9,27 +16,38 @@
                     </div>
                     
                     <div class="flex flex-col gap-space-md">
-                        <span class="font-title-md text-on-surface">Trending Topics</span>
-                        <div class="flex flex-wrap gap-space-xs">
-                            <a class="px-space-md py-space-xs rounded-full bg-surface-container border border-outline-variant/30 text-on-surface-variant font-caption hover:border-primary hover:text-primary transition-colors" href="#">#PHP Native</a>
-                            <a class="px-space-md py-space-xs rounded-full bg-surface-container border border-outline-variant/30 text-on-surface-variant font-caption hover:border-primary hover:text-primary transition-colors" href="#">#WebArchitecture</a>
-                            <a class="px-space-md py-space-xs rounded-full bg-surface-container border border-outline-variant/30 text-on-surface-variant font-caption hover:border-primary hover:text-primary transition-colors" href="#">#Minimalism</a>
+                        <span class="font-title-md text-on-surface">Popular Stories</span>
+                        <div class="flex flex-col gap-2">
+                            <?php foreach($popularPosts as $popPost): ?>
+                                <a href="<?= BASEURL ?>/post/detail/<?= $popPost['id'] ?>" class="flex flex-col gap-1 p-3 rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors group">
+                                    <span class="font-title-md text-sm text-on-surface group-hover:text-primary transition-colors line-clamp-2"><?= htmlspecialchars($popPost['title']) ?></span>
+                                    <span class="font-caption text-xs text-on-surface-variant">by @<?= htmlspecialchars($popPost['username']) ?> · <?= $popPost['read_time_minutes'] ?> min read</span>
+                                </a>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                     
                     <div class="flex flex-col gap-space-md">
                         <span class="font-title-md text-on-surface">Suggested Writers</span>
                         <div class="flex flex-col gap-space-md">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-space-sm">
-                                    <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center font-label-md text-primary">AL</div>
-                                    <div>
-                                        <p class="font-label-md text-on-surface leading-tight">Arthur Lyra</p>
-                                        <p class="font-caption text-on-surface-variant">Essays &amp; Systems</p>
-                                    </div>
+                            <?php foreach($suggestedWriters as $writer): ?>
+                                <div class="flex items-center justify-between">
+                                    <a href="<?= BASEURL ?>/profile/user/<?= urlencode($writer['username']) ?>" class="flex items-center gap-space-sm min-w-0 group hover:opacity-80 transition-opacity">
+                                        <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary shrink-0 overflow-hidden">
+                                            <?php if (!empty($writer['profile_picture'])): ?>
+                                                <img src="<?= BASEURL ?><?= htmlspecialchars($writer['profile_picture']) ?>" alt="avatar" class="w-full h-full object-cover">
+                                            <?php else: ?>
+                                                <?= strtoupper(substr($writer['username'], 0, 1)) ?>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="flex flex-col min-w-0">
+                                            <p class="font-title-md text-sm text-on-surface leading-tight truncate group-hover:text-primary transition-colors"><?= htmlspecialchars($writer['username']) ?></p>
+                                            <p class="font-caption text-xs text-on-surface-variant truncate max-w-[120px]"><?= htmlspecialchars($writer['bio'] ?: 'Community Writer') ?></p>
+                                        </div>
+                                    </a>
+                                    <button class="btn-follow px-space-sm py-space-xs rounded-full bg-surface-container border border-outline-variant text-on-surface hover:border-primary hover:text-primary font-caption text-xs transition-colors shrink-0" data-id="<?= $writer['id'] ?>">Follow</button>
                                 </div>
-                                <button class="px-space-sm py-space-xs rounded-full bg-surface-container border border-outline-variant text-on-surface hover:border-primary hover:text-primary font-caption transition-colors">Follow</button>
-                            </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                 </div>
