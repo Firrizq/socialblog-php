@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/Notification_model.php';
+
 /**
  * Comment Model
  * Handles database operations for post comments and threaded discussions.
@@ -164,6 +166,33 @@ class Comment_model
         $this->db->bind(':comment', $data['comment']);
         $this->db->bind(':parent_id', $parentId);
 
-        return $this->db->execute();
+        $executed = $this->db->execute();
+
+        if ($executed) {
+            $notificationModel = new Notification_model();
+            $actorId = (int)$data['user_id'];
+            $postId = (int)$data['post_id'];
+
+            if ($parentId === null) {
+                // Top-level comment: notify post owner
+                $this->db->query("SELECT user_id FROM posts WHERE id = :post_id LIMIT 1");
+                $this->db->bind(':post_id', $postId);
+                $post = $this->db->single();
+                if ($post && !empty($post['user_id'])) {
+                    $notificationModel->addNotification((int)$post['user_id'], $actorId, 'comment', $postId);
+                }
+            } else {
+                // Reply: notify parent comment owner
+                $this->db->query("SELECT user_id FROM {$this->table} WHERE id = :parent_id LIMIT 1");
+                $this->db->bind(':parent_id', $parentId);
+                $parentComment = $this->db->single();
+                if ($parentComment && !empty($parentComment['user_id'])) {
+                    $notificationModel->addNotification((int)$parentComment['user_id'], $actorId, 'reply', $postId);
+                }
+            }
+        }
+
+        return $executed;
     }
+
 }

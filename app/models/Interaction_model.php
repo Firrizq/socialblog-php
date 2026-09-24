@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/Notification_model.php';
+
 /**
  * Interaction Model
  * Handles database operations for Likes, Bookmarks, and Follow relationships.
@@ -47,6 +49,15 @@ class Interaction_model
             $this->db->execute();
 
             $status = 'liked';
+
+            // Fetch post owner and insert notification
+            $this->db->query("SELECT user_id FROM posts WHERE id = :post_id LIMIT 1");
+            $this->db->bind(':post_id', $postId);
+            $postOwner = $this->db->single();
+            if ($postOwner && !empty($postOwner['user_id'])) {
+                $notificationModel = new Notification_model();
+                $notificationModel->addNotification((int)$postOwner['user_id'], $userId, 'like_post', $postId);
+            }
         }
 
         // 2. Fetch updated like count
@@ -152,6 +163,10 @@ class Interaction_model
             $this->db->execute();
 
             $status = 'followed';
+
+            // Insert follow notification
+            $notificationModel = new Notification_model();
+            $notificationModel->addNotification($followedId, $followerId, 'follow');
         }
 
         $this->db->query("SELECT follower_count FROM users WHERE id = :followed_id LIMIT 1");

@@ -1,3 +1,7 @@
+<?php
+require_once dirname(__DIR__, 2) . '/models/Notification_model.php';
+$unreadNotifCount = (isset($_SESSION['user_id'])) ? (new Notification_model())->getUnreadCount((int)$_SESSION['user_id']) : 0;
+?>
 <!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
@@ -119,6 +123,10 @@ tailwind.config = {
                 </a>
                 <a class="<?= ($activePage === 'bookmarks') ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/bookmarks">
                     <span class="material-symbols-outlined text-xl">bookmark</span><span>Bookmarks</span>
+                </a>
+                <a class="<?= ($activePage === 'notifications') ? $activeNav : $inactiveNav ?> relative" href="<?= BASEURL ?>/notifications">
+                    <span class="material-symbols-outlined text-xl">notifications</span><span>Notifications</span>
+                    <?php if($unreadNotifCount > 0): ?><span class="absolute top-3 right-3 w-2.5 h-2.5 bg-error rounded-full border-2 border-surface-container-low"></span><?php endif; ?>
                 </a>
                 <a class="<?= ($activePage === 'profile') ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/profile">
                     <span class="material-symbols-outlined text-xl">account_circle</span><span>Profile</span>
