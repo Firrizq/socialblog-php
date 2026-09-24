@@ -51,4 +51,40 @@ class Explore extends Controller
 
         $this->view('explore/index', $data);
     }
+
+    /**
+     * View posts filtered by hashtag
+     * GET /explore/tag/{tagName}
+     *
+     * @param string $tagName
+     */
+    public function tag(string $tagName = ''): void
+    {
+        $tagName = trim($tagName);
+        if (empty($tagName)) {
+            header('Location: ' . BASEURL . '/explore');
+            exit;
+        }
+
+        $tagModel = $this->model('Tag_model');
+        $posts = $tagModel->getPostsByTag($tagName);
+
+        $likedPosts = [];
+        $bookmarkedPosts = [];
+        if (!empty($_SESSION['user_id'])) {
+            $userId = (int)$_SESSION['user_id'];
+            $likedPosts = $this->interactionModel->getUserLikedPostIds($userId);
+            $bookmarkedPosts = $this->interactionModel->getUserBookmarkedPostIds($userId);
+        }
+
+        $data = [
+            'title' => "#{$tagName} - Blogggle",
+            'tag_name' => $tagName,
+            'posts' => $posts,
+            'liked_posts' => $likedPosts,
+            'bookmarked_posts' => $bookmarkedPosts
+        ];
+
+        $this->view('explore/tag', $data);
+    }
 }

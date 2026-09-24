@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/../models/Tag_model.php';
+
 /**
  * Post Controller
  * Handles post authoring, publishing, single post detail viewing, and commenting.
@@ -62,13 +64,14 @@ class Post extends Controller
             }
 
             // Save post
-            $created = $this->postModel->createPost([
+            $newPostId = $this->postModel->createPost([
                 'user_id' => $_SESSION['user_id'],
                 'title' => $title,
                 'content' => $content
             ]);
 
-            if ($created) {
+            if ($newPostId) {
+                (new Tag_model())->processTags((int)$newPostId, $content);
                 header('Location: ' . BASEURL . '/home');
                 exit;
             } else {
@@ -108,11 +111,15 @@ class Post extends Controller
                 // Sanitize plain text and convert line breaks
                 $content = nl2br(htmlspecialchars($rawContent, ENT_QUOTES, 'UTF-8'));
 
-                $this->postModel->createPost([
+                $newPostId = $this->postModel->createPost([
                     'user_id' => (int)$_SESSION['user_id'],
                     'title' => null,
                     'content' => $content
                 ]);
+
+                if ($newPostId) {
+                    (new Tag_model())->processTags((int)$newPostId, $content);
+                }
             }
         }
 

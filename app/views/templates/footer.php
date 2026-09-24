@@ -28,6 +28,20 @@
                     </div>
                     
                     <div class="flex flex-col gap-space-md">
+                        <span class="font-title-md text-on-surface">Popular Tags</span>
+                        <div class="flex flex-wrap gap-2">
+                            <?php 
+                            $popularTags = ['Technology', 'Life', 'Design', 'Programming', 'Writing'];
+                            foreach($popularTags as $popTag): 
+                            ?>
+                                <a href="<?= BASEURL ?>/explore/tag/<?= urlencode($popTag) ?>" class="px-3 py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 text-on-surface-variant hover:text-primary hover:border-primary/50 text-xs font-semibold transition-all">
+                                    #<?= htmlspecialchars($popTag) ?>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col gap-space-md">
                         <span class="font-title-md text-on-surface">Suggested Writers</span>
                         <div class="flex flex-col gap-space-md">
                             <?php foreach($suggestedWriters as $writer): ?>

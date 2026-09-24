@@ -84,7 +84,7 @@ $countNodes($comments);
 
             <!-- Post Rich Content (Quill Rendered) -->
             <div class="font-body-md text-on-surface leading-relaxed quill-content text-base sm:text-lg py-2">
-                <?= $post['content'] ?>
+                <?= preg_replace('/(^|>|\s)#([a-zA-Z_][a-zA-Z0-9_]*)/', '$1<a href="' . BASEURL . '/explore/tag/$2" class="text-primary font-semibold hover:underline">#$2</a>', $post['content'] ?? '') ?>
             </div>
 
             <!-- Action Metrics Bar -->
@@ -209,7 +209,7 @@ $countNodes($comments);
                                 </div>
 
                                 <p class="font-body-md text-sm text-on-surface mt-1.5 leading-relaxed whitespace-pre-line break-words">
-                                    <?= htmlspecialchars($comment['comment']) ?>
+                                    <?= preg_replace('/(^|>|\s)#([a-zA-Z_][a-zA-Z0-9_]*)/', '$1<a href="' . BASEURL . '/explore/tag/$2" class="text-primary font-semibold hover:underline" onclick="event.stopPropagation();">#$2</a>', htmlspecialchars($comment['comment'] ?? '')) ?>
                                 </p>
 
                                 <!-- Comment Actions Toolbar -->

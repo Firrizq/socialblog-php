@@ -185,16 +185,17 @@ $user = $data['profile_user'] ?? null;
                         </div>
 
                         <!-- Content -->
-                        <a href="<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>" class="flex flex-col gap-1 cursor-pointer group text-decoration-none">
-                            <?php if (!empty($post['title'])): ?>
-                                <h3 class="font-headline-sm text-on-surface group-hover:text-primary transition-colors tracking-tight text-lg sm:text-xl font-bold">
+                        <div onclick="if(!event.target.closest('a')) window.location.href='<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>';" class="flex flex-col gap-space-xs cursor-pointer group text-decoration-none">
+                            <?php if(!empty($post['title'])): ?>
+                                <a href="<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>" class="font-headline-sm text-on-surface group-hover:text-primary transition-colors tracking-tight">
                                     <?= htmlspecialchars($post['title']) ?>
-                                </h3>
+                                </a>
                             <?php endif; ?>
+                            
                             <div class="font-body-md text-on-surface-variant leading-relaxed text-sm sm:text-base line-clamp-3">
-                                <?= strip_tags((string)($post['content'] ?? '')) ?>
+                                <?= preg_replace('/(^|>|\s)#([a-zA-Z_][a-zA-Z0-9_]*)/', '$1<a href="' . BASEURL . '/explore/tag/$2" class="text-primary font-semibold hover:underline relative z-10" onclick="event.stopPropagation();">#$2</a>', strip_tags((string)($post['content'] ?? ''))) ?>
                             </div>
-                        </a>
+                        </div>
 
                         <!-- Action Buttons -->
                         <div class="flex items-center justify-between pt-1 text-on-surface-variant max-w-md">

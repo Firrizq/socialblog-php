@@ -112,7 +112,7 @@ $replies = $data['replies'] ?? [];
                             </a>
                         </div>
                         <p class="font-body-md text-sm text-on-surface-variant mt-1 line-clamp-3 leading-relaxed whitespace-pre-line break-words">
-                            <?= htmlspecialchars($parentComment['comment']) ?>
+                            <?= preg_replace('/(^|>|\s)#([a-zA-Z_][a-zA-Z0-9_]*)/', '$1<a href="' . BASEURL . '/explore/tag/$2" class="text-primary font-semibold hover:underline">#$2</a>', htmlspecialchars($parentComment['comment'] ?? '')) ?>
                         </p>
                     </div>
                 </div>
@@ -174,7 +174,7 @@ $replies = $data['replies'] ?? [];
 
             <!-- Focused Comment Large Text -->
             <div class="font-body-lg text-lg sm:text-xl text-on-surface leading-relaxed whitespace-pre-line py-2 break-words">
-                <?= htmlspecialchars($comment['comment']) ?>
+                <?= preg_replace('/(^|>|\s)#([a-zA-Z_][a-zA-Z0-9_]*)/', '$1<a href="' . BASEURL . '/explore/tag/$2" class="text-primary font-semibold hover:underline">#$2</a>', htmlspecialchars($comment['comment'] ?? '')) ?>
             </div>
 
             <!-- Comment Full Timestamp -->
@@ -297,7 +297,7 @@ $replies = $data['replies'] ?? [];
                                     </div>
 
                                     <p class="font-body-md text-sm text-on-surface mt-1.5 leading-relaxed whitespace-pre-line break-words">
-                                        <?= htmlspecialchars($reply['comment']) ?>
+                                        <?= preg_replace('/(^|>|\s)#([a-zA-Z_][a-zA-Z0-9_]*)/', '$1<a href="' . BASEURL . '/explore/tag/$2" class="text-primary font-semibold hover:underline">#$2</a>', htmlspecialchars($reply['comment'] ?? '')) ?>
                                     </p>
 
                                     <!-- Reply Action Toolbar -->

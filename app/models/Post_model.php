@@ -40,9 +40,9 @@ class Post_model
      * Create a new post in the database
      *
      * @param array $data ['user_id', 'title', 'content']
-     * @return bool
+     * @return int|false
      */
-    public function createPost(array $data): bool
+    public function createPost(array $data): int|false
     {
         $query = "INSERT INTO {$this->table} (user_id, title, content) 
                   VALUES (:user_id, :title, :content)";
@@ -52,7 +52,10 @@ class Post_model
         $this->db->bind(':title', $data['title']);
         $this->db->bind(':content', $data['content']);
 
-        return $this->db->execute();
+        if ($this->db->execute()) {
+            return (int)$this->db->lastInsertId();
+        }
+        return false;
     }
 
     /**
