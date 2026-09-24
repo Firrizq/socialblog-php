@@ -75,7 +75,7 @@
                         <?php endif; ?>
                         
                         <div class="font-body-md text-on-surface-variant leading-relaxed text-sm sm:text-base line-clamp-3">
-                            <?= htmlspecialchars(strip_tags((string)($post['content'] ?? ''))) ?>
+                            <?= strip_tags((string)($post['content'] ?? '')) ?>
                         </div>
                     </a>
 

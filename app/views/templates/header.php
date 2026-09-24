@@ -124,9 +124,14 @@ tailwind.config = {
                 <a class="<?= ($activePage === 'bookmarks') ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/bookmarks">
                     <span class="material-symbols-outlined text-xl">bookmark</span><span>Bookmarks</span>
                 </a>
-                <a class="<?= ($activePage === 'notifications') ? $activeNav : $inactiveNav ?> relative" href="<?= BASEURL ?>/notifications">
-                    <span class="material-symbols-outlined text-xl">notifications</span><span>Notifications</span>
-                    <?php if($unreadNotifCount > 0): ?><span class="absolute top-3 right-3 w-2.5 h-2.5 bg-error rounded-full border-2 border-surface-container-low"></span><?php endif; ?>
+                <a class="<?= ($activePage === 'notifications') ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/notifications">
+                    <span class="material-symbols-outlined text-xl">notifications</span>
+                    <span>Notifications</span>
+                    <?php if($unreadNotifCount > 0): ?>
+                        <span class="ml-auto flex items-center justify-center min-w-[22px] h-[22px] px-1.5 bg-error text-on-error font-bold text-[11px] rounded-full shadow-sm">
+                            <?= $unreadNotifCount > 99 ? '99+' : $unreadNotifCount ?>
+                        </span>
+                    <?php endif; ?>
                 </a>
                 <a class="<?= ($activePage === 'profile') ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/profile">
                     <span class="material-symbols-outlined text-xl">account_circle</span><span>Profile</span>
