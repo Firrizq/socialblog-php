@@ -2,7 +2,19 @@
 require_once __DIR__ . '/../templates/header.php'; 
 $post = $data['post'] ?? null;
 $comments = $data['comments'] ?? [];
+
+$totalComments = 0;
+$countNodes = function($tree) use (&$countNodes, &$totalComments) {
+    foreach ($tree as $node) {
+        $totalComments++;
+        if (!empty($node['replies'])) {
+            $countNodes($node['replies']);
+        }
+    }
+};
+$countNodes($comments);
 ?>
+
 
 <div class="flex flex-col w-full pb-20">
     <!-- Top Sticky Bar -->
@@ -88,7 +100,7 @@ $comments = $data['comments'] ?? [];
                     </button>
                     <div class="flex items-center gap-1.5 hover:text-on-surface transition-colors">
                         <span class="material-symbols-outlined text-xl">chat_bubble</span>
-                        <span class="font-caption text-xs"><?= count($comments) ?></span>
+                        <span class="font-caption text-xs"><?= $totalComments ?></span>
                     </div>
                     <button class="flex items-center gap-1.5 hover:text-primary transition-colors">
                         <span class="material-symbols-outlined text-xl">sync_alt</span>
@@ -112,7 +124,7 @@ $comments = $data['comments'] ?? [];
             <div class="flex items-center justify-between">
                 <h2 class="font-title-md text-lg font-bold text-on-surface flex items-center gap-2">
                     <span class="material-symbols-outlined text-primary text-xl">forum</span>
-                    <span>Discussion (<?= count($comments) ?>)</span>
+                    <span>Discussion (<?= $totalComments ?>)</span>
                 </h2>
             </div>
 
