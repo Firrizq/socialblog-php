@@ -194,6 +194,26 @@ class Post_model
         $this->db->bind(':user_id', $userId);
         return $this->db->execute();
     }
+
+    /**
+     * Fetch feed posts from authors the user follows
+     *
+     * @param int $userId
+     * @return array
+     */
+    public function getFollowingFeedPosts(int $userId): array
+    {
+        $query = "SELECT posts.*, users.username, users.name, users.profile_picture, users.email 
+                  FROM {$this->table} 
+                  INNER JOIN users ON posts.user_id = users.id 
+                  INNER JOIN followings ON users.id = followings.target_id 
+                  WHERE followings.user_id = :user_id AND posts.status = 'published' 
+                  ORDER BY posts.created_at DESC";
+
+        $this->db->query($query);
+        $this->db->bind(':user_id', $userId);
+        return $this->db->resultSet();
+    }
 }
 
 

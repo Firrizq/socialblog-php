@@ -17,7 +17,13 @@ class Home extends Controller
 
     public function index(): void
     {
-        $posts = $this->postModel->getFeedPosts();
+        $feedType = $_GET['feed'] ?? 'for-you';
+
+        if ($feedType === 'following' && isset($_SESSION['user_id'])) {
+            $posts = $this->postModel->getFollowingFeedPosts((int)$_SESSION['user_id']);
+        } else {
+            $posts = $this->postModel->getFeedPosts();
+        }
 
         $likedPosts = [];
         $bookmarkedPosts = [];
@@ -29,6 +35,7 @@ class Home extends Controller
 
         $data = [
             'title' => 'Timeline Feed - Blogggle',
+            'feed_type' => $feedType,
             'posts' => $posts,
             'liked_posts' => $likedPosts,
             'bookmarked_posts' => $bookmarkedPosts

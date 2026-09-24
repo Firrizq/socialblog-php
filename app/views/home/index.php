@@ -4,13 +4,14 @@
     <!-- Feed Header Navigation Tabs -->
     <div class="sticky top-16 z-30 bg-surface/90 backdrop-blur-md pb-space-xs pt-space-xs mb-space-lg flex items-center justify-between">
         <nav class="flex items-center gap-space-lg">
-            <button class="relative pb-space-sm font-title-md text-primary transition-colors flex items-center gap-space-xs">
+            <a href="<?= BASEURL ?>/home?feed=for-you" class="relative pb-space-sm font-title-md <?= ($data['feed_type'] !== 'following') ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface' ?> transition-colors flex items-center gap-space-xs">
                 <span>For You</span>
-                <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full shadow-[0_0_8px_rgba(78,222,163,0.6)]"></span>
-            </button>
-            <button class="relative pb-space-sm font-title-md text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-space-xs">
+                <?php if($data['feed_type'] !== 'following'): ?><span class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full shadow-[0_0_8px_rgba(78,222,163,0.6)]"></span><?php endif; ?>
+            </a>
+            <a href="<?= BASEURL ?>/home?feed=following" class="relative pb-space-sm font-title-md <?= ($data['feed_type'] === 'following') ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface' ?> transition-colors flex items-center gap-space-xs">
                 <span>Following</span>
-            </button>
+                <?php if($data['feed_type'] === 'following'): ?><span class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full shadow-[0_0_8px_rgba(78,222,163,0.6)]"></span><?php endif; ?>
+            </a>
         </nav>
         <div class="flex items-center gap-space-xs">
             <button class="w-9 h-9 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-primary flex items-center justify-center transition-all"><span class="material-symbols-outlined text-xl">refresh</span></button>
@@ -113,9 +114,12 @@
 
             <?php endforeach; ?>
         <?php else: ?>
-            <div class="text-center p-10 bg-surface-container-low rounded-xl">
-                <h2 class="text-xl font-bold text-on-surface">Belum ada postingan</h2>
-                <p class="text-on-surface-variant mt-2">Jadilah yang pertama membuat cerita!</p>
+            <div class="text-center p-12 bg-surface-container-low rounded-xl border border-outline-variant/30 flex flex-col items-center">
+                <span class="material-symbols-outlined text-4xl text-outline mb-2">article</span>
+                <h2 class="text-xl font-bold text-on-surface">No stories found</h2>
+                <p class="text-on-surface-variant mt-2 text-sm max-w-sm">
+                    <?= ($data['feed_type'] === 'following') ? "The writers you follow haven't published anything recently. Discover new voices in the 'For You' tab." : "Be the first to share a perspective with the community!" ?>
+                </p>
             </div>
         <?php endif; ?>
     </div>
