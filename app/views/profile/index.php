@@ -25,7 +25,7 @@ $user = $data['profile_user'] ?? null;
             </a>
             <div class="min-w-0">
                 <h1 class="font-title-md text-lg font-bold text-on-surface leading-tight truncate">
-                    <?= htmlspecialchars($user['username']) ?>
+                    <?= htmlspecialchars($user['name'] ?? $user['username']) ?>
                 </h1>
                 <p class="font-caption text-xs text-on-surface-variant">
                     <?= count($data['posts']) ?> <?= count($data['posts']) === 1 ? 'post' : 'posts' ?>
@@ -75,7 +75,7 @@ $user = $data['profile_user'] ?? null;
             <!-- User Names -->
             <div class="mt-1">
                 <h2 class="font-headline-sm text-xl sm:text-2xl font-bold text-on-surface leading-tight tracking-tight">
-                    <?= htmlspecialchars($user['username']) ?>
+                    <?= htmlspecialchars($user['name'] ?? $user['username']) ?>
                 </h2>
                 <p class="font-body-md text-sm text-on-surface-variant font-normal">
                     @<?= htmlspecialchars($user['username']) ?>

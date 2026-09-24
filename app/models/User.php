@@ -49,14 +49,15 @@ class User
     /**
      * Register a new user into the database
      *
-     * @param array $data Contains 'username', 'email', 'password'
+     * @param array $data Contains 'name', 'username', 'email', 'password'
      * @return bool
      */
     public function register(array $data): bool
     {
         $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
 
-        $this->db->query("INSERT INTO {$this->table} (username, email, password) VALUES (:username, :email, :password)");
+        $this->db->query("INSERT INTO {$this->table} (name, username, email, password) VALUES (:name, :username, :email, :password)");
+        $this->db->bind(':name', $data['name']);
         $this->db->bind(':username', $data['username']);
         $this->db->bind(':email', $data['email']);
         $this->db->bind(':password', $hashedPassword);

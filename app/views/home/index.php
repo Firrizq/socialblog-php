@@ -53,10 +53,11 @@
                                 <?php endif; ?>
                             </a>
                             <div class="flex flex-col min-w-0">
-                                <div class="flex items-center gap-1 min-w-0">
+                                <div class="flex items-center gap-1.5 min-w-0">
                                     <a href="<?= BASEURL ?>/profile/user/<?= urlencode($post['username'] ?? '') ?>" class="font-title-md text-on-surface hover:text-primary transition-colors truncate">
-                                        <?= htmlspecialchars($post['username'] ?? 'Anonymous') ?>
+                                        <?= htmlspecialchars($post['name'] ?? $post['username'] ?? 'Anonymous') ?>
                                     </a>
+                                    <span class="font-caption text-on-surface-variant truncate">@<?= htmlspecialchars($post['username'] ?? 'anon') ?></span>
                                     <span class="font-caption text-on-surface-variant whitespace-nowrap"> • <?= date('M j, Y', strtotime($post['created_at'])) ?></span>
                                 </div>
                             </div>

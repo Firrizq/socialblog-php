@@ -92,6 +92,25 @@ $user = $data['user'] ?? [];
                 </div>
             </div>
 
+            <!-- Display Name Input -->
+            <div class="space-y-1.5 pt-2 border-t border-outline-variant/20">
+                <label for="name" class="block font-label-md text-xs uppercase tracking-wider text-on-surface-variant font-medium">
+                    Display Name
+                </label>
+                <div class="relative flex items-center">
+                    <span class="material-symbols-outlined absolute left-3.5 text-outline text-lg pointer-events-none">badge</span>
+                    <input 
+                        type="text" 
+                        name="name" 
+                        id="name" 
+                        maxlength="50"
+                        value="<?= htmlspecialchars($user['name'] ?? $user['username'] ?? '') ?>" 
+                        placeholder="Your full or display name"
+                        class="w-full pl-11 pr-4 py-2.5 bg-surface-container-lowest border border-outline-variant/40 rounded-xl font-body-md text-on-surface text-sm placeholder:text-outline/60 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    >
+                </div>
+            </div>
+
             <!-- 3. Bio Textarea -->
             <div class="space-y-1.5 pt-2 border-t border-outline-variant/20">
                 <div class="flex items-center justify-between">

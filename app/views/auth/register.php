@@ -80,10 +80,30 @@ tailwind.config = {
             <?php endif; ?>
 
             <form action="<?= BASEURL ?>/auth/register" method="POST" class="space-y-4">
+                <!-- Display Name Input -->
+                <div>
+                    <label for="name" class="block font-label-md text-xs uppercase tracking-wider text-on-surface-variant mb-1.5 font-medium">
+                        Display Name
+                    </label>
+                    <div class="relative flex items-center">
+                        <span class="material-symbols-outlined absolute left-3.5 text-outline text-lg pointer-events-none">badge</span>
+                        <input 
+                            type="text" 
+                            id="name" 
+                            name="name" 
+                            value="<?= htmlspecialchars($data['name'] ?? '') ?>" 
+                            placeholder="John Doe" 
+                            required 
+                            autofocus
+                            class="w-full pl-11 pr-4 py-2.5 bg-surface-container-lowest border border-outline-variant/40 rounded-xl font-body-md text-on-surface text-sm placeholder:text-outline/60 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                        >
+                    </div>
+                </div>
+
                 <!-- Username Input -->
                 <div>
                     <label for="username" class="block font-label-md text-xs uppercase tracking-wider text-on-surface-variant mb-1.5 font-medium">
-                        Username
+                        Handle / Username
                     </label>
                     <div class="relative flex items-center">
                         <span class="material-symbols-outlined absolute left-3.5 text-outline text-lg pointer-events-none">alternate_email</span>
@@ -94,7 +114,6 @@ tailwind.config = {
                             value="<?= htmlspecialchars($data['username'] ?? '') ?>" 
                             placeholder="johndoe" 
                             required 
-                            autofocus
                             class="w-full pl-11 pr-4 py-2.5 bg-surface-container-lowest border border-outline-variant/40 rounded-xl font-body-md text-on-surface text-sm placeholder:text-outline/60 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                         >
                     </div>

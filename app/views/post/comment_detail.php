@@ -99,8 +99,9 @@ $replies = $data['replies'] ?? [];
                         <div class="flex items-center justify-between gap-2">
                             <div class="flex items-center gap-1.5 min-w-0">
                                 <a href="<?= BASEURL ?>/profile/user/<?= urlencode($parentComment['username'] ?? '') ?>" class="font-title-md text-sm text-on-surface font-semibold hover:text-primary transition-colors truncate">
-                                    <?= htmlspecialchars($parentComment['username'] ?? 'Anonymous') ?>
+                                    <?= htmlspecialchars($parentComment['name'] ?? $parentComment['username'] ?? 'Anonymous') ?>
                                 </a>
+                                <span class="font-caption text-xs text-on-surface-variant">@<?= htmlspecialchars($parentComment['username'] ?? 'anon') ?></span>
                                 <span class="font-caption text-xs text-on-surface-variant">
                                     · <?= date('M j, Y', strtotime($parentComment['created_at'])) ?>
                                 </span>
@@ -133,7 +134,7 @@ $replies = $data['replies'] ?? [];
                     <div class="flex flex-col min-w-0">
                         <div class="flex items-center gap-1.5 flex-wrap">
                             <a href="<?= BASEURL ?>/profile/user/<?= urlencode($comment['username'] ?? '') ?>" class="font-title-md text-base text-on-surface font-bold hover:text-primary transition-colors truncate">
-                                <?= htmlspecialchars($comment['username'] ?? 'Anonymous') ?>
+                                <?= htmlspecialchars($comment['name'] ?? $comment['username'] ?? 'Anonymous') ?>
                             </a>
                             <?php if ($post && ($comment['user_id'] == $post['user_id'])): ?>
                                 <span class="px-2 py-0.5 rounded-full bg-primary-container/20 text-primary border border-primary/30 font-caption text-xs font-semibold">
@@ -283,8 +284,9 @@ $replies = $data['replies'] ?? [];
                                     <div class="flex items-center justify-between gap-2">
                                         <div class="flex items-center gap-1.5 min-w-0 flex-wrap">
                                             <a href="<?= BASEURL ?>/profile/user/<?= urlencode($reply['username'] ?? '') ?>" class="font-title-md text-sm text-on-surface font-semibold hover:text-primary transition-colors truncate">
-                                                <?= htmlspecialchars($reply['username'] ?? 'Anonymous') ?>
+                                                <?= htmlspecialchars($reply['name'] ?? $reply['username'] ?? 'Anonymous') ?>
                                             </a>
+                                            <span class="font-caption text-xs text-on-surface-variant">@<?= htmlspecialchars($reply['username'] ?? 'anon') ?></span>
                                             <a href="<?= BASEURL ?>/post/commentDetail/<?= $reply['id'] ?>" class="font-caption text-xs text-on-surface-variant hover:text-primary transition-colors">
                                                 · <?= date('M j, Y · g:i A', strtotime($reply['created_at'])) ?>
                                             </a>

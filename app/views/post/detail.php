@@ -55,7 +55,7 @@ $countNodes($comments);
                     </a>
                     <div class="flex flex-col min-w-0">
                         <a href="<?= BASEURL ?>/profile/user/<?= urlencode($post['username'] ?? '') ?>" class="font-title-md text-base text-on-surface font-bold hover:text-primary transition-colors truncate">
-                            <?= htmlspecialchars($post['username'] ?? 'Anonymous') ?>
+                            <?= htmlspecialchars($post['name'] ?? $post['username'] ?? 'Anonymous') ?>
                         </a>
                         <span class="font-caption text-xs text-on-surface-variant">
                             @<?= htmlspecialchars($post['username'] ?? 'anon') ?>
@@ -189,8 +189,9 @@ $countNodes($comments);
                                 <div class="flex items-center justify-between gap-2">
                                     <div class="flex items-center gap-1.5 min-w-0 flex-wrap">
                                         <a href="<?= BASEURL ?>/profile/user/<?= urlencode($comment['username'] ?? '') ?>" class="font-title-md text-sm text-on-surface font-semibold hover:text-primary transition-colors truncate">
-                                            <?= htmlspecialchars($comment['username'] ?? 'Anonymous') ?>
+                                            <?= htmlspecialchars($comment['name'] ?? $comment['username'] ?? 'Anonymous') ?>
                                         </a>
+                                        <span class="font-caption text-xs text-on-surface-variant">@<?= htmlspecialchars($comment['username'] ?? 'anon') ?></span>
                                         <a href="<?= BASEURL ?>/post/commentDetail/<?= $comment['id'] ?>" class="font-caption text-xs text-on-surface-variant hover:text-primary transition-colors" title="View thread detail">
                                             · <?= date('M j, Y · g:i A', strtotime($comment['created_at'])) ?>
                                         </a>

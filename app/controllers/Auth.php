@@ -52,6 +52,7 @@ class Auth extends Controller
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $name = trim($_POST['name'] ?? '');
             $username = trim($_POST['username'] ?? '');
             $email = trim($_POST['email'] ?? '');
             $password = $_POST['password'] ?? '';
@@ -59,13 +60,14 @@ class Auth extends Controller
 
             $data = [
                 'title' => 'Register - Blogggle',
+                'name' => $name,
                 'username' => $username,
                 'email' => $email,
                 'error' => ''
             ];
 
             // Form validation
-            if (empty($username) || empty($email) || empty($password)) {
+            if (empty($name) || empty($username) || empty($email) || empty($password)) {
                 $data['error'] = 'Please fill in all required fields.';
                 $this->view('auth/register', $data);
                 return;
@@ -104,6 +106,7 @@ class Auth extends Controller
 
             // Create new user
             $registered = $this->userModel->register([
+                'name' => $name,
                 'username' => $username,
                 'email' => $email,
                 'password' => $password
@@ -123,6 +126,7 @@ class Auth extends Controller
         // GET Request: Render form
         $data = [
             'title' => 'Register - Blogggle',
+            'name' => '',
             'username' => '',
             'email' => '',
             'error' => ''
@@ -165,6 +169,7 @@ class Auth extends Controller
             if ($user) {
                 // Set session variables
                 $_SESSION['user_id'] = $user['id'];
+                $_SESSION['name'] = $user['name'];
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['email'] = $user['email'];
                 $_SESSION['profile_picture'] = $user['profile_picture'] ?? null;

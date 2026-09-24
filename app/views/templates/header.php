@@ -154,8 +154,8 @@ tailwind.config = {
                 <?php endif; ?>
             </div>
             <div class="flex flex-col min-w-0 flex-1">
-                <span class="font-label-md text-label-md text-on-surface truncate"><?= htmlspecialchars($_SESSION['username']) ?></span>
-                <span class="font-caption text-caption text-on-surface-variant truncate">User</span>
+                <span class="font-label-md text-label-md text-on-surface truncate"><?= htmlspecialchars($_SESSION['name'] ?? $_SESSION['username']) ?></span>
+                <span class="font-caption text-caption text-on-surface-variant truncate">@<?= htmlspecialchars($_SESSION['username']) ?></span>
             </div>
         </a>
         <?php endif; ?>
