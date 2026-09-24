@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title><?= htmlspecialchars($data['title'] ?? 'Create Account - EmeraldInk') ?></title>
+    <title><?= htmlspecialchars($data['title'] ?? 'Create Account - Blogggle') ?></title>
     
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
@@ -59,7 +59,7 @@ tailwind.config = {
         <div class="flex items-center justify-center gap-2 mb-8">
             <a href="<?= BASEURL ?>/home" class="flex items-center gap-2 text-decoration-none group">
                 <span class="material-symbols-outlined text-primary text-3xl transition-transform group-hover:scale-105">edit_square</span>
-                <span class="font-title-md text-2xl text-on-surface tracking-tight font-bold">EmeraldInk</span>
+                <span class="font-title-md text-2xl text-on-surface tracking-tight font-bold">Blogggle</span>
             </a>
         </div>
 
@@ -112,7 +112,7 @@ tailwind.config = {
                             id="email" 
                             name="email" 
                             value="<?= htmlspecialchars($data['email'] ?? '') ?>" 
-                            placeholder="you@emeraldink.com" 
+                            placeholder="you@blogggle.com" 
                             required 
                             class="w-full pl-11 pr-4 py-2.5 bg-surface-container-lowest border border-outline-variant/40 rounded-xl font-body-md text-on-surface text-sm placeholder:text-outline/60 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                         >

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title><?= htmlspecialchars($data['title'] ?? 'Social Blog') ?></title>
+    <title><?= htmlspecialchars($data['title'] ?? 'Blogggle') ?></title>
     
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
@@ -72,7 +72,7 @@ tailwind.config = {
     <header class="fixed top-0 left-0 right-0 h-16 bg-surface-container-low/95 backdrop-blur-xl border-b border-outline-variant/30 z-50 flex items-center justify-between px-gutter">
         <div class="flex items-center gap-space-sm">
             <span class="material-symbols-outlined text-primary text-3xl">edit_square</span>
-            <span class="font-title-md text-title-md text-on-surface tracking-tight">EmeraldInk</span>
+            <span class="font-title-md text-title-md text-on-surface tracking-tight">Blogggle</span>
         </div>
         <div class="flex items-center gap-gutter">
             <?php if (isset($_SESSION['user_id'])): ?>
@@ -80,6 +80,13 @@ tailwind.config = {
                     <span class="material-symbols-outlined text-base">edit</span><span>Write</span>
                 </a>
                 <div class="flex items-center gap-space-sm pl-space-xs border-l border-outline-variant/40">
+                    <a href="<?= BASEURL ?>/profile" class="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-primary font-bold text-xs text-on-primary shrink-0 hover:ring-2 hover:ring-primary transition-all">
+                        <?php if (!empty($_SESSION['profile_picture'])): ?>
+                            <img src="<?= BASEURL ?><?= htmlspecialchars($_SESSION['profile_picture']) ?>" alt="<?= htmlspecialchars($_SESSION['username']) ?>" class="w-full h-full object-cover rounded-full">
+                        <?php else: ?>
+                            <?= strtoupper(substr($_SESSION['username'], 0, 1)) ?>
+                        <?php endif; ?>
+                    </a>
                     <a href="<?= BASEURL ?>/auth/logout" class="text-error hover:text-error-container text-sm font-medium">Logout</a>
                 </div>
             <?php else: ?>
@@ -91,17 +98,29 @@ tailwind.config = {
     <!-- Left Sidebar -->
     <aside class="fixed left-0 top-16 bottom-0 w-60 bg-surface-container-low border-r border-outline-variant/30 z-40 hidden md:flex flex-col justify-between p-gutter">
         <div class="flex flex-col gap-space-lg">
+            <?php
+            $currentUrl = isset($_GET['url']) ? rtrim($_GET['url'], '/') : '';
+            if (empty($currentUrl) && isset($_SERVER['REQUEST_URI'])) {
+                $currentUrl = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '', '/');
+            }
+            $currentUrl = $currentUrl ?: 'home';
+            $urlParts = explode('/', $currentUrl);
+            $activePage = strtolower($urlParts[0] ?? 'home');
+
+            $activeNav = "flex items-center gap-space-md px-space-md py-space-sm transition-colors bg-surface-container text-primary font-title-md rounded-xl border border-outline-variant/40";
+            $inactiveNav = "flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-title-md border border-transparent";
+            ?>
             <nav class="flex flex-col gap-space-xs">
-                <a aria-current="page" class="flex items-center gap-space-md px-space-md py-space-sm transition-colors bg-surface-container text-primary font-title-md rounded-xl border border-outline-variant/40" href="<?= BASEURL ?>/home">
+                <a class="<?= ($activePage === 'home' || $activePage === '') ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/home">
                     <span class="material-symbols-outlined text-xl">home</span><span>Home</span>
                 </a>
-                <a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-title-md" href="#">
+                <a class="<?= ($activePage === 'explore') ? $activeNav : $inactiveNav ?>" href="#">
                     <span class="material-symbols-outlined text-xl">explore</span><span>Explore</span>
                 </a>
-                <a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-title-md" href="#">
+                <a class="<?= ($activePage === 'bookmarks') ? $activeNav : $inactiveNav ?>" href="#">
                     <span class="material-symbols-outlined text-xl">bookmark</span><span>Bookmarks</span>
                 </a>
-                <a class="flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-title-md" href="<?= BASEURL ?>/profile">
+                <a class="<?= ($activePage === 'profile') ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/profile">
                     <span class="material-symbols-outlined text-xl">account_circle</span><span>Profile</span>
                 </a>
             </nav>
@@ -114,8 +133,12 @@ tailwind.config = {
         
         <?php if (isset($_SESSION['user_id'])): ?>
         <a href="<?= BASEURL ?>/profile" class="flex items-center gap-space-sm p-space-sm rounded-xl bg-surface-container border border-outline-variant/20 hover:border-primary/40 transition-colors">
-            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center font-bold text-on-primary">
-                <?= strtoupper(substr($_SESSION['username'], 0, 1)) ?>
+            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center font-bold text-on-primary overflow-hidden shrink-0">
+                <?php if (!empty($_SESSION['profile_picture'])): ?>
+                    <img src="<?= BASEURL ?><?= htmlspecialchars($_SESSION['profile_picture']) ?>" alt="<?= htmlspecialchars($_SESSION['username']) ?>" class="w-full h-full object-cover rounded-full">
+                <?php else: ?>
+                    <?= strtoupper(substr($_SESSION['username'], 0, 1)) ?>
+                <?php endif; ?>
             </div>
             <div class="flex flex-col min-w-0 flex-1">
                 <span class="font-label-md text-label-md text-on-surface truncate"><?= htmlspecialchars($_SESSION['username']) ?></span>

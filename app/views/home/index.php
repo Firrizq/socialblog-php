@@ -21,8 +21,12 @@
     <?php if (isset($_SESSION['user_id'])): ?>
     <section class="bg-surface-container-low rounded-xl p-space-md mb-space-lg shadow-md hover:shadow-xl transition-shadow relative overflow-hidden cursor-text" onclick="openNoteModal()">
         <div class="flex items-start gap-space-md">
-            <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center font-bold text-on-primary shrink-0">
-                <?= strtoupper(substr($_SESSION['username'], 0, 1)) ?>
+            <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center font-bold text-on-primary shrink-0 overflow-hidden">
+                <?php if (!empty($_SESSION['profile_picture'])): ?>
+                    <img src="<?= BASEURL ?><?= htmlspecialchars($_SESSION['profile_picture']) ?>" alt="<?= htmlspecialchars($_SESSION['username']) ?>" class="w-full h-full object-cover rounded-full">
+                <?php else: ?>
+                    <?= strtoupper(substr($_SESSION['username'], 0, 1)) ?>
+                <?php endif; ?>
             </div>
             <div class="flex-1 min-w-0 pt-2">
                 <p class="text-on-surface-variant font-body-md">Share a perspective, insight, or draft snippet...</p>
@@ -41,8 +45,12 @@
                     <!-- Header Meta -->
                     <div class="flex items-center justify-between gap-space-md">
                         <div class="flex items-center gap-space-sm min-w-0">
-                            <a href="<?= BASEURL ?>/profile/user/<?= urlencode($post['username'] ?? '') ?>" class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary shrink-0 hover:ring-2 hover:ring-primary transition-all">
-                                <?= htmlspecialchars(substr($post['username'] ?? 'U', 0, 1)) ?>
+                            <a href="<?= BASEURL ?>/profile/user/<?= urlencode($post['username'] ?? '') ?>" class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary shrink-0 hover:ring-2 hover:ring-primary transition-all overflow-hidden">
+                                <?php if (!empty($post['profile_picture'])): ?>
+                                    <img src="<?= BASEURL ?><?= htmlspecialchars($post['profile_picture']) ?>" alt="<?= htmlspecialchars($post['username'] ?? '') ?>" class="w-full h-full object-cover">
+                                <?php else: ?>
+                                    <?= htmlspecialchars(substr($post['username'] ?? 'U', 0, 1)) ?>
+                                <?php endif; ?>
                             </a>
                             <div class="flex flex-col min-w-0">
                                 <div class="flex items-center gap-1 min-w-0">
@@ -113,8 +121,12 @@
             <!-- Modal Header -->
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center font-bold text-on-primary shrink-0 shadow-inner">
-                        <?= strtoupper(substr($_SESSION['username'] ?? 'U', 0, 1)) ?>
+                    <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center font-bold text-on-primary shrink-0 shadow-inner overflow-hidden">
+                        <?php if (!empty($_SESSION['profile_picture'])): ?>
+                            <img src="<?= BASEURL ?><?= htmlspecialchars($_SESSION['profile_picture']) ?>" alt="<?= htmlspecialchars($_SESSION['username'] ?? '') ?>" class="w-full h-full object-cover rounded-full">
+                        <?php else: ?>
+                            <?= strtoupper(substr($_SESSION['username'] ?? 'U', 0, 1)) ?>
+                        <?php endif; ?>
                     </div>
                     <span class="font-bold text-on-surface text-base">
                         <?= htmlspecialchars($_SESSION['username'] ?? 'User') ?>

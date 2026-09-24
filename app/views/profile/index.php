@@ -36,7 +36,7 @@ $user = $data['profile_user'] ?? null;
         <!-- 1. Full-width Banner Image Area -->
         <div class="w-full h-48 sm:h-52 bg-surface-container-high relative overflow-hidden">
             <?php if (!empty($user['banner_picture'])): ?>
-                <img src="<?= htmlspecialchars($user['banner_picture']) ?>" alt="Banner" class="w-full h-full object-cover">
+                <img src="<?= BASEURL ?><?= htmlspecialchars($user['banner_picture']) ?>" alt="Banner" class="w-full h-full object-cover">
             <?php else: ?>
                 <!-- Default stylish Obsidian Emerald gradient banner -->
                 <div class="w-full h-full bg-gradient-to-r from-surface-container-lowest via-surface-container-high to-surface-container relative">
@@ -51,7 +51,7 @@ $user = $data['profile_user'] ?? null;
                 <!-- Overlapping Avatar with thick border matching background -->
                 <div class="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-surface bg-surface-container-high overflow-hidden shrink-0 shadow-xl flex items-center justify-center">
                     <?php if (!empty($user['profile_picture'])): ?>
-                        <img src="<?= htmlspecialchars($user['profile_picture']) ?>" alt="<?= htmlspecialchars($user['username']) ?>" class="w-full h-full object-cover">
+                        <img src="<?= BASEURL ?><?= htmlspecialchars($user['profile_picture']) ?>" alt="<?= htmlspecialchars($user['username']) ?>" class="w-full h-full object-cover">
                     <?php else: ?>
                         <div class="w-full h-full bg-primary flex items-center justify-center font-bold text-4xl sm:text-5xl text-on-primary select-none">
                             <?= strtoupper(substr($user['username'] ?? 'U', 0, 1)) ?>
@@ -62,9 +62,7 @@ $user = $data['profile_user'] ?? null;
                 <!-- Action Button: Edit Profile vs Follow -->
                 <div class="pb-1">
                     <?php if (isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)$user['id']): ?>
-                        <button class="px-5 py-1.5 rounded-full border border-outline-variant font-title-md text-sm font-semibold text-on-surface hover:bg-surface-container hover:border-primary transition-all">
-                            Edit profile
-                        </button>
+                        <a href="<?= BASEURL ?>/profile/edit" class="px-5 py-1.5 rounded-full border border-outline-variant font-title-md text-sm font-semibold text-on-surface hover:bg-surface-container hover:border-primary transition-all">Edit profile</a>
                     <?php else: ?>
                         <?php $isFollowing = !empty($data['is_following']); ?>
                         <button class="btn-follow <?= $isFollowing ? 'px-5 py-1.5 rounded-full border border-outline-variant font-title-md text-sm font-semibold text-on-surface hover:border-error hover:text-error hover:bg-error-container/20 transition-all' : 'px-6 py-1.5 rounded-full bg-primary-container text-on-primary-container hover:bg-primary font-title-md text-sm font-semibold transition-all shadow-[0_0_0_1px_rgba(16,185,129,0.3)] active:scale-95' ?>" data-id="<?= (int)$user['id'] ?>">
@@ -91,7 +89,7 @@ $user = $data['profile_user'] ?? null;
                 </p>
             <?php else: ?>
                 <p class="font-body-md text-sm text-on-surface-variant/70 italic mt-3">
-                    No bio yet.
+                    Writer and community contributor on Blogggle.
                 </p>
             <?php endif; ?>
 
@@ -161,7 +159,7 @@ $user = $data['profile_user'] ?? null;
                             <div class="flex items-center gap-3 min-w-0">
                                 <div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary shrink-0 overflow-hidden">
                                     <?php if (!empty($user['profile_picture'])): ?>
-                                        <img src="<?= htmlspecialchars($user['profile_picture']) ?>" alt="<?= htmlspecialchars($post['username'] ?? '') ?>" class="w-full h-full object-cover">
+                                        <img src="<?= BASEURL ?><?= htmlspecialchars($user['profile_picture']) ?>" alt="<?= htmlspecialchars($post['username'] ?? '') ?>" class="w-full h-full object-cover">
                                     <?php else: ?>
                                         <?= htmlspecialchars(substr($post['username'] ?? 'U', 0, 1)) ?>
                                     <?php endif; ?>

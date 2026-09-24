@@ -30,6 +30,7 @@ class Post_model
                     posts.content,
                     posts.created_at,
                     users.username,
+                    users.profile_picture,
                     users.email
                   FROM {$this->table}
                   INNER JOIN users ON posts.user_id = users.id
@@ -73,6 +74,7 @@ class Post_model
                     posts.content,
                     posts.created_at,
                     users.username,
+                    users.profile_picture,
                     users.email
                   FROM {$this->table}
                   INNER JOIN users ON posts.user_id = users.id

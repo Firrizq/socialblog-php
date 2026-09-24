@@ -5,7 +5,7 @@
                 <div class="flex flex-col gap-space-lg">
                     <div class="relative flex items-center">
                         <span class="material-symbols-outlined absolute left-space-md text-outline text-lg">search</span>
-                        <input class="w-full pl-10 pr-space-md py-space-xs bg-surface-container-lowest border border-outline-variant/40 rounded-full font-body-md text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container" placeholder="Search EmeraldInk..." type="text"/>
+                        <input class="w-full pl-10 pr-space-md py-space-xs bg-surface-container-lowest border border-outline-variant/40 rounded-full font-body-md text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container" placeholder="Search Blogggle..." type="text"/>
                     </div>
                     
                     <div class="flex flex-col gap-space-md">

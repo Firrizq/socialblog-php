@@ -36,7 +36,7 @@ $comments = $data['comments'] ?? [];
                 <div class="flex items-center gap-3 min-w-0">
                     <a href="<?= BASEURL ?>/profile/user/<?= urlencode($post['username'] ?? '') ?>" class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary text-lg shrink-0 overflow-hidden hover:ring-2 hover:ring-primary transition-all">
                         <?php if (!empty($post['profile_picture'])): ?>
-                            <img src="<?= htmlspecialchars($post['profile_picture']) ?>" alt="<?= htmlspecialchars($post['username'] ?? '') ?>" class="w-full h-full object-cover">
+                            <img src="<?= BASEURL ?><?= htmlspecialchars($post['profile_picture']) ?>" alt="<?= htmlspecialchars($post['username'] ?? '') ?>" class="w-full h-full object-cover">
                         <?php else: ?>
                             <?= strtoupper(substr($post['username'] ?? 'U', 0, 1)) ?>
                         <?php endif; ?>
@@ -166,7 +166,7 @@ $comments = $data['comments'] ?? [];
                             <!-- Avatar -->
                             <a href="<?= BASEURL ?>/profile/user/<?= urlencode($comment['username'] ?? '') ?>" class="<?= $avatarSize ?> rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary shrink-0 overflow-hidden hover:ring-2 hover:ring-primary transition-all">
                                 <?php if (!empty($comment['profile_picture'])): ?>
-                                    <img src="<?= htmlspecialchars($comment['profile_picture']) ?>" alt="<?= htmlspecialchars($comment['username'] ?? '') ?>" class="w-full h-full object-cover">
+                                    <img src="<?= BASEURL ?><?= htmlspecialchars($comment['profile_picture']) ?>" alt="<?= htmlspecialchars($comment['username'] ?? '') ?>" class="w-full h-full object-cover">
                                 <?php else: ?>
                                     <?= strtoupper(substr($comment['username'] ?? 'U', 0, 1)) ?>
                                 <?php endif; ?>

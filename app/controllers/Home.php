@@ -28,7 +28,7 @@ class Home extends Controller
         }
 
         $data = [
-            'title' => 'Timeline Feed - Social Blog',
+            'title' => 'Timeline Feed - Blogggle',
             'posts' => $posts,
             'liked_posts' => $likedPosts,
             'bookmarked_posts' => $bookmarkedPosts

@@ -100,4 +100,64 @@ class User
 
         return $row ?: false;
     }
+
+    /**
+     * Update user profile information
+     *
+     * @param int $userId
+     * @param array $data
+     * @return bool
+     */
+    public function updateProfile(int $userId, array $data): bool
+    {
+        $fields = [
+            'bio = :bio',
+            'location = :location',
+            'profile_link = :profile_link',
+            'tipping_link = :tipping_link'
+        ];
+
+        if (array_key_exists('profile_picture', $data) && $data['profile_picture'] !== null) {
+            $fields[] = 'profile_picture = :profile_picture';
+        }
+
+        if (array_key_exists('banner_picture', $data) && $data['banner_picture'] !== null) {
+            $fields[] = 'banner_picture = :banner_picture';
+        }
+
+        $sql = "UPDATE {$this->table} SET " . implode(', ', $fields) . " WHERE id = :user_id";
+        $this->db->query($sql);
+
+        $this->db->bind(':bio', $data['bio'] ?? null);
+        $this->db->bind(':location', $data['location'] ?? null);
+        $this->db->bind(':profile_link', $data['profile_link'] ?? null);
+        $this->db->bind(':tipping_link', $data['tipping_link'] ?? null);
+        $this->db->bind(':user_id', $userId);
+
+        if (array_key_exists('profile_picture', $data) && $data['profile_picture'] !== null) {
+            $this->db->bind(':profile_picture', $data['profile_picture']);
+        }
+
+        if (array_key_exists('banner_picture', $data) && $data['banner_picture'] !== null) {
+            $this->db->bind(':banner_picture', $data['banner_picture']);
+        }
+
+        return $this->db->execute();
+    }
+
+    /**
+     * Remove user profile picture
+     *
+     * @param int $userId
+     * @return bool
+     */
+    public function removeAvatar(int $userId): bool
+    {
+        $this->db->query("UPDATE {$this->table} SET profile_picture = NULL WHERE id = :user_id");
+        $this->db->bind(':user_id', $userId);
+
+        return $this->db->execute();
+    }
 }
+
+

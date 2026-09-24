@@ -48,7 +48,7 @@ class Post extends Controller
             $content = strip_tags($rawContent, $allowedTags);
 
             $data = [
-                'title' => 'Create New Post - EmeraldInk',
+                'title' => 'Create New Post - Blogggle',
                 'post_title' => $title,
                 'content' => $content,
                 'error' => ''
@@ -80,7 +80,7 @@ class Post extends Controller
 
         // GET request: show creation view
         $data = [
-            'title' => 'Create New Post - EmeraldInk',
+            'title' => 'Create New Post - Blogggle',
             'post_title' => '',
             'content' => '',
             'error' => ''
@@ -140,7 +140,7 @@ class Post extends Controller
         if (!$post) {
             http_response_code(404);
             $data = [
-                'title' => 'Post Not Found - EmeraldInk',
+                'title' => 'Post Not Found - Blogggle',
                 'post' => null,
                 'comments' => []
             ];
@@ -159,7 +159,7 @@ class Post extends Controller
         }
 
         $data = [
-            'title' => ($post['title'] ?? 'Story') . ' - EmeraldInk',
+            'title' => ($post['title'] ?? 'Story') . ' - Blogggle',
             'post' => $post,
             'comments' => $comments,
             'is_liked' => $isLiked,
@@ -233,7 +233,7 @@ class Post extends Controller
         if (!$comment) {
             http_response_code(404);
             $data = [
-                'title' => 'Thread Not Found - EmeraldInk',
+                'title' => 'Thread Not Found - Blogggle',
                 'comment' => null,
                 'post' => null,
                 'parent_comment' => null,
@@ -256,7 +256,7 @@ class Post extends Controller
         }
 
         $data = [
-            'title' => 'Thread by @' . htmlspecialchars($comment['username']) . ' - EmeraldInk',
+            'title' => 'Thread by @' . htmlspecialchars($comment['username']) . ' - Blogggle',
             'comment' => $comment,
             'post' => $post,
             'parent_comment' => $parentComment,

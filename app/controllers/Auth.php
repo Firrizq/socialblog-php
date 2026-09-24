@@ -28,7 +28,7 @@ class Auth extends Controller
         }
 
         $data = [
-            'title' => 'Login - Social Blog',
+            'title' => 'Sign In - Blogggle',
             'error' => '',
             'success' => $_SESSION['flash_success'] ?? '',
             'email' => ''
@@ -58,7 +58,7 @@ class Auth extends Controller
             $confirmPassword = $_POST['confirm_password'] ?? '';
 
             $data = [
-                'title' => 'Register - Social Blog',
+                'title' => 'Register - Blogggle',
                 'username' => $username,
                 'email' => $email,
                 'error' => ''
@@ -122,7 +122,7 @@ class Auth extends Controller
 
         // GET Request: Render form
         $data = [
-            'title' => 'Register - Social Blog',
+            'title' => 'Register - Blogggle',
             'username' => '',
             'email' => '',
             'error' => ''
@@ -167,6 +167,7 @@ class Auth extends Controller
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['email'] = $user['email'];
+                $_SESSION['profile_picture'] = $user['profile_picture'] ?? null;
 
                 header('Location: ' . BASEURL . '/home');
                 exit;
