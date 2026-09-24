@@ -115,6 +115,13 @@ $countNodes($comments);
                     <button class="hover:text-primary transition-colors" title="Share" onclick="navigator.clipboard.writeText(window.location.href); alert('Link copied to clipboard!');">
                         <span class="material-symbols-outlined text-xl">share</span>
                     </button>
+                    <?php if(isset($_SESSION['user_id']) && $_SESSION['user_id'] == $post['user_id']): ?>
+                      <form action="<?= BASEURL ?>/post/delete/<?= $post['id'] ?>" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this story? This action cannot be undone.');">
+                        <button type="submit" class="hover:text-error transition-colors flex items-center justify-center p-1 rounded-full hover:bg-error-container/20" title="Delete Story">
+                          <span class="material-symbols-outlined text-xl">delete</span>
+                        </button>
+                      </form>
+                    <?php endif; ?>
                 </div>
             </div>
         </article>

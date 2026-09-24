@@ -265,4 +265,40 @@ class Post extends Controller
 
         $this->view('post/comment_detail', $data);
     }
+
+    /**
+     * Delete a story owned by the authenticated user
+     * POST /post/delete/{id}
+     *
+     * @param string|int $id
+     */
+    public function delete(string|int $id = 0): void
+    {
+        // Enforce authentication
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: ' . BASEURL . '/auth');
+            exit;
+        }
+
+        // Enforce POST method
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            header('Location: ' . BASEURL . '/home');
+            exit;
+        }
+
+        $this->postModel->deletePost((int)$id, (int)$_SESSION['user_id']);
+
+        $referer = $_SERVER['HTTP_REFERER'] ?? '';
+        if (!empty($referer)) {
+            // If the user deleted the post from its own detail page, redirect to /profile to avoid 404
+            if (str_contains($referer, '/post/detail/' . (int)$id)) {
+                header('Location: ' . BASEURL . '/profile');
+            } else {
+                header('Location: ' . $referer);
+            }
+        } else {
+            header('Location: ' . BASEURL . '/profile');
+        }
+        exit;
+    }
 }

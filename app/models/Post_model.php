@@ -178,6 +178,22 @@ class Post_model
         $this->db->bind(':keyword', "%{$keyword}%");
         return $this->db->resultSet();
     }
+
+    /**
+     * Delete post owned by a specific user
+     *
+     * @param int $postId
+     * @param int $userId
+     * @return bool
+     */
+    public function deletePost(int $postId, int $userId): bool
+    {
+        $query = "DELETE FROM {$this->table} WHERE id = :id AND user_id = :user_id";
+        $this->db->query($query);
+        $this->db->bind(':id', $postId);
+        $this->db->bind(':user_id', $userId);
+        return $this->db->execute();
+    }
 }
 
 
