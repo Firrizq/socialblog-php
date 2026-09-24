@@ -24,14 +24,10 @@ class Post_model
     public function getFeedPosts(): array
     {
         $query = "SELECT 
-                    posts.id,
-                    posts.user_id,
-                    posts.title,
-                    posts.content,
-                    posts.created_at,
+                    posts.*,
                     users.username,
-                    users.profile_picture,
-                    users.email
+                    users.email,
+                    users.profile_picture
                   FROM {$this->table}
                   INNER JOIN users ON posts.user_id = users.id
                   ORDER BY posts.created_at DESC";
@@ -68,14 +64,10 @@ class Post_model
     public function getPostsByUser(int $user_id): array
     {
         $query = "SELECT 
-                    posts.id,
-                    posts.user_id,
-                    posts.title,
-                    posts.content,
-                    posts.created_at,
+                    posts.*,
                     users.username,
-                    users.profile_picture,
-                    users.email
+                    users.email,
+                    users.profile_picture
                   FROM {$this->table}
                   INNER JOIN users ON posts.user_id = users.id
                   WHERE posts.user_id = :user_id
