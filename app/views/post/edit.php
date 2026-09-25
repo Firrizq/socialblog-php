@@ -241,16 +241,45 @@
 <!-- Initialize Quill.js & Form Sync -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Toolbar configuration array
-    const toolbarOptions = [
-        ['undo', 'redo'],
-        [{ 'header': [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        ['blockquote', 'code-block'],
-        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-        ['link', 'image', 'video'],
-        ['clean']
-    ];
+    const BASE_URL = '<?= BASEURL ?>';
+
+    async function uploadImageToServer(file) {
+        if (!file || !file.type.startsWith('image/')) return;
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const res = await fetch(`${BASE_URL}/upload/image`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (data.success && data.url) {
+                const range = quill.getSelection(true);
+                quill.insertEmbed(range.index, 'image', BASE_URL + data.url);
+                quill.setSelection(range.index + 1);
+            } else {
+                alert(data.message || 'Image upload failed');
+            }
+        } catch (err) {
+            console.error('Image upload error:', err);
+            alert('Failed to upload image. Please try again.');
+        }
+    }
+
+    function imageHandler() {
+        const input = document.createElement('input');
+        input.setAttribute('type', 'file');
+        input.setAttribute('accept', 'image/*');
+        input.click();
+
+        input.onchange = async () => {
+            const file = input.files[0];
+            if (file) {
+                await uploadImageToServer(file);
+            }
+        };
+    }
 
     // Initialize Quill with custom sticky toolbar container
     const quill = new Quill('#editor', {
@@ -260,6 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
             toolbar: {
                 container: '#custom-toolbar',
                 handlers: {
+                    image: imageHandler,
                     undo: function() {
                         this.quill.history.undo();
                     },
@@ -272,6 +302,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 delay: 1000,
                 maxStack: 100,
                 userOnly: true
+            }
+        }
+    });
+
+    // Paste event listener for inline clipboard images
+    quill.root.addEventListener('paste', function(e) {
+        const clipboardData = e.clipboardData || window.clipboardData;
+        if (clipboardData && clipboardData.items) {
+            for (let i = 0; i < clipboardData.items.length; i++) {
+                if (clipboardData.items[i].type.indexOf('image') !== -1) {
+                    e.preventDefault();
+                    const file = clipboardData.items[i].getAsFile();
+                    uploadImageToServer(file);
+                    break;
+                }
             }
         }
     });

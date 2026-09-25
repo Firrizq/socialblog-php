@@ -44,18 +44,102 @@
             <?php endif; ?>
         </div>
 
-        <!-- Textarea with Cleaned Linebreaks -->
+        <!-- Textarea with Cleaned Linebreaks & Image Attachment Container -->
         <div class="w-full">
-            <textarea name="content" rows="6" class="w-full bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-4 font-body-md text-on-surface text-lg focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all resize-y placeholder:text-outline-variant leading-relaxed" placeholder="What's on your mind?" required><?= htmlspecialchars(strip_tags(str_replace(['<br>', '<br/>', '<br />'], "\n", $data['post']['content'] ?? ''))) ?></textarea>
+            <textarea name="content" id="noteEditTextarea" rows="6" class="w-full bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-4 font-body-md text-on-surface text-lg focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all resize-y placeholder:text-outline-variant leading-relaxed" placeholder="What's on your mind?" required><?= htmlspecialchars(strip_tags(str_replace(['<br>', '<br/>', '<br />'], "\n", $data['post']['content'] ?? ''))) ?></textarea>
+            
+            <input type="file" id="noteImageInput" accept="image/*" class="hidden">
+            <div id="noteImagePreviewContainer" class="<?= !empty($data['post']['cover_image']) ? '' : 'hidden' ?> relative mt-3 w-fit">
+              <img id="noteImagePreview" src="<?= !empty($data['post']['cover_image']) ? BASEURL . htmlspecialchars($data['post']['cover_image']) : '' ?>" class="rounded-xl border border-outline-variant/30 max-h-64 object-cover" alt="Cover preview">
+              <button type="button" onclick="removeNoteImage()" class="absolute top-2 right-2 w-7 h-7 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-error transition-colors"><span class="material-symbols-outlined text-sm">close</span></button>
+              <input type="hidden" name="cover_image" id="noteCoverImageInput" value="<?= htmlspecialchars($data['post']['cover_image'] ?? '') ?>">
+            </div>
         </div>
 
         <!-- Footer Section -->
-        <div class="border-t border-outline-variant/30 pt-4 flex items-center justify-end gap-3">
-            <a href="<?= ($data['post']['status'] ?? '') === 'draft' ? BASEURL . '/profile' : BASEURL . '/home' ?>" class="text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors px-3 py-2 rounded-lg hover:bg-surface-container">Cancel</a>
-            <button type="submit" name="action" value="draft" class="text-sm font-medium text-primary hover:text-primary-fixed transition-colors px-4 py-2 rounded-lg hover:bg-surface-container border border-primary/30 active:scale-95">Save Draft</button>
-            <button type="submit" name="action" value="publish" class="bg-primary-container text-on-primary-container hover:bg-primary rounded-full px-6 py-2 font-bold shadow-md transition-all active:scale-95 text-sm">Update</button>
+        <div class="border-t border-outline-variant/30 pt-4 flex items-center justify-between">
+            <button type="button" onclick="document.getElementById('noteImageInput').click()" class="flex items-center gap-1.5 text-on-surface-variant hover:text-primary transition-colors text-sm px-2.5 py-1.5 rounded-lg hover:bg-surface-container" title="Add Image">
+                <span class="material-symbols-outlined text-xl">image</span>
+                <span>Attach Image</span>
+            </button>
+            <div class="flex items-center gap-3">
+                <a href="<?= ($data['post']['status'] ?? '') === 'draft' ? BASEURL . '/profile' : BASEURL . '/home' ?>" class="text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors px-3 py-2 rounded-lg hover:bg-surface-container">Cancel</a>
+                <button type="submit" name="action" value="draft" class="text-sm font-medium text-primary hover:text-primary-fixed transition-colors px-4 py-2 rounded-lg hover:bg-surface-container border border-primary/30 active:scale-95">Save Draft</button>
+                <button type="submit" name="action" value="publish" class="bg-primary-container text-on-primary-container hover:bg-primary rounded-full px-6 py-2 font-bold shadow-md transition-all active:scale-95 text-sm">Update</button>
+            </div>
         </div>
     </form>
 </div>
+
+<script>
+const BASE_URL = '<?= BASEURL ?>';
+
+async function uploadNoteImage(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+        const res = await fetch(`${BASE_URL}/upload/image`, {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        if (data.success && data.url) {
+            const preview = document.getElementById('noteImagePreview');
+            const previewContainer = document.getElementById('noteImagePreviewContainer');
+            const hiddenInput = document.getElementById('noteCoverImageInput');
+            if (preview && previewContainer && hiddenInput) {
+                preview.src = BASE_URL + data.url;
+                hiddenInput.value = data.url;
+                previewContainer.classList.remove('hidden');
+            }
+        } else {
+            alert(data.message || 'Image upload failed');
+        }
+    } catch (err) {
+        console.error('Note image upload error:', err);
+        alert('Failed to upload image. Please try again.');
+    }
+}
+
+function removeNoteImage() {
+    const preview = document.getElementById('noteImagePreview');
+    const previewContainer = document.getElementById('noteImagePreviewContainer');
+    const hiddenInput = document.getElementById('noteCoverImageInput');
+    const fileInput = document.getElementById('noteImageInput');
+
+    if (preview) preview.src = '';
+    if (hiddenInput) hiddenInput.value = '';
+    if (fileInput) fileInput.value = '';
+    if (previewContainer) previewContainer.classList.add('hidden');
+}
+
+const noteImageInput = document.getElementById('noteImageInput');
+if (noteImageInput) {
+    noteImageInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            uploadNoteImage(this.files[0]);
+        }
+    });
+}
+
+const noteTextarea = document.getElementById('noteEditTextarea');
+if (noteTextarea) {
+    noteTextarea.addEventListener('paste', function(e) {
+        const clipboardData = e.clipboardData || window.clipboardData;
+        if (clipboardData && clipboardData.items) {
+            for (let i = 0; i < clipboardData.items.length; i++) {
+                if (clipboardData.items[i].type.indexOf('image') !== -1) {
+                    e.preventDefault();
+                    const file = clipboardData.items[i].getAsFile();
+                    uploadNoteImage(file);
+                    break;
+                }
+            }
+        }
+    });
+}
+</script>
 
 <?php require_once __DIR__ . '/../templates/footer.php'; ?>

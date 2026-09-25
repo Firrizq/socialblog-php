@@ -89,6 +89,12 @@
                             </a>
                         <?php endif; ?>
                         
+                        <?php if(!empty($post['cover_image'])): ?>
+                          <div class="mt-2 mb-3">
+                            <img src="<?= BASEURL ?><?= htmlspecialchars($post['cover_image']) ?>" class="w-full rounded-xl border border-outline-variant/30 object-cover max-h-[400px]" alt="Attachment">
+                          </div>
+                        <?php endif; ?>
+
                         <div class="font-body-md text-on-surface-variant leading-relaxed text-sm sm:text-base line-clamp-3">
                             <?= preg_replace('/(^|>|\s)#([a-zA-Z_][a-zA-Z0-9_]*)/', '$1<a href="' . BASEURL . '/explore/tag/$2" class="text-primary font-semibold hover:underline relative z-10" onclick="event.stopPropagation();">#$2</a>', strip_tags((string)($post['content'] ?? ''))) ?>
                         </div>
@@ -168,13 +174,19 @@
                     required 
                     class="bg-transparent border-none outline-none focus:ring-0 text-on-surface text-lg placeholder:text-outline-variant resize-none w-full p-0 leading-relaxed"
                 ></textarea>
+                <input type="file" id="noteImageInput" accept="image/*" class="hidden">
+                <div id="noteImagePreviewContainer" class="hidden relative mt-3 w-fit">
+                  <img id="noteImagePreview" src="" class="rounded-xl border border-outline-variant/30 max-h-64 object-cover">
+                  <button type="button" onclick="removeNoteImage()" class="absolute top-2 right-2 w-7 h-7 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-error transition-colors"><span class="material-symbols-outlined text-sm">close</span></button>
+                  <input type="hidden" name="cover_image" id="noteCoverImageInput" value="">
+                </div>
             </div>
 
             <!-- Modal Footer -->
             <div class="flex items-center justify-between pt-2 border-t border-outline-variant/20">
                 <!-- Left side: Dummy Material Icons -->
                 <div class="flex items-center gap-1.5 sm:gap-2 text-outline">
-                    <button type="button" class="p-1 rounded-full hover:bg-surface-container hover:text-primary transition-colors" title="Add Image">
+                    <button type="button" onclick="document.getElementById('noteImageInput').click()" class="p-1 rounded-full hover:bg-surface-container hover:text-primary transition-colors" title="Add Image">
                         <span class="material-symbols-outlined text-xl">image</span>
                     </button>
                     <button type="button" class="p-1 rounded-full hover:bg-surface-container hover:text-primary transition-colors" title="Add Video">
@@ -226,6 +238,75 @@ document.addEventListener('keydown', function(e) {
         closeNoteModal();
     }
 });
+
+const BASE_URL = '<?= BASEURL ?>';
+
+async function uploadNoteImage(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+        const res = await fetch(`${BASE_URL}/upload/image`, {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        if (data.success && data.url) {
+            const preview = document.getElementById('noteImagePreview');
+            const previewContainer = document.getElementById('noteImagePreviewContainer');
+            const hiddenInput = document.getElementById('noteCoverImageInput');
+            if (preview && previewContainer && hiddenInput) {
+                preview.src = BASE_URL + data.url;
+                hiddenInput.value = data.url;
+                previewContainer.classList.remove('hidden');
+            }
+        } else {
+            alert(data.message || 'Image upload failed');
+        }
+    } catch (err) {
+        console.error('Note image upload error:', err);
+        alert('Failed to upload image. Please try again.');
+    }
+}
+
+function removeNoteImage() {
+    const preview = document.getElementById('noteImagePreview');
+    const previewContainer = document.getElementById('noteImagePreviewContainer');
+    const hiddenInput = document.getElementById('noteCoverImageInput');
+    const fileInput = document.getElementById('noteImageInput');
+
+    if (preview) preview.src = '';
+    if (hiddenInput) hiddenInput.value = '';
+    if (fileInput) fileInput.value = '';
+    if (previewContainer) previewContainer.classList.add('hidden');
+}
+
+const noteImageInput = document.getElementById('noteImageInput');
+if (noteImageInput) {
+    noteImageInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            uploadNoteImage(this.files[0]);
+        }
+    });
+}
+
+const noteTextarea = document.getElementById('noteModalTextarea');
+if (noteTextarea) {
+    noteTextarea.addEventListener('paste', function(e) {
+        const clipboardData = e.clipboardData || window.clipboardData;
+        if (clipboardData && clipboardData.items) {
+            for (let i = 0; i < clipboardData.items.length; i++) {
+                if (clipboardData.items[i].type.indexOf('image') !== -1) {
+                    e.preventDefault();
+                    const file = clipboardData.items[i].getAsFile();
+                    uploadNoteImage(file);
+                    break;
+                }
+            }
+        }
+    });
+}
 </script>
 
 <style>

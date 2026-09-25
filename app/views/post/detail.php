@@ -94,6 +94,12 @@ $countNodes($comments);
             </div>
 
             <!-- Post Rich Content (Quill Rendered) -->
+            <?php if(!empty($post['cover_image'])): ?>
+              <div class="mt-2 mb-3">
+                <img src="<?= BASEURL ?><?= htmlspecialchars($post['cover_image']) ?>" class="w-full rounded-xl border border-outline-variant/30 object-cover max-h-[400px]" alt="Attachment">
+              </div>
+            <?php endif; ?>
+
             <div class="font-body-md text-on-surface leading-relaxed quill-content text-base sm:text-lg py-2">
                 <?= preg_replace('/(^|>|\s)#([a-zA-Z_][a-zA-Z0-9_]*)/', '$1<a href="' . BASEURL . '/explore/tag/$2" class="text-primary font-semibold hover:underline">#$2</a>', $post['content'] ?? '') ?>
             </div>

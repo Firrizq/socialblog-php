@@ -46,13 +46,15 @@ class Post_model
     public function createPost(array $data): int|false
     {
         $status = $data['status'] ?? 'published';
-        $query = "INSERT INTO {$this->table} (user_id, title, content, status) 
-                  VALUES (:user_id, :title, :content, :status)";
+        $coverImage = $data['cover_image'] ?? null;
+        $query = "INSERT INTO {$this->table} (user_id, title, content, cover_image, status) 
+                  VALUES (:user_id, :title, :content, :cover_image, :status)";
 
         $this->db->query($query);
         $this->db->bind(':user_id', $data['user_id']);
         $this->db->bind(':title', $data['title']);
         $this->db->bind(':content', $data['content']);
+        $this->db->bind(':cover_image', $coverImage);
         $this->db->bind(':status', $status);
 
         if ($this->db->execute()) {
@@ -233,10 +235,12 @@ class Post_model
      */
     public function updatePost(int $postId, int $userId, array $data): bool
     {
-        $query = "UPDATE {$this->table} SET title = :title, content = :content, status = :status WHERE id = :id AND user_id = :user_id";
+        $coverImage = $data['cover_image'] ?? null;
+        $query = "UPDATE {$this->table} SET title = :title, content = :content, cover_image = :cover_image, status = :status WHERE id = :id AND user_id = :user_id";
         $this->db->query($query);
         $this->db->bind(':title', $data['title']);
         $this->db->bind(':content', $data['content']);
+        $this->db->bind(':cover_image', $coverImage);
         $this->db->bind(':status', $data['status']);
         $this->db->bind(':id', $postId);
         $this->db->bind(':user_id', $userId);

@@ -46,7 +46,7 @@ class Post extends Controller
             $rawContent = trim($_POST['content'] ?? '');
 
             // Allow safe rich-text HTML tags from Quill while stripping dangerous tags (scripts, iframes, etc.)
-            $allowedTags = '<p><br><strong><b><em><i><u><s><h1><h2><h3><h4><h5><h6><blockquote><pre><code><ol><ul><li><a><span>';
+            $allowedTags = '<p><br><strong><b><em><i><u><s><h1><h2><h3><h4><h5><h6><blockquote><pre><code><ol><ul><li><a><span><img>';
             $content = strip_tags($rawContent, $allowedTags);
 
             $data = [
@@ -121,6 +121,7 @@ class Post extends Controller
 
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             $rawContent = trim($_POST['content'] ?? '');
+            $coverImage = trim($_POST['cover_image'] ?? '');
             $status = ($_POST['action'] ?? 'publish') === 'draft' ? 'draft' : 'published';
 
             if ($isNote) {
@@ -130,13 +131,14 @@ class Post extends Controller
                 $content = nl2br(htmlspecialchars($cleanText, ENT_QUOTES, 'UTF-8'));
             } else {
                 $title = trim($_POST['title'] ?? '');
-                $allowedTags = '<p><br><strong><b><em><i><u><s><h1><h2><h3><h4><h5><h6><blockquote><pre><code><ol><ul><li><a><span>';
+                $allowedTags = '<p><br><strong><b><em><i><u><s><h1><h2><h3><h4><h5><h6><blockquote><pre><code><ol><ul><li><a><span><img>';
                 $content = strip_tags($rawContent, $allowedTags);
             }
 
             $this->postModel->updatePost($id, (int)$_SESSION['user_id'], [
                 'title' => $title,
                 'content' => $content,
+                'cover_image' => $isNote ? ($coverImage ?: null) : ($post['cover_image'] ?? null),
                 'status' => $status
             ]);
 
@@ -174,8 +176,9 @@ class Post extends Controller
 
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             $rawContent = trim($_POST['content'] ?? '');
+            $coverImage = trim($_POST['cover_image'] ?? '');
 
-            if (!empty($rawContent)) {
+            if (!empty($rawContent) || !empty($coverImage)) {
                 // Sanitize plain text and convert line breaks
                 $content = nl2br(htmlspecialchars($rawContent, ENT_QUOTES, 'UTF-8'));
 
@@ -185,6 +188,7 @@ class Post extends Controller
                     'user_id' => (int)$_SESSION['user_id'],
                     'title' => null,
                     'content' => $content,
+                    'cover_image' => $coverImage ?: null,
                     'status' => $status
                 ]);
 
