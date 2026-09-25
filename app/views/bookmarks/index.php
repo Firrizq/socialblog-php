@@ -74,15 +74,22 @@
                             </a>
                         <?php endif; ?>
                         
-                        <?php if(!empty($post['cover_image'])): ?>
-                          <div class="mt-2 mb-3">
-                            <img src="<?= BASEURL ?><?= htmlspecialchars($post['cover_image']) ?>" class="w-full rounded-xl border border-outline-variant/30 object-cover max-h-[400px]" alt="Attachment">
-                          </div>
-                        <?php endif; ?>
-
-                        <div class="font-body-md text-on-surface-variant leading-relaxed text-sm sm:text-base line-clamp-3">
+                        <div class="font-body-md text-on-surface-variant leading-relaxed text-sm sm:text-base line-clamp-3 mb-2">
                             <?= preg_replace('/(^|>|\s)#([a-zA-Z_][a-zA-Z0-9_]*)/', '$1<a href="' . BASEURL . '/explore/tag/$2" class="text-primary font-semibold hover:underline relative z-10" onclick="event.stopPropagation();">#$2</a>', strip_tags((string)($post['content'] ?? ''))) ?>
                         </div>
+                        <?php if(!empty($post['cover_image'])): ?>
+                            <?php 
+                            $decoded = json_decode($post['cover_image'], true);
+                            $imgs = is_array($decoded) ? $decoded : array_filter(explode(',', $post['cover_image']));
+                            $imgs = array_slice($imgs, 0, 4);
+                            $imgCount = count($imgs);
+                            ?>
+                            <div class="mt-1 mb-2 grid <?= $imgCount === 1 ? 'grid-cols-1' : 'grid-cols-2' ?> gap-1 rounded-2xl overflow-hidden border border-outline-variant/30 relative z-0">
+                                <?php foreach($imgs as $idx => $img): ?>
+                                    <img src="<?= BASEURL ?><?= htmlspecialchars(trim($img)) ?>" class="w-full h-full object-cover <?= ($imgCount === 3 && $idx === 0) ? 'row-span-2' : '' ?> <?= $imgCount > 1 ? 'aspect-[4/3] sm:aspect-video' : 'max-h-[500px]' ?>" alt="Attachment" onclick="event.stopPropagation(); window.openLightbox && openLightbox(this.src, '<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>')">
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Actions -->

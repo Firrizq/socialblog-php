@@ -296,16 +296,26 @@
         article img:not(.rounded-full):hover, .quill-content img:hover { opacity: 0.85; }
     </style>
 
-    <!-- Split-Screen Image Lightbox Modal (Twitter/X Style) -->
+    <!-- Split-Screen Image Lightbox Modal (Twitter/X Style Gallery) -->
     <div id="imageLightbox" class="fixed inset-0 z-[100] hidden bg-black/95 backdrop-blur-md flex flex-col md:flex-row opacity-0 transition-opacity duration-300">
         <!-- Close Button -->
         <button type="button" onclick="closeLightbox()" class="absolute top-4 sm:top-6 left-4 sm:left-6 w-10 h-10 bg-white/10 hover:bg-white/25 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-colors z-[110]" title="Close (Esc)">
             <span class="material-symbols-outlined text-xl">close</span>
         </button>
 
-        <!-- Left: Image Area (Full on mobile, dynamic on Desktop) -->
-        <div class="flex-1 flex items-center justify-center p-4 sm:p-8 relative cursor-pointer h-[60vh] md:h-full" onclick="closeLightbox()">
-            <img id="lightboxImage" src="" alt="Expanded Image" class="max-w-full max-h-full object-contain shadow-2xl scale-95 transition-transform duration-300" onclick="event.stopPropagation();">
+        <!-- Left: Image Gallery Area -->
+        <div class="flex-1 flex items-center justify-center p-4 sm:p-12 relative h-[60vh] md:h-full group" onclick="closeLightbox()">
+            <!-- Prev Button -->
+            <button type="button" id="lightboxPrev" onclick="navigateLightbox(-1); event.stopPropagation();" class="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 hover:bg-white/25 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-colors z-[110] hidden" title="Previous (Left Arrow)">
+                <span class="material-symbols-outlined text-2xl">chevron_left</span>
+            </button>
+            
+            <img id="lightboxImage" src="" alt="Expanded Image" class="max-w-full max-h-full object-contain shadow-2xl scale-95 transition-transform duration-300 cursor-default" onclick="event.stopPropagation();">
+            
+            <!-- Next Button -->
+            <button type="button" id="lightboxNext" onclick="navigateLightbox(1); event.stopPropagation();" class="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 hover:bg-white/25 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-colors z-[110] hidden" title="Next (Right Arrow)">
+                <span class="material-symbols-outlined text-2xl">chevron_right</span>
+            </button>
         </div>
 
         <!-- Right: Context/Sidebar Area -->
@@ -316,7 +326,7 @@
         </div>
     </div>
 
-    <!-- Global Dropdown & Lightbox Logic -->
+    <!-- Global Dropdown & Lightbox Gallery Logic -->
     <script>
     function toggleMenu(event, menuId) {
         event.preventDefault();
@@ -334,7 +344,6 @@
         }
     });
 
-    // Ensure inline reply functions work globally
     window.toggleReplyForm = window.toggleReplyForm || function(commentId) {
         const form = document.getElementById('reply-form-' + commentId);
         if (form) {
@@ -351,17 +360,48 @@
         }
     };
 
-    function processSidebarContent(mainContent, src, sidebar) {
+    // Lightbox Gallery State
+    let lightboxImagesArray = [];
+    let lightboxCurrentIndex = 0;
+
+    function updateLightboxGalleryUI() {
+        const img = document.getElementById('lightboxImage');
+        const prevBtn = document.getElementById('lightboxPrev');
+        const nextBtn = document.getElementById('lightboxNext');
+        
+        if (lightboxImagesArray.length > 0) {
+            img.src = lightboxImagesArray[lightboxCurrentIndex];
+        }
+
+        if (lightboxImagesArray.length > 1) {
+            prevBtn.classList.toggle('hidden', lightboxCurrentIndex === 0);
+            nextBtn.classList.toggle('hidden', lightboxCurrentIndex === lightboxImagesArray.length - 1);
+        } else {
+            prevBtn.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+        }
+    }
+
+    window.navigateLightbox = function(direction) {
+        lightboxCurrentIndex += direction;
+        if (lightboxCurrentIndex < 0) lightboxCurrentIndex = 0;
+        if (lightboxCurrentIndex >= lightboxImagesArray.length) lightboxCurrentIndex = lightboxImagesArray.length - 1;
+        updateLightboxGalleryUI();
+    };
+
+    function processSidebarContent(mainContent, sidebar) {
         if (mainContent) {
-            // Remove the sticky top header ("<- Story") to save space
+            // Remove the sticky top header ("<- Story")
             const topBar = mainContent.querySelector('.sticky.top-0');
             if (topBar) topBar.remove();
             
-            // Remove the duplicated image since it's already shown on the left
+            // COMPLETELY remove the image grids and standalone cover images from the sidebar
+            mainContent.querySelectorAll('div.grid').forEach(grid => {
+                if(grid.querySelector('img')) grid.remove();
+            });
             mainContent.querySelectorAll('img').forEach(im => {
-                // Check if it's the same image source
-                if (im.src === src || im.src.includes(src)) {
-                    const wrapper = im.closest('div.mt-2.mb-3') || im.closest('p');
+                if(im.classList.contains('object-cover') && !im.classList.contains('rounded-full')) {
+                    const wrapper = im.closest('div.mt-2.mb-3') || im.closest('div.mt-1.mb-2');
                     if (wrapper) wrapper.remove();
                     else im.remove();
                 }
@@ -373,14 +413,18 @@
         }
     }
 
-    async function openLightbox(src, detailLink) {
+    async function openLightboxGallery(imagesArray, startIndex, detailLink) {
+        lightboxImagesArray = imagesArray;
+        lightboxCurrentIndex = startIndex;
+        
         const lightbox = document.getElementById('imageLightbox');
         const img = document.getElementById('lightboxImage');
         const sidebar = document.getElementById('lightboxSidebarContent');
         const sidebarContainer = document.getElementById('lightboxSidebar');
         
         if (lightbox && img) {
-            img.src = src;
+            updateLightboxGalleryUI();
+            
             lightbox.classList.remove('hidden');
             void lightbox.offsetWidth; // Trigger reflow
             lightbox.classList.remove('opacity-0');
@@ -392,17 +436,17 @@
                 sidebarContainer.classList.remove('hidden');
                 
                 if (detailLink) {
-                    // Instant load if we are already on the Detail Page!
+                    // Instant load if already on Detail Page
                     if (window.location.href.includes(detailLink) || window.location.pathname.includes('/post/detail/')) {
                         const mainDOM = document.querySelector('main');
                         if (mainDOM) {
                             const clonedMain = mainDOM.cloneNode(true);
-                            processSidebarContent(clonedMain, src, sidebar);
-                            return; // Exit early
+                            processSidebarContent(clonedMain, sidebar);
+                            return;
                         }
                     }
                     
-                    // Otherwise, fetch via AJAX (for Feed views)
+                    // Fetch via AJAX for Feed
                     sidebar.innerHTML = `
                         <div class="flex-1 flex flex-col items-center justify-center text-on-surface-variant h-full py-20">
                             <span class="material-symbols-outlined animate-spin text-4xl mb-4">progress_activity</span>
@@ -416,12 +460,11 @@
                         const parser = new DOMParser();
                         const doc = parser.parseFromString(html, 'text/html');
                         const mainContent = doc.querySelector('main');
-                        processSidebarContent(mainContent, src, sidebar);
+                        processSidebarContent(mainContent, sidebar);
                     } catch (err) {
                         sidebar.innerHTML = '<div class="p-8 text-center text-error">Network error. Failed to load discussion.</div>';
                     }
                 } else {
-                    // Hide sidebar if completely unavailable
                     sidebarContainer.classList.add('hidden');
                 }
             }
@@ -438,19 +481,24 @@
             setTimeout(() => {
                 lightbox.classList.add('hidden');
                 img.src = '';
-                document.body.style.overflow = ''; // Restore scrolling
+                lightboxImagesArray = [];
+                document.body.style.overflow = '';
             }, 300);
         }
     }
 
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeLightbox();
+        const lightbox = document.getElementById('imageLightbox');
+        if (lightbox && !lightbox.classList.contains('hidden')) {
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowLeft') navigateLightbox(-1);
+            if (e.key === 'ArrowRight') navigateLightbox(1);
+        }
     });
 
     // Intercept Clicks on Post Images
     document.addEventListener('click', function(e) {
         if (e.target.tagName === 'IMG') {
-            // Exclude UI avatars and form previews
             if (e.target.classList.contains('rounded-full') || e.target.closest('#noteImagePreviewContainer')) return;
             
             const article = e.target.closest('article');
@@ -460,24 +508,49 @@
                 e.preventDefault();
                 e.stopPropagation();
                 
+                let imagesToLoad = [];
+                let startIdx = 0;
+                
+                // Check if part of a grid
+                const gridContainer = e.target.closest('div.grid');
+                if (gridContainer) {
+                    const gridImgs = Array.from(gridContainer.querySelectorAll('img'));
+                    imagesToLoad = gridImgs.map(im => im.src);
+                    startIdx = gridImgs.indexOf(e.target);
+                } else {
+                    imagesToLoad = [e.target.src];
+                }
+                
                 let detailLink = null;
                 if (article) {
                     const linkTag = article.querySelector('a[href*="/post/detail/"]');
-                    if (linkTag) {
-                        detailLink = linkTag.href;
-                    } else if (window.location.href.includes('/post/detail/')) {
-                        detailLink = window.location.href; // We are on the detail page
-                    }
+                    if (linkTag) detailLink = linkTag.href;
+                    else if (window.location.href.includes('/post/detail/')) detailLink = window.location.href;
                 } else if (quillContent) {
-                    if (window.location.href.includes('/post/detail/')) {
-                        detailLink = window.location.href;
-                    }
+                    if (window.location.href.includes('/post/detail/')) detailLink = window.location.href;
                 }
                 
-                openLightbox(e.target.src, detailLink);
+                openLightboxGallery(imagesToLoad, startIdx, detailLink);
             }
         }
     });
+
+    // Backward compatibility bridge for inline onclick handlers
+    window.openLightbox = function(src, detailLink) {
+        let imagesToLoad = [src];
+        let startIdx = 0;
+        const clickedImg = Array.from(document.querySelectorAll('img')).find(im => im.src === src);
+        if (clickedImg) {
+            const gridContainer = clickedImg.closest('div.grid');
+            if (gridContainer) {
+                const gridImgs = Array.from(gridContainer.querySelectorAll('img'));
+                imagesToLoad = gridImgs.map(im => im.src);
+                startIdx = gridImgs.indexOf(clickedImg);
+                if (startIdx === -1) startIdx = 0;
+            }
+        }
+        openLightboxGallery(imagesToLoad, startIdx, detailLink);
+    };
     </script>
 </body>
 </html>

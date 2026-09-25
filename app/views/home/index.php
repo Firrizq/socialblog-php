@@ -89,15 +89,22 @@
                             </a>
                         <?php endif; ?>
                         
-                        <?php if(!empty($post['cover_image'])): ?>
-                          <div class="mt-2 mb-3">
-                            <img src="<?= BASEURL ?><?= htmlspecialchars($post['cover_image']) ?>" class="w-full rounded-xl border border-outline-variant/30 object-cover max-h-[400px]" alt="Attachment">
-                          </div>
-                        <?php endif; ?>
-
-                        <div class="font-body-md text-on-surface-variant leading-relaxed text-sm sm:text-base line-clamp-3">
+                        <div class="font-body-md text-on-surface-variant leading-relaxed text-sm sm:text-base line-clamp-3 mb-2">
                             <?= preg_replace('/(^|>|\s)#([a-zA-Z_][a-zA-Z0-9_]*)/', '$1<a href="' . BASEURL . '/explore/tag/$2" class="text-primary font-semibold hover:underline relative z-10" onclick="event.stopPropagation();">#$2</a>', strip_tags((string)($post['content'] ?? ''))) ?>
                         </div>
+                        <?php if(!empty($post['cover_image'])): ?>
+                            <?php 
+                            $decoded = json_decode($post['cover_image'], true);
+                            $imgs = is_array($decoded) ? $decoded : array_filter(explode(',', $post['cover_image']));
+                            $imgs = array_slice($imgs, 0, 4);
+                            $imgCount = count($imgs);
+                            ?>
+                            <div class="mt-1 mb-2 grid <?= $imgCount === 1 ? 'grid-cols-1' : 'grid-cols-2' ?> gap-1 rounded-2xl overflow-hidden border border-outline-variant/30 relative z-0">
+                                <?php foreach($imgs as $idx => $img): ?>
+                                    <img src="<?= BASEURL ?><?= htmlspecialchars(trim($img)) ?>" class="w-full h-full object-cover <?= ($imgCount === 3 && $idx === 0) ? 'row-span-2' : '' ?> <?= $imgCount > 1 ? 'aspect-[4/3] sm:aspect-video' : 'max-h-[500px]' ?>" alt="Attachment" onclick="event.stopPropagation(); window.openLightbox && openLightbox(this.src, '<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>')">
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Actions -->
@@ -174,12 +181,9 @@
                     required 
                     class="bg-transparent border-none outline-none focus:ring-0 text-on-surface text-lg placeholder:text-outline-variant resize-none w-full p-0 leading-relaxed"
                 ></textarea>
-                <input type="file" id="noteImageInput" accept="image/*" class="hidden">
-                <div id="noteImagePreviewContainer" class="hidden relative mt-3 w-fit">
-                  <img id="noteImagePreview" src="" class="rounded-xl border border-outline-variant/30 max-h-64 object-cover">
-                  <button type="button" onclick="removeNoteImage()" class="absolute top-2 right-2 w-7 h-7 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-error transition-colors"><span class="material-symbols-outlined text-sm">close</span></button>
-                  <input type="hidden" name="cover_image" id="noteCoverImageInput" value="">
-                </div>
+                <input type="file" id="noteImageInput" accept="image/*" class="hidden" multiple>
+                <input type="hidden" name="cover_image" id="noteCoverImageInput" value="">
+                <div id="noteImagePreviewContainer" class="hidden relative mt-3 w-full"></div>
             </div>
 
             <!-- Modal Footer -->
@@ -241,67 +245,83 @@ document.addEventListener('keydown', function(e) {
 
 const BASE_URL = '<?= BASEURL ?>';
 
-async function uploadNoteImage(file) {
-    if (!file || !file.type.startsWith('image/')) return;
-    const formData = new FormData();
-    formData.append('image', file);
+let uploadedNoteImages = [];
 
-    try {
-        const res = await fetch(`${BASE_URL}/upload/image`, {
-            method: 'POST',
-            body: formData
-        });
-        const data = await res.json();
-        if (data.success && data.url) {
-            const preview = document.getElementById('noteImagePreview');
-            const previewContainer = document.getElementById('noteImagePreviewContainer');
-            const hiddenInput = document.getElementById('noteCoverImageInput');
-            if (preview && previewContainer && hiddenInput) {
-                preview.src = BASE_URL + data.url;
-                hiddenInput.value = data.url;
-                previewContainer.classList.remove('hidden');
-            }
-        } else {
-            alert(data.message || 'Image upload failed');
-        }
-    } catch (err) {
-        console.error('Note image upload error:', err);
-        alert('Failed to upload image. Please try again.');
-    }
+// Pre-fill if editing (only needed in edit_note.php, but safe to include globally)
+const hiddenInputEl = document.getElementById('noteCoverImageInput');
+if (hiddenInputEl && hiddenInputEl.value) {
+    try { uploadedNoteImages = JSON.parse(hiddenInputEl.value); } 
+    catch(e) { uploadedNoteImages = hiddenInputEl.value.split(',').filter(Boolean); }
+    if(uploadedNoteImages.length > 0) renderNoteImagePreviews();
 }
 
-function removeNoteImage() {
-    const preview = document.getElementById('noteImagePreview');
-    const previewContainer = document.getElementById('noteImagePreviewContainer');
-    const hiddenInput = document.getElementById('noteCoverImageInput');
-    const fileInput = document.getElementById('noteImageInput');
+async function uploadNoteImage(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    if (uploadedNoteImages.length >= 4) {
+        alert('Maksimal 4 gambar diperbolehkan.');
+        return;
+    }
+    const formData = new FormData();
+    formData.append('image', file);
+    try {
+        const res = await fetch(`${BASE_URL}/upload/image`, { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.success && data.url) {
+            uploadedNoteImages.push(data.url);
+            renderNoteImagePreviews();
+        } else { alert(data.message || 'Image upload failed'); }
+    } catch (err) { alert('Failed to upload image. Please try again.'); }
+}
 
-    if (preview) preview.src = '';
-    if (hiddenInput) hiddenInput.value = '';
-    if (fileInput) fileInput.value = '';
-    if (previewContainer) previewContainer.classList.add('hidden');
+function renderNoteImagePreviews() {
+    const container = document.getElementById('noteImagePreviewContainer');
+    const hiddenInput = document.getElementById('noteCoverImageInput');
+    if (!container || !hiddenInput) return;
+    hiddenInput.value = uploadedNoteImages.length > 0 ? JSON.stringify(uploadedNoteImages) : '';
+    if (uploadedNoteImages.length === 0) {
+        container.innerHTML = '';
+        container.classList.add('hidden');
+        return;
+    }
+    container.classList.remove('hidden');
+    let html = `<div class="grid ${uploadedNoteImages.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-2">`;
+    uploadedNoteImages.forEach((url, idx) => {
+        html += `<div class="relative">
+            <img src="${BASE_URL + url}" class="w-full h-32 object-cover rounded-xl border border-outline-variant/30">
+            <button type="button" onclick="removeNoteImage(${idx})" class="absolute top-1 right-1 w-6 h-6 bg-black/70 text-white rounded-full flex items-center justify-center hover:bg-error transition-colors"><span class="material-symbols-outlined text-[14px]">close</span></button>
+        </div>`;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// Ensure this is attached to window so inline onclick works
+window.removeNoteImage = function(idx) {
+    uploadedNoteImages.splice(idx, 1);
+    renderNoteImagePreviews();
 }
 
 const noteImageInput = document.getElementById('noteImageInput');
 if (noteImageInput) {
-    noteImageInput.addEventListener('change', function() {
-        if (this.files && this.files[0]) {
-            uploadNoteImage(this.files[0]);
+    noteImageInput.addEventListener('change', async function() {
+        if (this.files) {
+            for(let i=0; i<this.files.length; i++) {
+                await uploadNoteImage(this.files[i]);
+            }
         }
+        this.value = ''; // Reset input
     });
 }
 
-const noteTextarea = document.getElementById('noteModalTextarea');
+const noteTextarea = document.getElementById('noteModalTextarea') || document.getElementById('noteEditTextarea');
 if (noteTextarea) {
-    noteTextarea.addEventListener('paste', function(e) {
+    noteTextarea.addEventListener('paste', async function(e) {
         const clipboardData = e.clipboardData || window.clipboardData;
         if (clipboardData && clipboardData.items) {
             for (let i = 0; i < clipboardData.items.length; i++) {
                 if (clipboardData.items[i].type.indexOf('image') !== -1) {
                     e.preventDefault();
-                    const file = clipboardData.items[i].getAsFile();
-                    uploadNoteImage(file);
-                    break;
+                    await uploadNoteImage(clipboardData.items[i].getAsFile());
                 }
             }
         }
