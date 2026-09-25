@@ -145,7 +145,7 @@
                     </span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="text-xs text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Drafts</span>
+                    <a href="<?= BASEURL ?>/profile" class="text-xs font-semibold text-on-surface-variant hover:text-primary transition-colors">Drafts</a>
                     <button type="button" onclick="closeNoteModal()" class="w-7 h-7 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors ml-1" title="Close">
                         <span class="material-symbols-outlined text-base">close</span>
                     </button>
