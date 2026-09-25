@@ -217,7 +217,7 @@ $user = $data['profile_user'] ?? null;
                                 }
                                 ?>
                                 <?php if($cover): ?>
-                                    <div class="relative w-full h-48 sm:h-64 border-b border-outline-variant/30 overflow-hidden bg-surface-container-high">
+                                    <div class="relative w-full aspect-video border-b border-outline-variant/30 overflow-hidden bg-surface-container-high">
                                         <img src="<?= BASEURL ?><?= htmlspecialchars($cover) ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Story Cover">
                                     </div>
                                 <?php endif; ?>
