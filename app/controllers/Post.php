@@ -68,6 +68,7 @@ class Post extends Controller
             // Save post
             $newPostId = $this->postModel->createPost([
                 'user_id' => $_SESSION['user_id'],
+                'post_type' => 'story',
                 'title' => $title,
                 'content' => $content,
                 'status' => $status
@@ -117,7 +118,7 @@ class Post extends Controller
             exit;
         }
 
-        $isNote = empty($post['title']);
+        $isNote = (($post['post_type'] ?? '') === 'note');
 
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             $rawContent = trim($_POST['content'] ?? '');
@@ -186,6 +187,7 @@ class Post extends Controller
 
                 $newPostId = $this->postModel->createPost([
                     'user_id' => (int)$_SESSION['user_id'],
+                    'post_type' => 'note',
                     'title' => null,
                     'content' => $content,
                     'cover_image' => $coverImage ?: null,

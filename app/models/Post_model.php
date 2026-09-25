@@ -47,11 +47,13 @@ class Post_model
     {
         $status = $data['status'] ?? 'published';
         $coverImage = $data['cover_image'] ?? null;
-        $query = "INSERT INTO {$this->table} (user_id, title, content, cover_image, status) 
-                  VALUES (:user_id, :title, :content, :cover_image, :status)";
+        $postType = $data['post_type'] ?? 'story';
+        $query = "INSERT INTO {$this->table} (user_id, post_type, title, content, cover_image, status) 
+                  VALUES (:user_id, :post_type, :title, :content, :cover_image, :status)";
 
         $this->db->query($query);
         $this->db->bind(':user_id', $data['user_id']);
+        $this->db->bind(':post_type', $postType);
         $this->db->bind(':title', $data['title']);
         $this->db->bind(':content', $data['content']);
         $this->db->bind(':cover_image', $coverImage);
