@@ -172,20 +172,23 @@ $user = $data['profile_user'] ?? null;
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-space-xs">
-                                <span class="px-2 py-0.5 rounded-full bg-surface-container font-caption text-on-surface-variant text-xs"><?= $post['read_time_minutes'] ?? 1 ?> min read</span>
+                            <div class="flex items-center gap-1">
+                                <span class="px-space-sm py-0.5 rounded-full bg-surface-container font-caption text-on-surface-variant"><?= $post['read_time_minutes'] ?? 1 ?> min read</span>
                                 <?php if(($post['status'] ?? 'published') === 'draft'): ?>
                                     <span class="px-2 py-0.5 rounded-full bg-error-container/20 text-error border border-error/30 font-caption text-xs font-semibold">Draft</span>
                                 <?php endif; ?>
                                 <?php if(isset($_SESSION['user_id']) && $_SESSION['user_id'] == $post['user_id']): ?>
-                                  <a href="<?= BASEURL ?>/post/edit/<?= $post['id'] ?>" class="text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center p-1 rounded-full hover:bg-primary-container/20" title="Edit Story">
-                                    <span class="material-symbols-outlined text-lg">edit</span>
-                                  </a>
-                                  <form action="<?= BASEURL ?>/post/delete/<?= $post['id'] ?>" method="POST" class="inline m-0 p-0" onsubmit="return confirm('Delete this story?');">
-                                    <button type="submit" class="text-on-surface-variant hover:text-error transition-colors flex items-center justify-center p-1 rounded-full hover:bg-error-container/20" title="Delete">
-                                      <span class="material-symbols-outlined text-lg">delete</span>
+                                  <div class="relative dropdown-container">
+                                    <button type="button" onclick="toggleMenu(event, 'menu-<?= $post['id'] ?>')" class="text-on-surface-variant hover:text-primary p-1.5 rounded-full hover:bg-surface-container transition-colors flex items-center justify-center">
+                                      <span class="material-symbols-outlined text-lg">more_horiz</span>
                                     </button>
-                                  </form>
+                                    <div id="menu-<?= $post['id'] ?>" class="hidden absolute right-0 top-full mt-1 w-40 bg-surface-container-high border border-outline-variant/30 rounded-xl shadow-xl z-50 overflow-hidden flex flex-col py-1">
+                                      <a href="<?= BASEURL ?>/post/edit/<?= $post['id'] ?>" class="px-4 py-2.5 text-sm text-on-surface font-title-md hover:bg-surface-container flex items-center gap-3 transition-colors"><span class="material-symbols-outlined text-lg">edit</span> Edit Story</a>
+                                      <form action="<?= BASEURL ?>/post/delete/<?= $post['id'] ?>" method="POST" class="m-0 p-0" onsubmit="return confirm('Are you sure you want to delete this story?');">
+                                        <button type="submit" class="w-full text-left px-4 py-2.5 text-sm text-error font-title-md hover:bg-error-container/20 flex items-center gap-3 transition-colors"><span class="material-symbols-outlined text-lg">delete</span> Delete</button>
+                                      </form>
+                                    </div>
+                                  </div>
                                 <?php endif; ?>
                             </div>
                         </div>

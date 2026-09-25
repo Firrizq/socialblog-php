@@ -289,5 +289,23 @@
         });
     })();
     </script>
+
+    <!-- Global Dropdown Toggle Logic -->
+    <script>
+    function toggleMenu(event, menuId) {
+        event.preventDefault();
+        event.stopPropagation();
+        document.querySelectorAll('.dropdown-container > div[id^="menu-"]').forEach(el => {
+            if (el.id !== menuId) el.classList.add('hidden');
+        });
+        const menu = document.getElementById(menuId);
+        if (menu) menu.classList.toggle('hidden');
+    }
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.dropdown-container')) {
+            document.querySelectorAll('.dropdown-container > div[id^="menu-"]').forEach(el => el.classList.add('hidden'));
+        }
+    });
+    </script>
 </body>
 </html>
