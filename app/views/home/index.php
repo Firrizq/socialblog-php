@@ -84,30 +84,65 @@
                     </div>
 
                     <!-- Content -->
-                    <div onclick="if(!event.target.closest('a')) window.location.href='<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>';" class="flex flex-col gap-space-xs cursor-pointer group text-decoration-none">
-                        <?php if(!empty($post['title'])): ?>
-                            <a href="<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>" class="font-headline-sm text-on-surface group-hover:text-primary transition-colors tracking-tight">
-                                <?= htmlspecialchars($post['title']) ?>
-                            </a>
-                        <?php endif; ?>
-                        
-                        <div class="font-body-md text-on-surface-variant leading-relaxed text-sm sm:text-base line-clamp-3 mb-2">
-                            <?= preg_replace('/(^|>|\s)#([a-zA-Z_][a-zA-Z0-9_]*)/', '$1<a href="' . BASEURL . '/explore/tag/$2" class="text-primary font-semibold hover:underline relative z-10" onclick="event.stopPropagation();">#$2</a>', strip_tags((string)($post['content'] ?? ''))) ?>
-                        </div>
-                        <?php if(!empty($post['cover_image'])): ?>
+                    <?php if(($post['post_type'] ?? 'story') === 'story'): ?>
+                        <!-- Story Card Layout (Article Preview) -->
+                        <div onclick="if(!event.target.closest('a') && !event.target.closest('button')) window.location.href='<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>';" class="mt-2 flex flex-col rounded-2xl border border-outline-variant/30 overflow-hidden cursor-pointer group hover:border-primary/50 transition-colors bg-surface-container-lowest">
                             <?php 
-                            $decoded = json_decode($post['cover_image'], true);
-                            $imgs = is_array($decoded) ? $decoded : array_filter(explode(',', $post['cover_image']));
-                            $imgs = array_slice($imgs, 0, 4);
-                            $imgCount = count($imgs);
+                            $cover = '';
+                            if(!empty($post['cover_image'])) {
+                                $decoded = json_decode($post['cover_image'], true);
+                                $imgs = is_array($decoded) ? $decoded : array_filter(explode(',', $post['cover_image']));
+                                $cover = !empty($imgs) ? trim($imgs[0]) : '';
+                            }
                             ?>
-                            <div class="mt-1 mb-2 grid <?= $imgCount === 1 ? 'grid-cols-1' : 'grid-cols-2' ?> gap-1 rounded-2xl overflow-hidden border border-outline-variant/30 relative z-0">
-                                <?php foreach($imgs as $idx => $img): ?>
-                                    <img src="<?= BASEURL ?><?= htmlspecialchars(trim($img)) ?>" class="w-full h-full object-cover <?= ($imgCount === 3 && $idx === 0) ? 'row-span-2' : '' ?> <?= $imgCount > 1 ? 'aspect-[4/3] sm:aspect-video' : 'max-h-[500px]' ?>" alt="Attachment" onclick="event.stopPropagation(); window.openLightbox && openLightbox(this.src, '<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>')">
-                                <?php endforeach; ?>
+                            <?php if($cover): ?>
+                                <div class="relative w-full h-48 sm:h-64 border-b border-outline-variant/30 overflow-hidden bg-surface-container-high">
+                                    <img src="<?= BASEURL ?><?= htmlspecialchars($cover) ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Story Cover">
+                                </div>
+                            <?php endif; ?>
+                            <div class="p-4 flex flex-col gap-1.5 bg-surface-container-lowest group-hover:bg-surface-container-low transition-colors">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <div class="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden shrink-0">
+                                        <?php if (!empty($post['profile_picture'])): ?>
+                                            <img src="<?= BASEURL ?><?= htmlspecialchars($post['profile_picture']) ?>" class="w-full h-full object-cover">
+                                        <?php else: ?>
+                                            <span class="text-[10px] font-bold text-primary"><?= htmlspecialchars(substr($post['username'] ?? 'U', 0, 1)) ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <span class="font-caption text-xs text-on-surface-variant font-medium truncate"><?= htmlspecialchars($post['name'] ?? $post['username']) ?></span>
+                                </div>
+                                <?php if(!empty($post['title'])): ?>
+                                    <h2 class="font-title-md text-base sm:text-lg font-bold text-on-surface tracking-tight line-clamp-2">
+                                        <?= htmlspecialchars($post['title']) ?>
+                                    </h2>
+                                <?php endif; ?>
+                                <div class="font-body-md text-on-surface-variant text-sm line-clamp-2 mt-0.5">
+                                    <?= strip_tags((string)($post['content'] ?? '')) ?>
+                                </div>
                             </div>
-                        <?php endif; ?>
-                    </div>
+                        </div>
+                    <?php else: ?>
+                        <!-- Note Layout (Text Top, Image Grid Bottom) -->
+                        <div onclick="if(!event.target.closest('a') && !event.target.closest('button')) window.location.href='<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>';" class="flex flex-col gap-space-xs cursor-pointer group text-decoration-none">
+                            <div class="font-body-md text-on-surface-variant leading-relaxed text-sm sm:text-base whitespace-pre-line mb-1">
+                                <?= preg_replace('/(^|>|\s)#([a-zA-Z_][a-zA-Z0-9_]*)/', '$1<a href="' . BASEURL . '/explore/tag/$2" class="text-primary font-semibold hover:underline relative z-10" onclick="event.stopPropagation();">#$2</a>', strip_tags((string)($post['content'] ?? ''))) ?>
+                            </div>
+                            <?php if(!empty($post['cover_image'])): ?>
+                                <?php 
+                                $decoded = json_decode($post['cover_image'], true);
+                                $imgs = is_array($decoded) ? $decoded : array_filter(explode(',',$post['cover_image']));
+                                $imgs = array_slice($imgs, 0, 4);
+                                $imgCount = count($imgs);
+                                $imgJson = htmlspecialchars(json_encode(array_values($imgs)), ENT_QUOTES, 'UTF-8');
+                                ?>
+                                <div class="mt-1 mb-2 grid <?= $imgCount === 1 ? 'grid-cols-1' : 'grid-cols-2' ?> gap-1 rounded-2xl overflow-hidden border border-outline-variant/30 relative z-0">
+                                    <?php foreach($imgs as $idx =>$img): ?>
+                                        <img src="<?= BASEURL ?><?= htmlspecialchars(trim($img)) ?>" class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity <?= ($imgCount === 3 &&$idx === 0) ? 'row-span-2' : '' ?> <?= $imgCount > 1 ? 'aspect-[4/3] sm:aspect-video' : 'max-h-[500px]' ?>" alt="Attachment" onclick="event.stopPropagation(); window.openLightboxGallery && openLightboxGallery(<?= $imgJson ?>, <?= $idx ?>, '<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>')">
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
 
                     <!-- Actions -->
                     <div class="flex items-center justify-between pt-space-xs text-on-surface-variant">
