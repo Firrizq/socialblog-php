@@ -117,14 +117,22 @@ class Post extends Controller
             exit;
         }
 
+        $isNote = empty($post['title']);
+
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
-            $title = trim($_POST['title'] ?? '');
             $rawContent = trim($_POST['content'] ?? '');
-
-            $allowedTags = '<p><br><strong><b><em><i><u><s><h1><h2><h3><h4><h5><h6><blockquote><pre><code><ol><ul><li><a><span>';
-            $content = strip_tags($rawContent, $allowedTags);
-
             $status = ($_POST['action'] ?? 'publish') === 'draft' ? 'draft' : 'published';
+
+            if ($isNote) {
+                $title = null;
+                // Reverse <br> to newlines, strip any stray HTML, then re-apply nl2br for safe saving
+                $cleanText = strip_tags(str_replace(['<br>', '<br/>', '<br />'], "\n", $rawContent));
+                $content = nl2br(htmlspecialchars($cleanText, ENT_QUOTES, 'UTF-8'));
+            } else {
+                $title = trim($_POST['title'] ?? '');
+                $allowedTags = '<p><br><strong><b><em><i><u><s><h1><h2><h3><h4><h5><h6><blockquote><pre><code><ol><ul><li><a><span>';
+                $content = strip_tags($rawContent, $allowedTags);
+            }
 
             $this->postModel->updatePost($id, (int)$_SESSION['user_id'], [
                 'title' => $title,
@@ -142,8 +150,11 @@ class Post extends Controller
             exit;
         }
 
-        $this->view('post/edit', [
-            'title' => 'Edit Story',
+        $viewName = $isNote ? 'post/edit_note' : 'post/edit';
+        $viewTitle = $isNote ? 'Edit Note' : 'Edit Story';
+
+        $this->view($viewName, [
+            'title' => $viewTitle,
             'post' => $post,
             'error' => ''
         ]);
