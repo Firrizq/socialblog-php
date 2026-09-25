@@ -222,6 +222,26 @@ class Post_model
         $this->db->bind(':user_id', $userId);
         return $this->db->resultSet();
     }
+
+    /**
+     * Update an existing post owned by a specific user
+     *
+     * @param int $postId
+     * @param int $userId
+     * @param array $data ['title', 'content', 'status']
+     * @return bool
+     */
+    public function updatePost(int $postId, int $userId, array $data): bool
+    {
+        $query = "UPDATE {$this->table} SET title = :title, content = :content, status = :status WHERE id = :id AND user_id = :user_id";
+        $this->db->query($query);
+        $this->db->bind(':title', $data['title']);
+        $this->db->bind(':content', $data['content']);
+        $this->db->bind(':status', $data['status']);
+        $this->db->bind(':id', $postId);
+        $this->db->bind(':user_id', $userId);
+        return $this->db->execute();
+    }
 }
 
 

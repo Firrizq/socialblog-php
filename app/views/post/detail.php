@@ -116,6 +116,9 @@ $countNodes($comments);
                         <span class="material-symbols-outlined text-xl">share</span>
                     </button>
                     <?php if(isset($_SESSION['user_id']) && $_SESSION['user_id'] == $post['user_id']): ?>
+                      <a href="<?= BASEURL ?>/post/edit/<?= $post['id'] ?>" class="text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center p-1 rounded-full hover:bg-primary-container/20" title="Edit Story">
+                        <span class="material-symbols-outlined text-lg">edit</span>
+                      </a>
                       <form action="<?= BASEURL ?>/post/delete/<?= $post['id'] ?>" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this story? This action cannot be undone.');">
                         <button type="submit" class="hover:text-error transition-colors flex items-center justify-center p-1 rounded-full hover:bg-error-container/20" title="Delete Story">
                           <span class="material-symbols-outlined text-xl">delete</span>

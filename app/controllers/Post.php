@@ -96,6 +96,60 @@ class Post extends Controller
     }
 
     /**
+     * Edit an existing story or draft
+     * GET /post/edit/{id} | POST /post/edit/{id}
+     *
+     * @param string|int $id
+     */
+    public function edit(string|int $id = 0): void
+    {
+        // Enforce authentication
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: ' . BASEURL . '/auth');
+            exit;
+        }
+
+        $id = (int)$id;
+        $post = $this->postModel->getPostById($id);
+
+        if (!$post || (int)$post['user_id'] !== (int)$_SESSION['user_id']) {
+            header('Location: ' . BASEURL . '/home');
+            exit;
+        }
+
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+            $title = trim($_POST['title'] ?? '');
+            $rawContent = trim($_POST['content'] ?? '');
+
+            $allowedTags = '<p><br><strong><b><em><i><u><s><h1><h2><h3><h4><h5><h6><blockquote><pre><code><ol><ul><li><a><span>';
+            $content = strip_tags($rawContent, $allowedTags);
+
+            $status = ($_POST['action'] ?? 'publish') === 'draft' ? 'draft' : 'published';
+
+            $this->postModel->updatePost($id, (int)$_SESSION['user_id'], [
+                'title' => $title,
+                'content' => $content,
+                'status' => $status
+            ]);
+
+            (new Tag_model())->processTags($id, $content);
+
+            if ($status === 'published') {
+                header('Location: ' . BASEURL . '/post/detail/' . $id);
+            } else {
+                header('Location: ' . BASEURL . '/profile');
+            }
+            exit;
+        }
+
+        $this->view('post/edit', [
+            'title' => 'Edit Story',
+            'post' => $post,
+            'error' => ''
+        ]);
+    }
+
+    /**
      * Create a short-form note (Substack / Twitter style)
      * POST /post/createNote
      */
