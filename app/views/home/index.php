@@ -89,10 +89,19 @@
                         <div onclick="if(!event.target.closest('a') && !event.target.closest('button')) window.location.href='<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>';" class="mt-2 flex flex-col rounded-2xl border border-outline-variant/30 overflow-hidden cursor-pointer group hover:border-primary/50 transition-colors bg-surface-container-lowest">
                             <?php 
                             $cover = '';
+                            // 1. Try to get the explicit cover_image column first
                             if(!empty($post['cover_image'])) {
                                 $decoded = json_decode($post['cover_image'], true);
                                 $imgs = is_array($decoded) ? $decoded : array_filter(explode(',', $post['cover_image']));
                                 $cover = !empty($imgs) ? trim($imgs[0]) : '';
+                            }
+                            // 2. Fallback: Extract the first inline image from Quill HTML content
+                            if (empty($cover) && preg_match('/<img[^>]+src="([^">]+)"/i', $post['content'] ?? '', $matches)) {
+                                $cover = $matches[1];
+                                // Strip BASEURL if it was saved absolutely, to prevent double URL concatenation in the img tag
+                                if (str_starts_with($cover, BASEURL)) {
+                                    $cover = substr($cover, strlen(BASEURL));
+                                }
                             }
                             ?>
                             <?php if($cover): ?>
