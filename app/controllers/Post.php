@@ -114,11 +114,13 @@ class Post extends Controller
                 // Sanitize plain text and convert line breaks
                 $content = nl2br(htmlspecialchars($rawContent, ENT_QUOTES, 'UTF-8'));
 
+                $status = ($_POST['action'] ?? 'publish') === 'draft' ? 'draft' : 'published';
+
                 $newPostId = $this->postModel->createPost([
                     'user_id' => (int)$_SESSION['user_id'],
                     'title' => null,
                     'content' => $content,
-                    'status' => 'published'
+                    'status' => $status
                 ]);
 
                 if ($newPostId) {

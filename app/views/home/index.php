@@ -184,19 +184,9 @@
 
                 <!-- Right side: Cancel & Post Buttons -->
                 <div class="flex items-center gap-2">
-                    <button 
-                        type="button" 
-                        onclick="closeNoteModal()" 
-                        class="text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors px-3 py-1.5 rounded-lg hover:bg-surface-container"
-                    >
-                        Cancel
-                    </button>
-                    <button 
-                        type="submit" 
-                        class="bg-primary-container text-on-primary-container hover:bg-primary rounded-full px-6 py-2 font-bold shadow-md transition-all active:scale-95 text-sm"
-                    >
-                        Post
-                    </button>
+                    <button type="button" onclick="closeNoteModal()" class="text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors px-3 py-1.5 rounded-lg hover:bg-surface-container">Cancel</button>
+                    <button type="submit" name="action" value="draft" class="text-sm font-medium text-primary hover:text-primary-fixed transition-colors px-3 py-1.5 rounded-lg hover:bg-surface-container border border-primary/30 active:scale-95">Draft</button>
+                    <button type="submit" name="action" value="publish" class="bg-primary-container text-on-primary-container hover:bg-primary rounded-full px-6 py-2 font-bold shadow-md transition-all active:scale-95 text-sm">Post</button>
                 </div>
             </div>
         </form>
