@@ -49,7 +49,9 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-1">
-                          <span class="px-space-sm py-0.5 rounded-full bg-surface-container font-caption text-on-surface-variant"><?= $post['read_time_minutes'] ?? 1 ?> min read</span>
+                          <?php if(($post['post_type'] ?? 'story') === 'story'): ?>
+                              <span class="px-space-sm py-0.5 rounded-full bg-surface-container font-caption text-on-surface-variant whitespace-nowrap"><?= $post['read_time_minutes'] ?? 1 ?> min read</span>
+                          <?php endif; ?>
                           <?php if(isset($_SESSION['user_id']) && $_SESSION['user_id'] == $post['user_id']): ?>
                             <div class="relative dropdown-container">
                               <button type="button" onclick="toggleMenu(event, 'menu-<?= $post['id'] ?>')" class="text-on-surface-variant hover:text-primary p-1.5 rounded-full hover:bg-surface-container transition-colors flex items-center justify-center">

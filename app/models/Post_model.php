@@ -48,8 +48,11 @@ class Post_model
         $status = $data['status'] ?? 'published';
         $coverImage = $data['cover_image'] ?? null;
         $postType = $data['post_type'] ?? 'story';
-        $query = "INSERT INTO {$this->table} (user_id, post_type, title, content, cover_image, status) 
-                  VALUES (:user_id, :post_type, :title, :content, :cover_image, :status)";
+        $wordCount = str_word_count(strip_tags($data['content'] ?? ''));
+        $readTime = max(1, (int)ceil($wordCount / 200));
+
+        $query = "INSERT INTO {$this->table} (user_id, post_type, title, content, cover_image, status, read_time_minutes) 
+                  VALUES (:user_id, :post_type, :title, :content, :cover_image, :status, :read_time_minutes)";
 
         $this->db->query($query);
         $this->db->bind(':user_id', $data['user_id']);
@@ -58,6 +61,7 @@ class Post_model
         $this->db->bind(':content', $data['content']);
         $this->db->bind(':cover_image', $coverImage);
         $this->db->bind(':status', $status);
+        $this->db->bind(':read_time_minutes', $readTime);
 
         if ($this->db->execute()) {
             return (int)$this->db->lastInsertId();
@@ -238,12 +242,16 @@ class Post_model
     public function updatePost(int $postId, int $userId, array $data): bool
     {
         $coverImage = $data['cover_image'] ?? null;
-        $query = "UPDATE {$this->table} SET title = :title, content = :content, cover_image = :cover_image, status = :status WHERE id = :id AND user_id = :user_id";
+        $wordCount = str_word_count(strip_tags($data['content'] ?? ''));
+        $readTime = max(1, (int)ceil($wordCount / 200));
+
+        $query = "UPDATE {$this->table} SET title = :title, content = :content, cover_image = :cover_image, status = :status, read_time_minutes = :read_time_minutes WHERE id = :id AND user_id = :user_id";
         $this->db->query($query);
         $this->db->bind(':title', $data['title']);
         $this->db->bind(':content', $data['content']);
         $this->db->bind(':cover_image', $coverImage);
         $this->db->bind(':status', $data['status']);
+        $this->db->bind(':read_time_minutes', $readTime);
         $this->db->bind(':id', $postId);
         $this->db->bind(':user_id', $userId);
         return $this->db->execute();

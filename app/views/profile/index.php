@@ -173,7 +173,9 @@ $user = $data['profile_user'] ?? null;
                                 </div>
                             </div>
                             <div class="flex items-center gap-1">
-                                <span class="px-space-sm py-0.5 rounded-full bg-surface-container font-caption text-on-surface-variant"><?= $post['read_time_minutes'] ?? 1 ?> min read</span>
+                                <?php if(($post['post_type'] ?? 'story') === 'story'): ?>
+                                    <span class="px-space-sm py-0.5 rounded-full bg-surface-container font-caption text-on-surface-variant whitespace-nowrap"><?= $post['read_time_minutes'] ?? 1 ?> min read</span>
+                                <?php endif; ?>
                                 <?php if(($post['status'] ?? 'published') === 'draft'): ?>
                                     <span class="px-2 py-0.5 rounded-full bg-error-container/20 text-error border border-error/30 font-caption text-xs font-semibold">Draft</span>
                                 <?php endif; ?>
