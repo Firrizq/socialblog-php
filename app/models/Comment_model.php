@@ -169,9 +169,22 @@ class Comment_model
         $executed = $this->db->execute();
 
         if ($executed) {
+            $postId = (int)$data['post_id'];
+            
+            // Increment the main post's comment count
+            $this->db->query("UPDATE posts SET comment_count = comment_count + 1 WHERE id = :post_id");
+            $this->db->bind(':post_id', $postId);
+            $this->db->execute();
+
+            // If it's a nested reply, increment the parent comment's reply count
+            if ($parentId !== null) {
+                $this->db->query("UPDATE {$this->table} SET reply_count = reply_count + 1 WHERE id = :parent_id");
+                $this->db->bind(':parent_id', $parentId);
+                $this->db->execute();
+            }
+
             $notificationModel = new Notification_model();
             $actorId = (int)$data['user_id'];
-            $postId = (int)$data['post_id'];
 
             if ($parentId === null) {
                 // Top-level comment: notify post owner

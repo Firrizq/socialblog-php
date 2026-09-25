@@ -552,5 +552,27 @@
         openLightboxGallery(imagesToLoad, startIdx, detailLink);
     };
     </script>
+
+    <!-- Global Keyboard Shortcuts -->
+    <script>
+    document.addEventListener('keydown', function(e) {
+        // Check if the user is typing inside a textarea
+        if (e.target.tagName === 'TEXTAREA') {
+            // Check for Enter key + either Ctrl (Windows/Linux) or Meta (Command on Mac)
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault(); // Prevent any accidental newline
+                
+                const form = e.target.closest('form');
+                if (form) {
+                    // Find the primary submit button (either the "Publish" button with value="publish" or a generic submit button)
+                    const submitBtn = form.querySelector('button[value="publish"]') || form.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.click(); // Trigger click to ensure the button's name/value is passed securely
+                    }
+                }
+            }
+        }
+    });
+    </script>
 </body>
 </html>
