@@ -60,7 +60,8 @@ class Profile extends Controller
             return;
         }
 
-        $posts = $this->postModel->getPostsByUser((int)$profileUser['id']);
+        $isOwner = (!empty($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)$profileUser['id']);
+        $posts = $this->postModel->getPostsByUser((int)$profileUser['id'], $isOwner);
 
         $isFollowing = false;
         $likedPosts = [];

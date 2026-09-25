@@ -174,6 +174,9 @@ $user = $data['profile_user'] ?? null;
                             </div>
                             <div class="flex items-center gap-space-xs">
                                 <span class="px-2 py-0.5 rounded-full bg-surface-container font-caption text-on-surface-variant text-xs"><?= $post['read_time_minutes'] ?? 1 ?> min read</span>
+                                <?php if(($post['status'] ?? 'published') === 'draft'): ?>
+                                    <span class="px-2 py-0.5 rounded-full bg-error-container/20 text-error border border-error/30 font-caption text-xs font-semibold">Draft</span>
+                                <?php endif; ?>
                                 <?php if(isset($_SESSION['user_id']) && $_SESSION['user_id'] == $post['user_id']): ?>
                                   <form action="<?= BASEURL ?>/post/delete/<?= $post['id'] ?>" method="POST" class="inline m-0 p-0" onsubmit="return confirm('Delete this story?');">
                                     <button type="submit" class="text-on-surface-variant hover:text-error transition-colors flex items-center justify-center p-1 rounded-full hover:bg-error-container/20" title="Delete">

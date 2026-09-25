@@ -30,6 +30,7 @@ class Post_model
                     users.profile_picture
                   FROM {$this->table}
                   INNER JOIN users ON posts.user_id = users.id
+                  WHERE posts.status = 'published'
                   ORDER BY posts.created_at DESC";
 
         $this->db->query($query);
@@ -39,18 +40,20 @@ class Post_model
     /**
      * Create a new post in the database
      *
-     * @param array $data ['user_id', 'title', 'content']
+     * @param array $data ['user_id', 'title', 'content', 'status']
      * @return int|false
      */
     public function createPost(array $data): int|false
     {
-        $query = "INSERT INTO {$this->table} (user_id, title, content) 
-                  VALUES (:user_id, :title, :content)";
+        $status = $data['status'] ?? 'published';
+        $query = "INSERT INTO {$this->table} (user_id, title, content, status) 
+                  VALUES (:user_id, :title, :content, :status)";
 
         $this->db->query($query);
         $this->db->bind(':user_id', $data['user_id']);
         $this->db->bind(':title', $data['title']);
         $this->db->bind(':content', $data['content']);
+        $this->db->bind(':status', $status);
 
         if ($this->db->execute()) {
             return (int)$this->db->lastInsertId();
@@ -62,10 +65,12 @@ class Post_model
      * Fetch all posts for a specific user, ordered by newest first
      *
      * @param int $user_id
+     * @param bool $isOwner
      * @return array
      */
-    public function getPostsByUser(int $user_id): array
+    public function getPostsByUser(int $user_id, bool $isOwner = false): array
     {
+        $statusCondition = $isOwner ? "" : " AND posts.status = 'published'";
         $query = "SELECT 
                     posts.*,
                     users.username,
@@ -73,7 +78,7 @@ class Post_model
                     users.profile_picture
                   FROM {$this->table}
                   INNER JOIN users ON posts.user_id = users.id
-                  WHERE posts.user_id = :user_id
+                  WHERE posts.user_id = :user_id {$statusCondition}
                   ORDER BY posts.created_at DESC";
 
         $this->db->query($query);

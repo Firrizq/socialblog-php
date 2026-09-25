@@ -75,15 +75,10 @@
 
         <!-- Right: Action Buttons -->
         <div class="flex items-center gap-3 shrink-0">
-            <a href="<?= BASEURL ?>/home" class="text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors px-2 py-1.5 rounded-lg hover:bg-surface-container">
-                Cancel
-            </a>
-            <button 
-                type="submit" 
-                class="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-primary-container text-on-primary-container font-label-md text-sm font-semibold hover:bg-primary transition-all shadow-[0_0_0_1px_rgba(16,185,129,0.3)] active:scale-95"
-            >
-                <span class="material-symbols-outlined text-base">send</span>
-                <span>Publish</span>
+            <a href="<?= BASEURL ?>/home" class="text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors px-2 py-1.5 rounded-lg hover:bg-surface-container">Cancel</a>
+            <button type="submit" name="action" value="draft" class="text-sm font-medium text-primary hover:text-primary-fixed transition-colors px-3 py-1.5 rounded-lg hover:bg-surface-container border border-primary/30 active:scale-95">Save Draft</button>
+            <button type="submit" name="action" value="publish" class="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-primary-container text-on-primary-container font-label-md text-sm font-semibold hover:bg-primary transition-all shadow-[0_0_0_1px_rgba(16,185,129,0.3)] active:scale-95">
+                <span class="material-symbols-outlined text-base">send</span><span>Publish</span>
             </button>
         </div>
     </div>

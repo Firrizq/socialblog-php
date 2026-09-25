@@ -63,11 +63,14 @@ class Post extends Controller
                 return;
             }
 
+            $status = ($_POST['action'] ?? 'publish') === 'draft' ? 'draft' : 'published';
+
             // Save post
             $newPostId = $this->postModel->createPost([
                 'user_id' => $_SESSION['user_id'],
                 'title' => $title,
-                'content' => $content
+                'content' => $content,
+                'status' => $status
             ]);
 
             if ($newPostId) {
@@ -114,7 +117,8 @@ class Post extends Controller
                 $newPostId = $this->postModel->createPost([
                     'user_id' => (int)$_SESSION['user_id'],
                     'title' => null,
-                    'content' => $content
+                    'content' => $content,
+                    'status' => 'published'
                 ]);
 
                 if ($newPostId) {
