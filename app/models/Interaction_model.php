@@ -81,6 +81,18 @@ class Interaction_model
      */
     public function toggleBookmark(int $userId, int $postId): array
     {
+        // 1. Verify post exists
+        $this->db->query("SELECT id FROM posts WHERE id = :post_id LIMIT 1");
+        $this->db->bind(':post_id', $postId);
+        $post = $this->db->single();
+
+        if (!$post) {
+            return [
+                'status' => 'error',
+                'message' => 'Post not found'
+            ];
+        }
+
         $this->db->query("SELECT id FROM bookmarks WHERE user_id = :user_id AND post_id = :post_id LIMIT 1");
         $this->db->bind(':user_id', $userId);
         $this->db->bind(':post_id', $postId);

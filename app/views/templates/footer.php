@@ -185,19 +185,33 @@
                     const data = await response.json();
 
                     if (data.success) {
+                        const isBookmarked = data.status === 'bookmarked';
                         const icon = bookmarkBtn.querySelector('.material-symbols-outlined');
 
-                        if (data.status === 'bookmarked') {
+                        if (isBookmarked) {
                             bookmarkBtn.classList.add('text-primary');
+                            bookmarkBtn.classList.remove('hover:text-primary');
                             bookmarkBtn.classList.remove('text-on-surface-variant');
                             if (icon) {
                                 icon.style.fontVariationSettings = "'FILL' 1";
                             }
+                            if (typeof showToast === 'function') showToast('Saved to bookmarks', 'success');
                         } else {
                             bookmarkBtn.classList.remove('text-primary');
-                            bookmarkBtn.classList.add('text-on-surface-variant');
+                            bookmarkBtn.classList.add('hover:text-primary');
                             if (icon) {
                                 icon.style.fontVariationSettings = "'FILL' 0";
+                            }
+                            if (typeof showToast === 'function') showToast('Removed from bookmarks', 'info');
+
+                            // Dim post card if currently on the Bookmarks page
+                            if (window.location.pathname.includes('/bookmarks')) {
+                                const card = bookmarkBtn.closest('article');
+                                if (card) {
+                                    card.style.transition = 'opacity 0.3s ease, filter 0.3s ease';
+                                    card.style.opacity = '0.35';
+                                    card.style.filter = 'grayscale(0.7)';
+                                }
                             }
                         }
 
@@ -205,17 +219,20 @@
                         document.querySelectorAll(`.btn-bookmark[data-id="${postId}"]`).forEach(btn => {
                             if (btn !== bookmarkBtn) {
                                 const otherIcon = btn.querySelector('.material-symbols-outlined');
-                                if (data.status === 'bookmarked') {
+                                if (isBookmarked) {
                                     btn.classList.add('text-primary');
+                                    btn.classList.remove('hover:text-primary');
                                     btn.classList.remove('text-on-surface-variant');
                                     if (otherIcon) otherIcon.style.fontVariationSettings = "'FILL' 1";
                                 } else {
                                     btn.classList.remove('text-primary');
-                                    btn.classList.add('text-on-surface-variant');
+                                    btn.classList.add('hover:text-primary');
                                     if (otherIcon) otherIcon.style.fontVariationSettings = "'FILL' 0";
                                 }
                             }
                         });
+                    } else if (data.message) {
+                        if (typeof showToast === 'function') showToast(data.message, 'error');
                     }
                 } catch (err) {
                     console.error('Bookmark error:', err);
@@ -286,7 +303,7 @@
                 }
                 return;
             }
-        });
+        }, true);
     })();
     </script>
 

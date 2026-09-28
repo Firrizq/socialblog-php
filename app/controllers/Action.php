@@ -66,6 +66,12 @@ class Action extends Controller
         $userId = (int)$_SESSION['user_id'];
         $result = $this->interactionModel->toggleBookmark($userId, $postId);
 
+        if (($result['status'] ?? '') === 'error') {
+            $this->jsonResponse(array_merge([
+                'success' => false
+            ], $result), 404);
+        }
+
         $this->jsonResponse(array_merge([
             'success' => true,
             'post_id' => $postId

@@ -161,13 +161,13 @@
                                 $isLiked = in_array((int)$post['id'], $data['liked_posts'] ?? []);
                                 $isBookmarked = in_array((int)$post['id'], $data['bookmarked_posts'] ?? []);
                             ?>
-                            <button type="button" class="btn-like group flex items-center gap-1 transition-colors <?= $isLiked ? 'text-error' : 'hover:text-error' ?> active:scale-95" data-id="<?= (int)$post['id'] ?>" title="Like" onclick="event.stopPropagation();">
+                            <button type="button" class="btn-like group flex items-center gap-1 transition-colors <?= $isLiked ? 'text-error' : 'hover:text-error' ?> active:scale-95" data-id="<?= (int)$post['id'] ?>" title="Like">
                                 <div class="w-8 h-8 rounded-full group-hover:bg-error/10 flex items-center justify-center transition-colors">
                                     <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' <?= $isLiked ? 1 : 0 ?>;">favorite</span>
                                 </div>
                                 <span class="like-count font-body-md text-xs"><?= (int)($post['like_count'] ?? 0) ?></span>
                             </button>
-                            <button type="button" class="btn-bookmark group flex items-center transition-colors <?= $isBookmarked ? 'text-primary' : 'hover:text-primary' ?> active:scale-95" data-id="<?= (int)$post['id'] ?>" title="Bookmark" onclick="event.stopPropagation();">
+                            <button type="button" class="btn-bookmark group flex items-center transition-colors <?= $isBookmarked ? 'text-primary' : 'hover:text-primary' ?> active:scale-95" data-id="<?= (int)$post['id'] ?>" title="Bookmark">
                                 <div class="w-8 h-8 rounded-full group-hover:bg-primary/10 flex items-center justify-center transition-colors">
                                     <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' <?= $isBookmarked ? 1 : 0 ?>;">bookmark</span>
                                 </div>
