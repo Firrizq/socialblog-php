@@ -97,6 +97,14 @@ class Post extends Controller
     }
 
     /**
+     * Alias for create to support /post/store route
+     */
+    public function store(): void
+    {
+        $this->create();
+    }
+
+    /**
      * Edit an existing story or draft
      * GET /post/edit/{id} | POST /post/edit/{id}
      *
