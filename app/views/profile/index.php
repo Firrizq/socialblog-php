@@ -133,20 +133,27 @@ $data['user'] = $user;
                 </div>
             </div>
 
-            <!-- Tabs Navigation -->
+            <!-- Tabs Navigation (Classic Full-Width Border) -->
             <div class="flex border-b border-outline-variant/30 w-full mt-2">
                 <a href="#" class="flex-1 flex justify-center hover:bg-surface-container-low transition-colors cursor-pointer group">
-                    <div class="py-3.5 font-title-md text-[15px] font-bold text-on-surface border-b-4 border-primary relative">
+                    <!-- Active Tab with full-width primary border -->
+                    <div class="w-full text-center py-3.5 font-title-md text-[15px] font-bold text-on-surface border-b-4 border-primary">
                         Posts
                     </div>
                 </a>
                 <a href="#" class="flex-1 flex justify-center hover:bg-surface-container-low transition-colors cursor-pointer group">
-                    <div class="py-3.5 font-title-md text-[15px] font-medium text-on-surface-variant border-b-4 border-transparent group-hover:text-on-surface relative transition-colors">
+                    <!-- Inactive Tab -->
+                    <div class="w-full text-center py-3.5 font-title-md text-[15px] font-medium text-on-surface-variant border-b-4 border-transparent group-hover:text-on-surface transition-colors">
                         Replies
                     </div>
                 </a>
                 <a href="#" class="flex-1 flex justify-center hover:bg-surface-container-low transition-colors cursor-pointer group">
-                    <div class="py-3.5 font-title-md text-[15px] font-medium text-on-surface-variant border-b-4 border-transparent group-hover:text-on-surface relative transition-colors">
+                    <div class="w-full text-center py-3.5 font-title-md text-[15px] font-medium text-on-surface-variant border-b-4 border-transparent group-hover:text-on-surface transition-colors">
+                        Reposts
+                    </div>
+                </a>
+                <a href="#" class="flex-1 flex justify-center hover:bg-surface-container-low transition-colors cursor-pointer group">
+                    <div class="w-full text-center py-3.5 font-title-md text-[15px] font-medium text-on-surface-variant border-b-4 border-transparent group-hover:text-on-surface transition-colors">
                         Media
                     </div>
                 </a>
