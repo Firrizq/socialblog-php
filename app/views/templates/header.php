@@ -140,10 +140,11 @@ $unreadNotifCount = (isset($_SESSION['user_id'])) ? (new Notification_model())->
             <span class="material-symbols-outlined text-primary text-3xl">edit_square</span>
             <span class="font-title-md text-title-md text-on-surface tracking-tight">Blogggle</span>
         </div>
-        <div class="flex items-center gap-3 sm:gap-4">
+        <div class="flex items-center gap-2 sm:gap-3">
+            <!-- Theme Switcher -->
             <div class="relative dropdown-container">
-                <button type="button" onclick="toggleMenu(event, 'theme-menu')" class="w-9 h-9 rounded-full hover:bg-surface-container border border-transparent hover:border-outline-variant/30 text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-all" id="theme-toggle-btn" title="Theme Settings">
-                    <span class="material-symbols-outlined text-[20px]" id="theme-icon">dark_mode</span>
+                <button type="button" onclick="toggleMenu(event, 'theme-menu')" class="w-9 h-9 rounded-full bg-surface border border-outline-variant/50 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low flex items-center justify-center transition-all shadow-sm" id="theme-toggle-btn" title="Theme Settings">
+                    <span class="material-symbols-outlined text-[18px]" id="theme-icon">dark_mode</span>
                 </button>
                 <div id="theme-menu" class="hidden absolute right-0 top-full mt-2 w-36 bg-surface-container-low border border-outline-variant/30 rounded-xl shadow-xl z-[60] overflow-hidden flex flex-col py-1.5">
                     <button onclick="setTheme('light')" class="w-full text-left px-4 py-2.5 text-sm text-on-surface font-title-md hover:bg-surface-container flex items-center gap-3 transition-colors group">
@@ -159,21 +160,28 @@ $unreadNotifCount = (isset($_SESSION['user_id'])) ? (new Notification_model())->
             </div>
 
             <?php if (isset($_SESSION['user_id'])): ?>
-                <a class="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-on-primary font-label-md text-sm hover:opacity-90 transition-opacity shadow-sm" href="<?= BASEURL ?>/post/create">
+                <!-- Write Button: Editorial Style (Inverted Contrast) -->
+                <a class="hidden sm:inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-on-surface text-surface font-title-md text-sm hover:opacity-80 transition-opacity shadow-sm ml-1" href="<?= BASEURL ?>/post/create">
                     <span class="material-symbols-outlined text-[18px]">edit_square</span><span>Write</span>
                 </a>
-                <div class="flex items-center gap-3 pl-3 sm:pl-4 border-l border-outline-variant/50">
-                    <a href="<?= BASEURL ?>/profile" class="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-primary-container font-bold text-xs text-on-primary-container shrink-0 hover:ring-2 hover:ring-primary transition-all">
-                        <?php if (!empty($_SESSION['profile_picture'])): ?>
-                            <img src="<?= BASEURL ?><?= htmlspecialchars($_SESSION['profile_picture']) ?>" alt="<?= htmlspecialchars($_SESSION['username']) ?>" class="w-full h-full object-cover">
-                        <?php else: ?>
-                            <?= strtoupper(substr($_SESSION['username'], 0, 1)) ?>
-                        <?php endif; ?>
-                    </a>
-                    <a href="<?= BASEURL ?>/auth/logout" class="hidden sm:block text-error hover:text-error-container text-sm font-medium transition-colors">Logout</a>
-                </div>
+                
+                <div class="h-5 w-px bg-outline-variant/60 mx-1 hidden sm:block"></div>
+
+                <!-- Profile Avatar -->
+                <a href="<?= BASEURL ?>/profile" class="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center bg-surface-container-high border border-outline-variant/50 font-bold text-xs text-on-surface shrink-0 hover:ring-2 hover:ring-primary transition-all">
+                    <?php if (!empty($_SESSION['profile_picture'])): ?>
+                        <img src="<?= BASEURL ?><?= htmlspecialchars($_SESSION['profile_picture']) ?>" alt="<?= htmlspecialchars($_SESSION['username']) ?>" class="w-full h-full object-cover">
+                    <?php else: ?>
+                        <?= strtoupper(substr($_SESSION['username'], 0, 1)) ?>
+                    <?php endif; ?>
+                </a>
+                
+                <!-- Logout: Subtle Icon Button -->
+                <a href="<?= BASEURL ?>/auth/logout" class="hidden sm:flex w-9 h-9 rounded-full items-center justify-center text-on-surface-variant hover:text-error hover:bg-error-container/20 transition-colors" title="Logout">
+                    <span class="material-symbols-outlined text-[20px]">logout</span>
+                </a>
             <?php else: ?>
-                <a href="<?= BASEURL ?>/auth" class="text-primary hover:text-primary-container font-medium text-sm transition-colors">Sign In</a>
+                <a href="<?= BASEURL ?>/auth" class="px-4 py-1.5 rounded-full bg-on-surface text-surface font-title-md text-sm hover:opacity-80 transition-opacity shadow-sm ml-2">Sign In</a>
             <?php endif; ?>
         </div>
 
