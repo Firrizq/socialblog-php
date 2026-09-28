@@ -259,11 +259,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 quill.insertEmbed(range.index, 'image', BASE_URL + data.url);
                 quill.setSelection(range.index + 1);
             } else {
-                alert(data.message || 'Image upload failed');
+                showToast(data.message || 'Image upload failed', 'error');
             }
         } catch (err) {
             console.error('Image upload error:', err);
-            alert('Failed to upload image. Please try again.');
+            showToast('Failed to upload image. Please try again.', 'error');
         }
     }
 

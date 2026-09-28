@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
         avatarInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file && file.size > 10 * 1024 * 1024) {
-                alert('File is too large! Maximum allowed size is 10MB.');
+                showToast('File is too large! Maximum allowed size is 10MB.', 'error');
                 e.target.value = '';
                 return;
             }
@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
         bannerInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file && file.size > 10 * 1024 * 1024) {
-                alert('File is too large! Maximum allowed size is 10MB.');
+                showToast('File is too large! Maximum allowed size is 10MB.', 'error');
                 e.target.value = '';
                 return;
             }

@@ -375,12 +375,6 @@ $replies = $data['replies'] ?? [];
     <?php endif; ?>
 </div>
 
-<!-- Simple Toast Notification -->
-<div id="thread-toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-surface-container-high border border-primary/40 text-on-surface px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 text-xs font-title-md">
-    <span class="material-symbols-outlined text-primary text-base">check_circle</span>
-    <span id="toast-message">Notification</span>
-</div>
-
 <script>
 /**
  * Toggle visibility of nested inline reply forms
@@ -396,24 +390,6 @@ function toggleNestedReply(id) {
     } else {
         formEl.classList.add('hidden');
     }
-}
-
-/**
- * Toast popup notification helper
- */
-function showToast(msg) {
-    const toast = document.getElementById('thread-toast');
-    const msgEl = document.getElementById('toast-message');
-    if (!toast || !msgEl) return;
-    
-    msgEl.textContent = msg;
-    toast.classList.remove('translate-y-20', 'opacity-0');
-    toast.classList.add('translate-y-0', 'opacity-100');
-    
-    setTimeout(() => {
-        toast.classList.remove('translate-y-0', 'opacity-100');
-        toast.classList.add('translate-y-20', 'opacity-0');
-    }, 2500);
 }
 </script>
 

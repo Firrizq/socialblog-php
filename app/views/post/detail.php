@@ -138,7 +138,7 @@ $countNodes($comments);
                     <button class="btn-bookmark <?= $isBookmarked ? 'text-primary' : 'hover:text-primary' ?> transition-colors active:scale-95" data-id="<?= (int)$post['id'] ?>" title="Bookmark">
                         <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' <?= $isBookmarked ? 1 : 0 ?>;">bookmark</span>
                     </button>
-                    <button class="hover:text-primary transition-colors" title="Share" onclick="navigator.clipboard.writeText(window.location.href); alert('Link copied to clipboard!');">
+                    <button class="hover:text-primary transition-colors" title="Share" onclick="navigator.clipboard.writeText(window.location.href); showToast('Link copied to clipboard!', 'success');">
                         <span class="material-symbols-outlined text-xl">share</span>
                     </button>
                 </div>

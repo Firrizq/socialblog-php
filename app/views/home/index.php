@@ -304,7 +304,7 @@ if (hiddenInputEl && hiddenInputEl.value) {
 async function uploadNoteImage(file) {
     if (!file || !file.type.startsWith('image/')) return;
     if (uploadedNoteImages.length >= 4) {
-        alert('Maksimal 4 gambar diperbolehkan.');
+        showToast('Maksimal 4 gambar diperbolehkan.', 'error');
         return;
     }
     const formData = new FormData();
@@ -315,8 +315,8 @@ async function uploadNoteImage(file) {
         if (data.success && data.url) {
             uploadedNoteImages.push(data.url);
             renderNoteImagePreviews();
-        } else { alert(data.message || 'Image upload failed'); }
-    } catch (err) { alert('Failed to upload image. Please try again.'); }
+        } else { showToast(data.message || 'Image upload failed', 'error'); }
+    } catch (err) { showToast('Failed to upload image. Please try again.', 'error'); }
 }
 
 function renderNoteImagePreviews() {

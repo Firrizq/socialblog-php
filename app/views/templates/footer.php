@@ -603,5 +603,44 @@
     updateTimeAgo();
     setInterval(updateTimeAgo, 60000);
     </script>
+
+    <!-- Global Dynamic Toast Container -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-[200] flex flex-col gap-3 pointer-events-none"></div>
+
+    <script>
+    window.showToast = function(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        const isError = type === 'error';
+        const icon = isError ? 'error' : 'check_circle';
+        const colorClass = isError 
+            ? 'text-error border-error/40 bg-error-container/20' 
+            : 'text-primary border-primary/40 bg-surface-container-high';
+
+        toast.className = `transform translate-y-10 opacity-0 transition-all duration-300 pointer-events-auto px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 text-sm font-title-md border text-on-surface backdrop-blur-md ${colorClass}`;
+        
+        toast.innerHTML = `
+            <span class="material-symbols-outlined text-base ${isError ? 'text-error' : 'text-primary'}">${icon}</span>
+            <span>${message}</span>
+        `;
+
+        container.appendChild(toast);
+
+        // Animate in
+        requestAnimationFrame(() => {
+            toast.classList.remove('translate-y-10', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+        });
+
+        // Animate out and remove after 3.5 seconds
+        setTimeout(() => {
+            toast.classList.remove('translate-y-0', 'opacity-100');
+            toast.classList.add('translate-y-10', 'opacity-0');
+            setTimeout(() => toast.remove(), 300);
+        }, 3500);
+    };
+    </script>
 </body>
 </html>
