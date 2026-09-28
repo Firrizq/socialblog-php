@@ -37,7 +37,6 @@ $unreadNotifCount = (isset($_SESSION['user_id'])) ? (new Notification_model())->
     <!-- Quill.js CSS -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 
-    <!-- CSS Variables for Theming -->
     <style>
         @layer base {
             html, body { margin: 0; padding: 0; }
@@ -51,12 +50,12 @@ $unreadNotifCount = (isset($_SESSION['user_id'])) ? (new Notification_model())->
                 --color-primary-container: 209 250 229; /* #d1fae5 */
                 --color-on-primary-container: 6 95 70; /* #065f46 */
                 --color-surface: 255 255 255; /* #ffffff */
-                --color-surface-container-lowest: 248 250 252; /* #f8fafc */
-                --color-surface-container-low: 241 245 249; /* #f1f5f9 */
-                --color-surface-container: 226 232 240; /* #e2e8f0 */
-                --color-surface-container-high: 203 213 225; /* #cbd5e1 */
+                --color-surface-container-lowest: 255 255 255; /* #ffffff */
+                --color-surface-container-low: 248 250 252; /* #f8fafc */
+                --color-surface-container: 241 245 249; /* #f1f5f9 */
+                --color-surface-container-high: 226 232 240; /* #e2e8f0 */
                 --color-on-surface: 15 23 42; /* #0f172a */
-                --color-on-surface-variant: 100 116 139; /* #64748b */
+                --color-on-surface-variant: 71 85 105; /* #475569 */
                 --color-outline-variant: 226 232 240; /* #e2e8f0 */
                 --color-error: 239 68 68; /* #ef4444 */
                 --color-error-container: 254 226 226; /* #fee2e2 */
@@ -81,18 +80,18 @@ $unreadNotifCount = (isset($_SESSION['user_id'])) ? (new Notification_model())->
         }
         ::-webkit-scrollbar { display: none; }
         
-        /* Quill Adjustments */
-        .ql-toolbar.ql-snow { background: rgb(var(--color-surface-container)); border-color: rgb(var(--color-outline-variant) / 0.5) !important; border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem; }
-        .ql-container.ql-snow { background: rgb(var(--color-surface-container-lowest)); border-color: rgb(var(--color-outline-variant) / 0.5) !important; border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem; color: rgb(var(--color-on-surface)); font-family: 'Inter', sans-serif; font-size: 1rem; min-height: 260px; }
+        /* Quill Dark/Light Mode Adjustments */
+        .ql-toolbar.ql-snow { background: rgb(var(--color-surface-container-low)); border-color: rgb(var(--color-outline-variant)) !important; border-top-left-radius: 1rem; border-top-right-radius: 1rem; padding: 0.75rem !important; }
+        .ql-container.ql-snow { background: rgb(var(--color-surface-container-lowest)); border-color: rgb(var(--color-outline-variant)) !important; border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem; color: rgb(var(--color-on-surface)); font-family: 'Inter', sans-serif; font-size: 1.125rem; min-height: 300px; }
         .ql-snow .ql-stroke { stroke: rgb(var(--color-on-surface-variant)) !important; }
         .ql-snow .ql-fill { fill: rgb(var(--color-on-surface-variant)) !important; }
         .ql-snow .ql-picker { color: rgb(var(--color-on-surface-variant)) !important; }
-        .ql-snow .ql-picker-options { background-color: rgb(var(--color-surface-container)) !important; border-color: rgb(var(--color-outline-variant) / 0.5) !important; }
+        .ql-snow .ql-picker-options { background-color: rgb(var(--color-surface-container-high)) !important; border-color: rgb(var(--color-outline-variant)) !important; }
         .ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow.ql-toolbar button:focus .ql-stroke, .ql-snow.ql-toolbar button.ql-active .ql-stroke { stroke: rgb(var(--color-primary)) !important; }
         .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow.ql-toolbar button:focus .ql-fill, .ql-snow.ql-toolbar button.ql-active .ql-fill { fill: rgb(var(--color-primary)) !important; }
+        .ql-editor.ql-blank::before { color: rgb(var(--color-on-surface-variant) / 0.5) !important; font-style: normal !important; }
     </style>
 
-    <!-- FOUC Prevention Script -->
     <script>
         const savedTheme = localStorage.getItem('blogggle-theme') || 'system';
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -126,7 +125,7 @@ $unreadNotifCount = (isset($_SESSION['user_id'])) ? (new Notification_model())->
                     },
                     "spacing": { "space-sm": "0.5rem", "space-xs": "0.25rem", "gutter": "1.5rem", "space-md": "1rem", "space-lg": "1.5rem" },
                     "fontFamily": {
-                        "body-lg": ["Inter"], "title-md": ["Inter"], "headline-sm": ["Inter"], "body-md": ["Inter"], "headline-lg": ["Inter"], "caption": ["Inter"], "label-md": ["Inter"]
+                        "body-lg": ["Inter", "sans-serif"], "title-md": ["Inter", "sans-serif"], "headline-sm": ["Inter", "sans-serif"], "body-md": ["Inter", "sans-serif"], "headline-lg": ["Inter", "sans-serif"], "caption": ["Inter", "sans-serif"], "label-md": ["Inter", "sans-serif"]
                     }
                 }
             }
@@ -141,46 +140,44 @@ $unreadNotifCount = (isset($_SESSION['user_id'])) ? (new Notification_model())->
             <span class="material-symbols-outlined text-primary text-3xl">edit_square</span>
             <span class="font-title-md text-title-md text-on-surface tracking-tight">Blogggle</span>
         </div>
-        <div class="flex items-center gap-4 sm:gap-gutter">
-            <!-- Theme Switcher -->
+        <div class="flex items-center gap-3 sm:gap-4">
             <div class="relative dropdown-container">
-                <button type="button" onclick="toggleMenu(event, 'theme-menu')" class="w-9 h-9 rounded-full bg-surface-container-low hover:bg-surface-container border border-outline-variant/30 text-on-surface-variant hover:text-primary flex items-center justify-center transition-all shadow-sm" id="theme-toggle-btn" title="Theme Settings">
-                    <span class="material-symbols-outlined text-lg" id="theme-icon">dark_mode</span>
+                <button type="button" onclick="toggleMenu(event, 'theme-menu')" class="w-9 h-9 rounded-full hover:bg-surface-container border border-transparent hover:border-outline-variant/30 text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-all" id="theme-toggle-btn" title="Theme Settings">
+                    <span class="material-symbols-outlined text-[20px]" id="theme-icon">dark_mode</span>
                 </button>
-                <div id="theme-menu" class="hidden absolute right-0 top-full mt-2 w-36 bg-surface-container-high border border-outline-variant/30 rounded-xl shadow-xl z-50 overflow-hidden flex flex-col py-1">
-                    <button onclick="setTheme('light')" class="w-full text-left px-4 py-2 text-sm text-on-surface font-title-md hover:bg-surface-container flex items-center gap-3 transition-colors group">
-                        <span class="material-symbols-outlined text-base group-hover:text-primary">light_mode</span> Light
+                <div id="theme-menu" class="hidden absolute right-0 top-full mt-2 w-36 bg-surface-container-low border border-outline-variant/30 rounded-xl shadow-xl z-[60] overflow-hidden flex flex-col py-1.5">
+                    <button onclick="setTheme('light')" class="w-full text-left px-4 py-2.5 text-sm text-on-surface font-title-md hover:bg-surface-container flex items-center gap-3 transition-colors group">
+                        <span class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover:text-primary">light_mode</span> Light
                     </button>
-                    <button onclick="setTheme('dark')" class="w-full text-left px-4 py-2 text-sm text-on-surface font-title-md hover:bg-surface-container flex items-center gap-3 transition-colors group">
-                        <span class="material-symbols-outlined text-base group-hover:text-primary">dark_mode</span> Dark
+                    <button onclick="setTheme('dark')" class="w-full text-left px-4 py-2.5 text-sm text-on-surface font-title-md hover:bg-surface-container flex items-center gap-3 transition-colors group">
+                        <span class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover:text-primary">dark_mode</span> Dark
                     </button>
-                    <button onclick="setTheme('system')" class="w-full text-left px-4 py-2 text-sm text-on-surface font-title-md hover:bg-surface-container flex items-center gap-3 transition-colors group">
-                        <span class="material-symbols-outlined text-base group-hover:text-primary">desktop_windows</span> System
+                    <button onclick="setTheme('system')" class="w-full text-left px-4 py-2.5 text-sm text-on-surface font-title-md hover:bg-surface-container flex items-center gap-3 transition-colors group">
+                        <span class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover:text-primary">desktop_windows</span> System
                     </button>
                 </div>
             </div>
 
             <?php if (isset($_SESSION['user_id'])): ?>
-                <a class="hidden sm:inline-flex items-center gap-space-xs px-space-md py-space-xs rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md hover:bg-primary transition-colors shadow-sm" href="<?= BASEURL ?>/post/create">
-                    <span class="material-symbols-outlined text-base">edit</span><span>Write</span>
+                <a class="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-on-primary font-label-md text-sm hover:opacity-90 transition-opacity shadow-sm" href="<?= BASEURL ?>/post/create">
+                    <span class="material-symbols-outlined text-[18px]">edit_square</span><span>Write</span>
                 </a>
-                <div class="flex items-center gap-space-sm pl-space-xs border-l border-outline-variant/40">
-                    <a href="<?= BASEURL ?>/profile" class="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-primary font-bold text-xs text-on-primary shrink-0 hover:ring-2 hover:ring-primary transition-all">
+                <div class="flex items-center gap-3 pl-3 sm:pl-4 border-l border-outline-variant/50">
+                    <a href="<?= BASEURL ?>/profile" class="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-primary-container font-bold text-xs text-on-primary-container shrink-0 hover:ring-2 hover:ring-primary transition-all">
                         <?php if (!empty($_SESSION['profile_picture'])): ?>
-                            <img src="<?= BASEURL ?><?= htmlspecialchars($_SESSION['profile_picture']) ?>" alt="<?= htmlspecialchars($_SESSION['username']) ?>" class="w-full h-full object-cover rounded-full">
+                            <img src="<?= BASEURL ?><?= htmlspecialchars($_SESSION['profile_picture']) ?>" alt="<?= htmlspecialchars($_SESSION['username']) ?>" class="w-full h-full object-cover">
                         <?php else: ?>
                             <?= strtoupper(substr($_SESSION['username'], 0, 1)) ?>
                         <?php endif; ?>
                     </a>
-                    <a href="<?= BASEURL ?>/auth/logout" class="hidden sm:block text-error hover:text-error-container text-sm font-medium">Logout</a>
+                    <a href="<?= BASEURL ?>/auth/logout" class="hidden sm:block text-error hover:text-error-container text-sm font-medium transition-colors">Logout</a>
                 </div>
             <?php else: ?>
-                <a href="<?= BASEURL ?>/auth" class="text-primary hover:text-primary-fixed font-medium text-sm">Sign In</a>
+                <a href="<?= BASEURL ?>/auth" class="text-primary hover:text-primary-container font-medium text-sm transition-colors">Sign In</a>
             <?php endif; ?>
         </div>
 
         <script>
-            // Theme Switcher Logic
             function updateThemeIcon(theme) {
                 const icon = document.getElementById('theme-icon');
                 if (!icon) return;
@@ -190,7 +187,8 @@ $unreadNotifCount = (isset($_SESSION['user_id'])) ? (new Notification_model())->
             }
 
             function applyTheme(theme) {
-                if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (theme === 'dark' || (theme === 'system' && prefersDark)) {
                     document.documentElement.classList.add('dark');
                 } else {
                     document.documentElement.classList.remove('dark');
@@ -201,18 +199,20 @@ $unreadNotifCount = (isset($_SESSION['user_id'])) ? (new Notification_model())->
                 localStorage.setItem('blogggle-theme', theme);
                 applyTheme(theme);
                 updateThemeIcon(theme);
+                
+                // Hide dropdown
                 const menu = document.getElementById('theme-menu');
                 if(menu) menu.classList.add('hidden');
             };
 
-            // Listen for system theme changes
+            // Listen for OS system theme changes
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-                if (localStorage.getItem('blogggle-theme') === 'system') {
+                if (localStorage.getItem('blogggle-theme') === 'system' || !localStorage.getItem('blogggle-theme')) {
                     applyTheme('system');
                 }
             });
 
-            // Init icon
+            // Init icon on load
             updateThemeIcon(localStorage.getItem('blogggle-theme') || 'system');
         </script>
     </header>
