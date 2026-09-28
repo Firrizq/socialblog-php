@@ -1,12 +1,13 @@
 <?php 
 require_once __DIR__ . '/../templates/header.php'; 
-$user = $data['profile_user'] ?? null;
+$user = $data['profile_user'] ?? $data['user'] ?? null;
+$data['user'] = $user;
 ?>
 
 <div class="flex flex-col w-full pb-20">
     <?php if (!$user): ?>
         <!-- User Not Found State -->
-        <div class="text-center p-12 bg-surface-container-low border-b border-outline-variant/30">
+        <div class="text-center p-12 bg-surface-container-low border border-outline-variant/30 rounded-2xl my-4">
             <span class="material-symbols-outlined text-outline text-5xl mb-3">person_off</span>
             <h1 class="font-title-md text-2xl font-bold text-on-surface">User Not Found</h1>
             <p class="font-body-md text-on-surface-variant text-sm mt-1 mb-6">
@@ -18,139 +19,116 @@ $user = $data['profile_user'] ?? null;
             </a>
         </div>
     <?php else: ?>
-        <!-- Top Sticky Subheader (Twitter/X style) -->
-        <div class="sticky top-0 z-30 bg-surface/90 backdrop-blur-md px-4 py-2 border-b border-outline-variant/30 flex items-center gap-6">
-            <a href="<?= BASEURL ?>/home" class="w-9 h-9 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors">
+        <!-- Sticky Subheader -->
+        <div class="sticky top-0 z-30 bg-surface/90 backdrop-blur-md px-4 py-2.5 border-b border-outline-variant/30 flex items-center gap-4">
+            <button onclick="history.back()" class="w-9 h-9 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors">
                 <span class="material-symbols-outlined text-xl">arrow_back</span>
-            </a>
+            </button>
             <div class="min-w-0">
                 <h1 class="font-title-md text-lg font-bold text-on-surface leading-tight truncate">
-                    <?= htmlspecialchars($user['name'] ?? $user['username']) ?>
+                    <?= htmlspecialchars($data['user']['name'] ?? $data['user']['username'] ?? 'Profile') ?>
                 </h1>
                 <p class="font-caption text-xs text-on-surface-variant">
-                    <?= count($data['posts']) ?> <?= count($data['posts']) === 1 ? 'post' : 'posts' ?>
+                    <?= count($data['posts'] ?? []) ?> <?= count($data['posts'] ?? []) === 1 ? 'post' : 'posts' ?>
                 </p>
             </div>
         </div>
 
-        <!-- 1. Full-width Banner Image Area -->
-        <div class="w-full h-48 sm:h-52 bg-surface-container-high relative overflow-hidden">
-            <?php if (!empty($user['banner_picture'])): ?>
-                <img src="<?= BASEURL ?><?= htmlspecialchars($user['banner_picture']) ?>" alt="Banner" class="w-full h-full object-cover">
-            <?php else: ?>
-                <!-- Default stylish Obsidian Emerald gradient banner -->
-                <div class="w-full h-full bg-gradient-to-r from-surface-container-lowest via-surface-container-high to-surface-container relative">
-                    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent"></div>
-                </div>
-            <?php endif; ?>
-        </div>
+        <!-- 1. Hero Section -->
+        <div class="bg-surface-container-lowest border-x border-t border-outline-variant/30 rounded-t-2xl overflow-hidden mt-2 relative">
+            <!-- Banner (Gradient Fallback) -->
+            <div class="h-32 sm:h-48 w-full bg-surface-container-high relative">
+                <?php if (!empty($data['user']['banner_picture'])): ?>
+                    <img src="<?= BASEURL ?><?= htmlspecialchars($data['user']['banner_picture']) ?>" class="w-full h-full object-cover">
+                <?php else: ?>
+                    <div class="w-full h-full bg-gradient-to-r from-primary/20 to-primary/5"></div>
+                <?php endif; ?>
+            </div>
 
-        <!-- 2. Profile Info Area (Overlapping Avatar & Action Button) -->
-        <div class="px-4 sm:px-6">
-            <div class="flex items-end justify-between -mt-16 sm:-mt-20 mb-3">
-                <!-- Overlapping Avatar with thick border matching background -->
-                <div class="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-surface bg-surface-container-high overflow-hidden shrink-0 shadow-xl flex items-center justify-center">
-                    <?php if (!empty($user['profile_picture'])): ?>
-                        <img src="<?= BASEURL ?><?= htmlspecialchars($user['profile_picture']) ?>" alt="<?= htmlspecialchars($user['username']) ?>" class="w-full h-full object-cover">
+            <!-- Avatar & Actions Row -->
+            <div class="px-4 sm:px-5 relative flex justify-end items-start pt-3">
+                <!-- Overlapping Avatar -->
+                <div class="absolute -top-12 sm:-top-16 left-4 sm:left-5 w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-surface-container-lowest bg-surface-container-high overflow-hidden shrink-0 z-10 shadow-lg">
+                    <?php if (!empty($data['user']['profile_picture'])): ?>
+                        <img src="<?= BASEURL ?><?= htmlspecialchars($data['user']['profile_picture']) ?>" class="w-full h-full object-cover">
                     <?php else: ?>
-                        <div class="w-full h-full bg-primary flex items-center justify-center font-bold text-4xl sm:text-5xl text-on-primary select-none">
-                            <?= strtoupper(substr($user['username'] ?? 'U', 0, 1)) ?>
+                        <div class="w-full h-full flex items-center justify-center font-bold text-primary text-3xl sm:text-4xl bg-surface-container-low select-none">
+                            <?= htmlspecialchars(substr($data['user']['username'] ?? 'U', 0, 1)) ?>
                         </div>
                     <?php endif; ?>
                 </div>
 
-                <!-- Action Button: Edit Profile vs Follow -->
-                <div class="pb-1">
-                    <?php if (isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)$user['id']): ?>
-                        <a href="<?= BASEURL ?>/profile/edit" class="px-5 py-1.5 rounded-full border border-outline-variant font-title-md text-sm font-semibold text-on-surface hover:bg-surface-container hover:border-primary transition-all">Edit profile</a>
-                    <?php else: ?>
-                        <?php $isFollowing = !empty($data['is_following']); ?>
-                        <button class="btn-follow <?= $isFollowing ? 'px-5 py-1.5 rounded-full border border-outline-variant font-title-md text-sm font-semibold text-on-surface hover:border-error hover:text-error hover:bg-error-container/20 transition-all' : 'px-6 py-1.5 rounded-full bg-primary-container text-on-primary-container hover:bg-primary font-title-md text-sm font-semibold transition-all shadow-[0_0_0_1px_rgba(16,185,129,0.3)] active:scale-95' ?>" data-id="<?= (int)$user['id'] ?>">
-                            <?= $isFollowing ? 'Following' : 'Follow' ?>
-                        </button>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <!-- User Names -->
-            <div class="mt-1">
-                <h2 class="font-headline-sm text-xl sm:text-2xl font-bold text-on-surface leading-tight tracking-tight">
-                    <?= htmlspecialchars($user['name'] ?? $user['username']) ?>
-                </h2>
-                <p class="font-body-md text-sm text-on-surface-variant font-normal">
-                    @<?= htmlspecialchars($user['username']) ?>
-                </p>
-            </div>
-
-            <!-- Bio -->
-            <?php if (!empty($user['bio'])): ?>
-                <p class="font-body-md text-sm text-on-surface mt-3 leading-relaxed">
-                    <?= nl2br(htmlspecialchars($user['bio'])) ?>
-                </p>
-            <?php else: ?>
-                <p class="font-body-md text-sm text-on-surface-variant/70 italic mt-3">
-                    Writer and community contributor on Blogggle.
-                </p>
-            <?php endif; ?>
-
-            <!-- Metadata Row (Location, Links, Joined Date) -->
-            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3.5 text-xs text-on-surface-variant font-caption">
-                <?php if (!empty($user['location'])): ?>
-                    <span class="flex items-center gap-1">
-                        <span class="material-symbols-outlined text-base">location_on</span>
-                        <span><?= htmlspecialchars($user['location']) ?></span>
-                    </span>
+                <!-- Edit Profile Button / Follow Button -->
+                <?php if (isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)($data['user']['id'] ?? 0)): ?>
+                    <a href="<?= BASEURL ?>/profile/edit" class="px-5 py-1.5 rounded-full bg-surface border border-outline-variant/50 text-on-surface font-title-md text-sm hover:bg-surface-container-low transition-colors shadow-sm font-bold relative z-10">
+                        Edit profile
+                    </a>
+                <?php elseif (!empty($data['user']['id'])): ?>
+                    <?php $isFollowing = !empty($data['is_following']); ?>
+                    <button class="btn-follow <?= $isFollowing ? 'px-5 py-1.5 rounded-full border border-outline-variant/50 font-title-md text-sm font-bold text-on-surface hover:border-error hover:text-error hover:bg-error-container/20 transition-all shadow-sm relative z-10' : 'px-6 py-1.5 rounded-full bg-on-surface text-surface hover:opacity-80 font-title-md text-sm font-bold transition-all shadow-sm relative z-10' ?>" data-id="<?= (int)$data['user']['id'] ?>">
+                        <?= $isFollowing ? 'Following' : 'Follow' ?>
+                    </button>
                 <?php endif; ?>
+            </div>
+
+            <!-- Identity & Bio -->
+            <div class="px-4 sm:px-5 mt-2 sm:mt-4 pb-4">
+                <h1 class="text-xl sm:text-2xl font-black text-on-surface leading-tight tracking-tight">
+                    <?= htmlspecialchars($data['user']['name'] ?? $data['user']['username'] ?? 'Anonymous') ?>
+                </h1>
+                <p class="text-on-surface-variant font-body-md text-sm sm:text-[15px]">
+                    @<?= htmlspecialchars($data['user']['username'] ?? 'anon') ?>
+                </p>
                 
-                <?php if (!empty($user['profile_link'])): ?>
-                    <a href="<?= htmlspecialchars($user['profile_link']) ?>" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1 text-primary hover:underline">
-                        <span class="material-symbols-outlined text-base">link</span>
-                        <span class="truncate max-w-[180px]"><?= htmlspecialchars(parse_url($user['profile_link'], PHP_URL_HOST) ?: $user['profile_link']) ?></span>
-                    </a>
+                <?php if (!empty($data['user']['bio'])): ?>
+                    <div class="mt-3 text-on-surface font-body-md text-[15px] leading-relaxed">
+                        <?= htmlspecialchars($data['user']['bio']) ?>
+                    </div>
                 <?php endif; ?>
 
-                <?php if (!empty($user['tipping_link'])): ?>
-                    <a href="<?= htmlspecialchars($user['tipping_link']) ?>" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1 text-primary hover:underline">
-                        <span class="material-symbols-outlined text-base">volunteer_activism</span>
-                        <span>Support Author</span>
-                    </a>
-                <?php endif; ?>
+                <div class="flex items-center gap-4 mt-3 text-on-surface-variant font-body-md text-sm flex-wrap">
+                    <div class="flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[16px]">calendar_month</span>
+                        <span>Joined <?= date('F Y', strtotime($data['user']['created_at'] ?? 'now')) ?></span>
+                    </div>
 
-                <span class="flex items-center gap-1">
-                    <span class="material-symbols-outlined text-base">calendar_month</span>
-                    <span>Joined <?= date('F Y', strtotime($user['created_at'])) ?></span>
-                </span>
+                    <?php if (!empty($data['user']['location'])): ?>
+                        <div class="flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[16px]">location_on</span>
+                            <span><?= htmlspecialchars($data['user']['location']) ?></span>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($data['user']['profile_link'])): ?>
+                        <a href="<?= htmlspecialchars($data['user']['profile_link']) ?>" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1 text-primary hover:underline">
+                            <span class="material-symbols-outlined text-[16px]">link</span>
+                            <span><?= htmlspecialchars(parse_url($data['user']['profile_link'], PHP_URL_HOST) ?: $data['user']['profile_link']) ?></span>
+                        </a>
+                    <?php endif; ?>
+
+                    <div class="flex items-center gap-4">
+                        <span class="text-on-surface font-bold"><?= (int)($data['user']['following_count'] ?? 0) ?> <span class="font-normal text-on-surface-variant">Following</span></span>
+                        <span class="text-on-surface font-bold"><span id="profile-follower-count"><?= (int)($data['user']['follower_count'] ?? 0) ?></span> <span class="font-normal text-on-surface-variant">Followers</span></span>
+                    </div>
+                </div>
             </div>
 
-            <!-- Stats (Following and Followers) -->
-            <div class="flex items-center gap-5 mt-3.5 text-sm pb-2">
-                <div class="flex items-center gap-1">
-                    <span class="font-bold text-on-surface font-title-md"><?= (int)($user['following_count'] ?? 0) ?></span>
-                    <span class="text-on-surface-variant font-body-md text-xs sm:text-sm">Following</span>
-                </div>
-                <div class="flex items-center gap-1">
-                    <span class="font-bold text-on-surface font-title-md" id="profile-follower-count"><?= (int)($user['follower_count'] ?? 0) ?></span>
-                    <span class="text-on-surface-variant font-body-md text-xs sm:text-sm">Followers</span>
-                </div>
+            <!-- Tabs Navigation -->
+            <div class="flex border-b border-outline-variant/30 overflow-x-auto hide-scrollbar px-2 sm:px-0">
+                <a href="#" class="px-6 py-3.5 font-title-md text-[15px] font-bold text-on-surface border-b-4 border-primary hover:bg-surface-container-low transition-colors whitespace-nowrap">
+                    Posts
+                </a>
+                <a href="#" class="px-6 py-3.5 font-title-md text-[15px] font-medium text-on-surface-variant border-b-4 border-transparent hover:bg-surface-container-low hover:text-on-surface transition-colors whitespace-nowrap">
+                    Replies
+                </a>
+                <a href="#" class="px-6 py-3.5 font-title-md text-[15px] font-medium text-on-surface-variant border-b-4 border-transparent hover:bg-surface-container-low hover:text-on-surface transition-colors whitespace-nowrap">
+                    Media
+                </a>
             </div>
-        </div>
-
-        <!-- 3. Sticky Tab Navigation (Posts, Replies, Media) -->
-        <div class="sticky top-12 z-20 bg-surface/90 backdrop-blur-md border-b border-outline-variant/30 flex text-center mt-2">
-            <button class="flex-1 py-3.5 font-title-md text-sm text-on-surface hover:bg-surface-container-low/50 transition-colors relative font-semibold flex items-center justify-center">
-                <span>Posts</span>
-                <span class="absolute bottom-0 left-1/4 right-1/4 h-1 bg-primary rounded-full shadow-[0_0_8px_rgba(78,222,163,0.8)]"></span>
-            </button>
-            <button class="flex-1 py-3.5 font-title-md text-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low/50 transition-colors font-medium">
-                <span>Replies</span>
-            </button>
-            <button class="flex-1 py-3.5 font-title-md text-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low/50 transition-colors font-medium">
-                <span>Media</span>
-            </button>
         </div>
 
         <!-- Feed Post Stream -->
-        <div class="flex flex-col divide-y divide-outline-variant/30 border-y border-outline-variant/30 mt-2">
+        <div class="flex flex-col divide-y divide-outline-variant/30 border-b border-outline-variant/30">
             <?php if (!empty($data['posts']) && is_array($data['posts'])): ?>
                 <?php foreach ($data['posts'] as $post): ?>
                     <!-- Asymmetrical Post Row -->
@@ -312,7 +290,8 @@ $user = $data['profile_user'] ?? null;
 <style>
     /* Quill content formatting inside profile */
     .quill-content p { margin-bottom: 0.75rem; }
-    .quill-content a { color: #4edea3; text-decoration: underline; }
+    .quill-content a { color: #10b981; text-decoration: underline; }
+    .dark .quill-content a { color: #4edea3; }
     .quill-content strong { color: #dae2fd; }
     .quill-content blockquote { border-left: 3px solid #10b981; padding-left: 1rem; margin: 1rem 0; font-style: italic; }
 </style>
