@@ -4,6 +4,7 @@ $post = $data['post'] ?? null;
 $comments = $data['comments'] ?? [];
 ?>
 
+<div id="reading-progress" class="fixed top-0 left-0 h-1 bg-primary z-[120] w-0 transition-all duration-150"></div>
 <div class="max-w-2xl mx-auto w-full px-4 sm:px-0 pb-20 pt-4">
     <!-- Back Navigation -->
     <div class="mb-8">
@@ -75,6 +76,17 @@ $comments = $data['comments'] ?? [];
                     </div>
                 <?php endif; ?>
             </div>
+
+            <!-- Dedicated Hero Cover Image -->
+            <?php if(($post['post_type'] ?? 'story') === 'story' && !empty($post['cover_image'])): ?>
+                <?php 
+                    $decoded = json_decode($post['cover_image'], true);
+                    $coverPath = is_array($decoded) && !empty($decoded) ? $decoded[0] : (strpos($post['cover_image'], ',') ? explode(',', $post['cover_image'])[0] : $post['cover_image']);
+                ?>
+                <div class="w-full aspect-[16/9] sm:aspect-video rounded-2xl overflow-hidden mb-10 border border-outline-variant/30">
+                    <img src="<?= BASEURL ?><?= htmlspecialchars(trim($coverPath)) ?>" class="w-full h-full object-cover" alt="Story Cover">
+                </div>
+            <?php endif; ?>
 
             <!-- Content Body (Immersive Typography) -->
             <div class="font-body-md text-on-surface text-[17px] sm:text-[20px] leading-[1.7] sm:leading-[1.8] whitespace-pre-line mb-10 overflow-hidden break-words quill-content">
@@ -227,5 +239,14 @@ $comments = $data['comments'] ?? [];
     .quill-content li { margin-bottom: 0.35rem; }
     .quill-content img { border-radius: 1rem; margin: 1.5rem 0; max-width: 100%; height: auto; }
 </style>
+
+<script>
+    window.addEventListener('scroll', () => {
+        const winScroll = document.documentElement.scrollTop || document.body.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        const scrolled = (winScroll / height) * 100;
+        document.getElementById('reading-progress').style.width = scrolled + '%';
+    });
+</script>
 
 <?php require_once __DIR__ . '/../templates/footer.php'; ?>

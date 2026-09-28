@@ -20,6 +20,7 @@
 
         <!-- Right: Actions -->
         <div class="flex-1 flex items-center justify-end gap-2 sm:gap-3">
+            <span id="word-count-badge" class="hidden md:flex items-center text-xs font-title-md text-on-surface-variant mr-3"><span id="draft-status" class="mr-2 text-primary font-bold"></span><span id="word-count-text">0 words</span></span>
             <button type="button" onclick="if(typeof showToast === 'function') showToast('Saved to Drafts!', 'success');" class="hidden sm:block px-4 py-2 rounded-full text-on-surface-variant font-title-md text-sm hover:bg-surface-container-low transition-colors">Save Draft</button>
             <button type="button" id="preview-btn" class="px-4 py-2 rounded-full bg-surface-container-lowest border border-outline-variant/50 text-on-surface font-title-md text-sm hover:bg-surface-container-low transition-colors shadow-sm">Preview</button>
             <button type="submit" form="story-form" class="px-5 py-2 rounded-full bg-primary text-on-primary font-title-md text-sm hover:opacity-90 transition-opacity shadow-sm font-bold">Save Changes</button>
@@ -48,7 +49,7 @@
             }
             ?>
             <!-- Dedicated Cover Image Uploader -->
-            <div id="cover-image-container" class="mb-10 w-full flex flex-col items-start">
+            <div id="cover-image-container" class="mb-10 w-full flex flex-col items-start" id="cover-dropzone">
                 <input type="file" name="images[]" id="cover-image-input" accept="image/*" class="hidden">
                 <!-- Flag to tell backend if the existing cover was kept or removed -->
                 <input type="hidden" name="existing_cover" id="existing_cover" value="<?= htmlspecialchars($existingCover) ?>">
@@ -335,6 +336,72 @@
         window.addEventListener('popstate', () => {
             document.body.style.overflow = 'auto';
         });
+
+        // 1. Live Word Count
+        quill.on('text-change', () => {
+            const text = quill.getText().trim();
+            const words = text.length > 0 ? text.split(/\s+/).length : 0;
+            const readTime = Math.max(1, Math.ceil(words / 200));
+            document.getElementById('word-count-text').textContent = `${words} words · ${readTime} min read`;
+        });
+
+        // 2. LocalStorage Auto-Save
+        const draftKey = 'blogggle_draft_' + (window.location.pathname.includes('edit') ? <?= $post['id'] ?? '0' ?> : 'new');
+        const draftStatus = document.getElementById('draft-status');
+        
+        // Only load draft on create, or if we want to prompt on edit (simplified for auto-save)
+        if(window.location.pathname.includes('create') && localStorage.getItem(draftKey)) {
+            const savedData = JSON.parse(localStorage.getItem(draftKey));
+            if(confirm('We found an unsaved draft. Would you like to restore it?')) {
+                document.getElementById('title-input').value = savedData.title || '';
+                document.getElementById('subtitle-input').value = savedData.subtitle || '';
+                quill.clipboard.dangerouslyPasteHTML(savedData.content || '');
+            } else {
+                localStorage.removeItem(draftKey);
+            }
+        }
+
+        setInterval(() => {
+            const title = document.getElementById('title-input').value;
+            const subtitle = document.getElementById('subtitle-input').value;
+            const content = quill.root.innerHTML;
+            if(title.trim() !== '' || quill.getText().trim().length > 0) {
+                localStorage.setItem(draftKey, JSON.stringify({title, subtitle, content}));
+                draftStatus.textContent = 'Saved locally';
+                setTimeout(() => { draftStatus.textContent = ''; }, 3000);
+            }
+        }, 10000); // Auto-save every 10 seconds
+
+        // Clear draft on successful submit
+        document.getElementById('story-form').addEventListener('submit', () => {
+            localStorage.removeItem(draftKey);
+        });
+
+        // 3. Drag and Drop Cover Image
+        const dropZone = document.getElementById('cover-image-container');
+        if(dropZone && coverInput) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+            function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.add('opacity-50'), false);
+            });
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.remove('opacity-50'), false);
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                let dt = e.dataTransfer;
+                let files = dt.files;
+                if(files && files[0] && files[0].type.startsWith('image/')) {
+                    coverInput.files = files;
+                    const event = new Event('change');
+                    coverInput.dispatchEvent(event);
+                }
+            }, false);
+        }
     });
 </script>
 

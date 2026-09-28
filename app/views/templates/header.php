@@ -91,12 +91,15 @@ $unreadNotifCount = (isset($_SESSION['user_id'])) ? (new Notification_model())->
         .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow.ql-toolbar button:focus .ql-fill, .ql-snow.ql-toolbar button.ql-active .ql-fill { fill: rgb(var(--color-primary)) !important; }
         .ql-editor.ql-blank::before { color: rgb(var(--color-on-surface-variant) / 0.5) !important; font-style: normal !important; }
     </style>
+    <meta name="theme-color" content="#ffffff" id="meta-theme-color">
 
     <script>
         const savedTheme = localStorage.getItem('blogggle-theme') || 'system';
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         if (savedTheme === 'dark' || (savedTheme === 'system' && prefersDark)) {
             document.documentElement.classList.add('dark');
+            const metaTheme = document.getElementById('meta-theme-color');
+            if(metaTheme) metaTheme.setAttribute('content', '#0b1326');
         } else {
             document.documentElement.classList.remove('dark');
         }
@@ -196,10 +199,15 @@ $unreadNotifCount = (isset($_SESSION['user_id'])) ? (new Notification_model())->
 
             function applyTheme(theme) {
                 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                if (theme === 'dark' || (theme === 'system' && prefersDark)) {
+                const isDark = theme === 'dark' || (theme === 'system' && prefersDark);
+                if (isDark) {
                     document.documentElement.classList.add('dark');
+                    const metaEl = document.getElementById('meta-theme-color');
+                    if (metaEl) metaEl.setAttribute('content', '#0b1326');
                 } else {
                     document.documentElement.classList.remove('dark');
+                    const metaEl = document.getElementById('meta-theme-color');
+                    if (metaEl) metaEl.setAttribute('content', '#ffffff');
                 }
             }
 
@@ -207,11 +215,17 @@ $unreadNotifCount = (isset($_SESSION['user_id'])) ? (new Notification_model())->
                 localStorage.setItem('blogggle-theme', theme);
                 applyTheme(theme);
                 updateThemeIcon(theme);
-                
-                // Hide dropdown
                 const menu = document.getElementById('theme-menu');
                 if(menu) menu.classList.add('hidden');
             };
+
+            // Cross-tab synchronization
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'blogggle-theme') {
+                    applyTheme(e.newValue);
+                    updateThemeIcon(e.newValue);
+                }
+            });
 
             // Listen for OS system theme changes
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
