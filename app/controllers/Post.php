@@ -105,6 +105,14 @@ class Post extends Controller
     }
 
     /**
+     * Alias for edit to support /post/update/{id} route
+     */
+    public function update(string|int $id = 0): void
+    {
+        $this->edit($id);
+    }
+
+    /**
      * Edit an existing story or draft
      * GET /post/edit/{id} | POST /post/edit/{id}
      *

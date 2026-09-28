@@ -112,6 +112,9 @@
     /* Hide scrollbar for mobile toolbar */
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Subtitle rendering inside content */
+    .story-subtitle { font-size: 22px; color: rgb(var(--color-on-surface-variant)); margin-bottom: 24px; line-height: 1.6; }
 </style>
 
 <!-- Initialize Quill and Interactions -->
@@ -275,14 +278,20 @@
             }
         }
 
-        // Form Submit Logic
+        // Form Submit Logic (Injecting subtitle)
         document.getElementById('story-form').addEventListener('submit', function(e) {
-            const html = quill.root.innerHTML;
+            let html = quill.root.innerHTML;
+            const subtitle = document.getElementById('subtitle-input').value.trim();
+            
             if (html === '<p><br></p>' || html.trim() === '') {
                 e.preventDefault();
                 if(typeof showToast === 'function') showToast('Content cannot be empty', 'error');
                 else alert('Content cannot be empty');
                 return;
+            }
+
+            if (subtitle !== '') {
+                html = `<h2 class="story-subtitle editorial-font" style="font-size: 22px; color: rgb(var(--color-on-surface-variant)); margin-bottom: 24px; line-height: 1.6;">${subtitle}</h2>` + html;
             }
             document.getElementById('content').value = html;
             localStorage.removeItem('blogggle_story_draft');
