@@ -64,6 +64,7 @@ class Post extends Controller
             }
 
             $status = ($_POST['action'] ?? 'publish') === 'draft' ? 'draft' : 'published';
+            $coverImage = $this->handleUploadedCover();
 
             // Save post
             $newPostId = $this->postModel->createPost([
@@ -71,6 +72,7 @@ class Post extends Controller
                 'post_type' => 'story',
                 'title' => $title,
                 'content' => $content,
+                'cover_image' => $coverImage,
                 'status' => $status
             ]);
 
@@ -152,10 +154,18 @@ class Post extends Controller
                 $content = strip_tags($rawContent, $allowedTags);
             }
 
+            $uploadedCover = $this->handleUploadedCover();
+            $finalStoryCover = $post['cover_image'] ?? null;
+            if ($uploadedCover !== null) {
+                $finalStoryCover = $uploadedCover;
+            } elseif (isset($_POST['existing_cover'])) {
+                $finalStoryCover = !empty($_POST['existing_cover']) ? trim($_POST['existing_cover']) : null;
+            }
+
             $this->postModel->updatePost($id, (int)$_SESSION['user_id'], [
                 'title' => $title,
                 'content' => $content,
-                'cover_image' => $isNote ? ($coverImage ?: null) : ($post['cover_image'] ?? null),
+                'cover_image' => $isNote ? ($coverImage ?: null) : $finalStoryCover,
                 'status' => $status
             ]);
 
@@ -400,5 +410,29 @@ class Post extends Controller
             header('Location: ' . BASEURL . '/profile');
         }
         exit;
+    }
+
+    /**
+     * Helper to process single cover image file upload from $_FILES['images']
+     */
+    private function handleUploadedCover(): ?string
+    {
+        if (!empty($_FILES['images']['name'][0]) && $_FILES['images']['error'][0] === UPLOAD_ERR_OK) {
+            $fileTmp = $_FILES['images']['tmp_name'][0];
+            $fileName = $_FILES['images']['name'][0];
+            $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION)) ?: 'jpg';
+            $allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            if (in_array($ext, $allowedExts, true)) {
+                $uploadDir = dirname(__DIR__, 2) . '/public/uploads/images';
+                if (!is_dir($uploadDir)) {
+                    @mkdir($uploadDir, 0755, true);
+                }
+                $filename = 'cover_' . bin2hex(random_bytes(8)) . '.' . $ext;
+                if (@move_uploaded_file($fileTmp, $uploadDir . '/' . $filename)) {
+                    return '/uploads/images/' . $filename;
+                }
+            }
+        }
+        return null;
     }
 }
