@@ -57,14 +57,14 @@
     <form id="editPostForm" action="<?= BASEURL ?>/post/edit/<?= (int)$data['post']['id'] ?>" method="POST" class="flex flex-col px-4 sm:px-6 py-6">
         <input type="hidden" name="action" id="actionInput" value="publish">
 
-        <!-- Title Input (Serif Typography matching Create View) -->
+        <!-- Title Input (Exact same massive serif typography as Create view) -->
         <input 
             type="text" 
             name="title" 
             id="titleInput" 
             value="<?= htmlspecialchars($data['post']['title'] ?? '') ?>" 
             placeholder="Title" 
-            class="w-full bg-transparent border-none p-0 focus:ring-0 text-3xl sm:text-4xl font-bold text-on-surface mb-6 placeholder:text-on-surface-variant/40" 
+            class="w-full bg-transparent border-none p-0 focus:ring-0 text-4xl sm:text-[44px] font-bold text-on-surface mb-6 placeholder:text-on-surface-variant/40" 
             style="font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif; line-height: 1.2;" 
             required 
             autofocus
@@ -220,11 +220,15 @@
         const BASE_URL = '<?= BASEURL ?>';
 
         // Register custom icons in Quill
+        const undoIcon = '<svg viewBox="0 0 18 18"><polygon class="ql-fill ql-stroke" points="6 10 4 12 2 10 6 10"></polygon><path class="ql-stroke" d="M8.09,13.91A4.6,4.6,0,0,0,9,14,5,5,0,1,0,4,9"></path></svg>';
+        const redoIcon = '<svg viewBox="0 0 18 18"><polygon class="ql-fill ql-stroke" points="12 10 14 12 16 10 12 10"></polygon><path class="ql-stroke" d="M9.91,13.91A4.6,4.6,0,0,1,9,14a5,5,0,1,1,5-5"></path></svg>';
+        const audioIcon = '<svg viewBox="0 0 18 18"><polygon class="ql-stroke" points="3 6 3 12 7 12 12 16 12 2 7 6 3 6"></polygon><path class="ql-stroke" d="M14 6.5a4 4 0 0 1 0 5"></path><path class="ql-stroke" d="M16 4a7 7 0 0 1 0 10"></path></svg>';
+
         if (window.Quill) {
             const icons = Quill.import('ui/icons');
-            icons['undo'] = '<svg viewBox="0 0 18 18"><polygon class="ql-fill ql-stroke" points="6 10 4 12 2 10 6 10"></polygon><path class="ql-stroke" d="M8.09,13.91A4.6,4.6,0,0,0,9,14,5,5,0,1,0,4,9"></path></svg>';
-            icons['redo'] = '<svg viewBox="0 0 18 18"><polygon class="ql-fill ql-stroke" points="12 10 14 12 16 10 12 10"></polygon><path class="ql-stroke" d="M9.91,13.91A4.6,4.6,0,0,1,9,14a5,5,0,1,1,5-5"></path></svg>';
-            icons['audio'] = '<svg viewBox="0 0 18 18"><polygon class="ql-stroke" points="3 6 3 12 7 12 12 16 12 2 7 6 3 6"></polygon><path class="ql-stroke" d="M14 6.5a4 4 0 0 1 0 5"></path><path class="ql-stroke" d="M16 4a7 7 0 0 1 0 10"></path></svg>';
+            icons['undo'] = undoIcon;
+            icons['redo'] = redoIcon;
+            icons['audio'] = audioIcon;
         }
 
         // Image upload handler
@@ -318,6 +322,17 @@
         if (generatedToolbar && targetContainer) {
             targetContainer.appendChild(generatedToolbar);
         }
+
+        // Ensure SVGs are rendered inside custom buttons
+        document.querySelectorAll('.ql-undo').forEach(btn => {
+            if (!btn.querySelector('svg')) btn.innerHTML = undoIcon;
+        });
+        document.querySelectorAll('.ql-redo').forEach(btn => {
+            if (!btn.querySelector('svg')) btn.innerHTML = redoIcon;
+        });
+        document.querySelectorAll('.ql-audio').forEach(btn => {
+            if (!btn.querySelector('svg')) btn.innerHTML = audioIcon;
+        });
 
         // Paste event listener for images
         quill.root.addEventListener('paste', function(e) {
