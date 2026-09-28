@@ -97,15 +97,29 @@
                                         <img src="<?= BASEURL ?><?= htmlspecialchars($cover) ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" alt="Story Cover">
                                     </div>
                                 <?php endif; ?>
-                                <div class="p-3.5 sm:p-4 flex flex-col gap-1 bg-surface-container-lowest group-hover:bg-surface-container-low/30 transition-colors">
+                                <div class="p-3.5 sm:p-4 flex flex-col gap-1.5 bg-surface-container-lowest group-hover:bg-surface-container-low/30 transition-colors">
                                     <?php if(!empty($post['title'])): ?>
-                                        <h2 class="font-title-md text-base sm:text-lg font-bold text-on-surface tracking-tight line-clamp-2">
+                                        <h2 class="font-title-md text-base sm:text-[17px] font-bold text-on-surface tracking-tight line-clamp-2">
                                             <?= htmlspecialchars($post['title']) ?>
                                         </h2>
                                     <?php endif; ?>
-                                    <div class="font-body-md text-on-surface-variant text-[14px] sm:text-[15px] line-clamp-2 leading-relaxed">
-                                        <?= strip_tags((string)($post['content'] ?? '')) ?>
-                                    </div>
+                                    <?php 
+                                        // Extract Subtitle explicitly
+                                        $excerpt = '';
+                                        if (preg_match('/<h2[^>]*class="[^"]*story-subtitle[^"]*"[^>]*>(.*?)<\/h2>/is', $post['content'] ?? '', $matches)) {
+                                            $excerpt = trim(strip_tags($matches[1]));
+                                        }
+                                        // Fallback: If no subtitle, safely get the first bit of text with proper spacing
+                                        if (empty($excerpt)) {
+                                            $cleanText = str_replace(['<p>', '<br>', '</div>', '</li>', '</h1>', '</h2>', '</h3>'], ' ', (string)($post['content'] ?? ''));
+                                            $excerpt = trim(strip_tags($cleanText));
+                                        }
+                                    ?>
+                                    <?php if(!empty($excerpt)): ?>
+                                        <div class="font-body-md text-on-surface-variant text-[14px] sm:text-[15px] line-clamp-2 leading-relaxed">
+                                            <?= htmlspecialchars($excerpt) ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         <?php else: ?>
