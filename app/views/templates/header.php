@@ -37,55 +37,100 @@ $unreadNotifCount = (isset($_SESSION['user_id'])) ? (new Notification_model())->
     <!-- Quill.js CSS -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 
-    <!-- Tailwind Config dari Google Stitch -->
+    <!-- CSS Variables for Theming -->
     <style>
-        @layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}
-        ::-webkit-scrollbar{display:none;}
-        /* Penyesuaian Quill untuk Dark Mode Obsidian Emerald */
-        .ql-toolbar.ql-snow { background: #171f33; border-color: rgba(60, 74, 66, 0.5) !important; border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem; }
-        .ql-container.ql-snow { background: #060e20; border-color: rgba(60, 74, 66, 0.5) !important; border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem; color: #dae2fd; font-family: 'Inter', sans-serif; font-size: 1rem; min-height: 260px; }
-        .ql-snow .ql-stroke { stroke: #bbcabf !important; }
-        .ql-snow .ql-fill { fill: #bbcabf !important; }
-        .ql-snow .ql-picker { color: #bbcabf !important; }
-        .ql-snow .ql-picker-options { background-color: #171f33 !important; border-color: rgba(60, 74, 66, 0.5) !important; }
-        .ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow.ql-toolbar button:focus .ql-stroke, .ql-snow.ql-toolbar button.ql-active .ql-stroke { stroke: #4edea3 !important; }
-        .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow.ql-toolbar button:focus .ql-fill, .ql-snow.ql-toolbar button.ql-active .ql-fill { fill: #4edea3 !important; }
-        .ql-editor.ql-blank::before { color: #86948a !important; font-style: normal; }
-    </style>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script id="tailwind-config">
-tailwind.config = {
-    "darkMode": "class",
-    "theme": {
-        "extend": {
-            "colors": {
-                "on-error": "#690005", "inverse-primary": "#006c49", "tertiary-fixed-dim": "#68dba9", "tertiary-fixed": "#85f8c4", "tertiary-container": "#3eb686", "surface-container-lowest": "#060e20", "on-background": "#dae2fd", "secondary-fixed": "#d5e3fd", "primary-container": "#10b981", "on-surface": "#dae2fd", "background": "#0b1326", "surface-dim": "#0b1326", "secondary-fixed-dim": "#b9c7e0", "on-tertiary": "#003825", "primary-fixed-dim": "#4edea3", "on-secondary-container": "#abb9d2", "error-container": "#93000a", "surface-bright": "#31394d", "error": "#ffb4ab", "primary": "#4edea3", "surface-variant": "#2d3449", "on-tertiary-container": "#00422c", "on-tertiary-fixed": "#002114", "on-primary-fixed-variant": "#005236", "surface": "#0b1326", "inverse-surface": "#dae2fd", "on-error-container": "#ffdad6", "surface-container-high": "#222a3d", "surface-container-low": "#131b2e", "on-surface-variant": "#bbcabf", "on-tertiary-fixed-variant": "#005137", "outline-variant": "#3c4a42", "tertiary": "#68dba9", "secondary": "#b9c7e0", "outline": "#86948a", "inverse-on-surface": "#283044", "on-secondary": "#233144", "secondary-container": "#3c4a5e", "on-primary-container": "#00422b", "on-primary": "#003824", "on-secondary-fixed-variant": "#3a485c", "surface-tint": "#4edea3", "surface-container": "#171f33", "on-primary-fixed": "#002113", "surface-container-highest": "#2d3449", "primary-fixed": "#6ffbbe", "on-secondary-fixed": "#0d1c2f"
-            },
-            "borderRadius": {
-                "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"
-            },
-            "spacing": {
-                "space-sm": "0.5rem", "space-xs": "0.25rem", "margin": "2rem", "gutter": "1.5rem", "space-md": "1rem", "space-xl": "2.5rem", "space-lg": "1.5rem"
-            },
-            "fontFamily": {
-                "body-lg": ["Inter"], "title-md": ["Inter"], "headline-sm": ["Inter"], "display-mobile": ["Inter"], "body-md": ["Inter"], "display": ["Inter"], "headline-lg": ["Inter"], "headline-md": ["Inter"], "caption": ["Inter"], "headline-lg-mobile": ["Inter"], "label-md": ["Inter"]
-            },
-            "fontSize": {
-                "body-lg": ["18px", {"lineHeight": "30px", "letterSpacing": "-0.005em", "fontWeight": "400"}], 
-                "title-md": ["16px", {"lineHeight": "24px", "letterSpacing": "-0.005em", "fontWeight": "600"}], 
-                "headline-sm": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}], 
-                "display-mobile": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}], 
-                "body-md": ["15px", {"lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400"}], 
-                "display": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.025em", "fontWeight": "700"}], 
-                "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600"}], 
-                "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600"}], 
-                "caption": ["12px", {"lineHeight": "16px", "letterSpacing": "0.015em", "fontWeight": "400"}], 
-                "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600"}], 
-                "label-md": ["13px", {"lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "500"}]
+        @layer base {
+            html, body { margin: 0; padding: 0; }
+            body { overscroll-behavior: none; }
+            main > :first-child { margin-top: 0 !important; }
+            main > :last-child { margin-bottom: 0 !important; }
+            
+            /* Light Theme (Editorial & Clean) */
+            :root {
+                --color-primary: 16 185 129; /* #10b981 */
+                --color-primary-container: 209 250 229; /* #d1fae5 */
+                --color-on-primary-container: 6 95 70; /* #065f46 */
+                --color-surface: 255 255 255; /* #ffffff */
+                --color-surface-container-lowest: 248 250 252; /* #f8fafc */
+                --color-surface-container-low: 241 245 249; /* #f1f5f9 */
+                --color-surface-container: 226 232 240; /* #e2e8f0 */
+                --color-surface-container-high: 203 213 225; /* #cbd5e1 */
+                --color-on-surface: 15 23 42; /* #0f172a */
+                --color-on-surface-variant: 100 116 139; /* #64748b */
+                --color-outline-variant: 226 232 240; /* #e2e8f0 */
+                --color-error: 239 68 68; /* #ef4444 */
+                --color-error-container: 254 226 226; /* #fee2e2 */
+            }
+
+            /* Dark Theme (Obsidian Emerald) */
+            .dark {
+                --color-primary: 78 222 163; /* #4edea3 */
+                --color-primary-container: 16 185 129; /* #10b981 */
+                --color-on-primary-container: 0 66 43; /* #00422b */
+                --color-surface: 11 19 38; /* #0b1326 */
+                --color-surface-container-lowest: 6 14 32; /* #060e20 */
+                --color-surface-container-low: 19 27 46; /* #131b2e */
+                --color-surface-container: 23 31 51; /* #171f33 */
+                --color-surface-container-high: 34 42 61; /* #222a3d */
+                --color-on-surface: 218 226 253; /* #dae2fd */
+                --color-on-surface-variant: 187 202 191; /* #bbcabf */
+                --color-outline-variant: 60 74 66; /* #3c4a42 */
+                --color-error: 255 180 171; /* #ffb4ab */
+                --color-error-container: 147 0 10; /* #93000a */
             }
         }
-    }
-};
+        ::-webkit-scrollbar { display: none; }
+        
+        /* Quill Adjustments */
+        .ql-toolbar.ql-snow { background: rgb(var(--color-surface-container)); border-color: rgb(var(--color-outline-variant) / 0.5) !important; border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem; }
+        .ql-container.ql-snow { background: rgb(var(--color-surface-container-lowest)); border-color: rgb(var(--color-outline-variant) / 0.5) !important; border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem; color: rgb(var(--color-on-surface)); font-family: 'Inter', sans-serif; font-size: 1rem; min-height: 260px; }
+        .ql-snow .ql-stroke { stroke: rgb(var(--color-on-surface-variant)) !important; }
+        .ql-snow .ql-fill { fill: rgb(var(--color-on-surface-variant)) !important; }
+        .ql-snow .ql-picker { color: rgb(var(--color-on-surface-variant)) !important; }
+        .ql-snow .ql-picker-options { background-color: rgb(var(--color-surface-container)) !important; border-color: rgb(var(--color-outline-variant) / 0.5) !important; }
+        .ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow.ql-toolbar button:focus .ql-stroke, .ql-snow.ql-toolbar button.ql-active .ql-stroke { stroke: rgb(var(--color-primary)) !important; }
+        .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow.ql-toolbar button:focus .ql-fill, .ql-snow.ql-toolbar button.ql-active .ql-fill { fill: rgb(var(--color-primary)) !important; }
+    </style>
+
+    <!-- FOUC Prevention Script -->
+    <script>
+        const savedTheme = localStorage.getItem('blogggle-theme') || 'system';
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme === 'dark' || (savedTheme === 'system' && prefersDark)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            "darkMode": "class",
+            "theme": {
+                "extend": {
+                    "colors": {
+                        "primary": "rgb(var(--color-primary) / <alpha-value>)",
+                        "primary-container": "rgb(var(--color-primary-container) / <alpha-value>)",
+                        "on-primary-container": "rgb(var(--color-on-primary-container) / <alpha-value>)",
+                        "surface": "rgb(var(--color-surface) / <alpha-value>)",
+                        "surface-container-lowest": "rgb(var(--color-surface-container-lowest) / <alpha-value>)",
+                        "surface-container-low": "rgb(var(--color-surface-container-low) / <alpha-value>)",
+                        "surface-container": "rgb(var(--color-surface-container) / <alpha-value>)",
+                        "surface-container-high": "rgb(var(--color-surface-container-high) / <alpha-value>)",
+                        "on-surface": "rgb(var(--color-on-surface) / <alpha-value>)",
+                        "on-surface-variant": "rgb(var(--color-on-surface-variant) / <alpha-value>)",
+                        "outline-variant": "rgb(var(--color-outline-variant) / <alpha-value>)",
+                        "error": "rgb(var(--color-error) / <alpha-value>)",
+                        "error-container": "rgb(var(--color-error-container) / <alpha-value>)"
+                    },
+                    "spacing": { "space-sm": "0.5rem", "space-xs": "0.25rem", "gutter": "1.5rem", "space-md": "1rem", "space-lg": "1.5rem" },
+                    "fontFamily": {
+                        "body-lg": ["Inter"], "title-md": ["Inter"], "headline-sm": ["Inter"], "body-md": ["Inter"], "headline-lg": ["Inter"], "caption": ["Inter"], "label-md": ["Inter"]
+                    }
+                }
+            }
+        }
     </script>
 </head>
 <body class="bg-surface text-on-surface min-h-screen">
@@ -96,9 +141,27 @@ tailwind.config = {
             <span class="material-symbols-outlined text-primary text-3xl">edit_square</span>
             <span class="font-title-md text-title-md text-on-surface tracking-tight">Blogggle</span>
         </div>
-        <div class="flex items-center gap-gutter">
+        <div class="flex items-center gap-4 sm:gap-gutter">
+            <!-- Theme Switcher -->
+            <div class="relative dropdown-container">
+                <button type="button" onclick="toggleMenu(event, 'theme-menu')" class="w-9 h-9 rounded-full bg-surface-container-low hover:bg-surface-container border border-outline-variant/30 text-on-surface-variant hover:text-primary flex items-center justify-center transition-all shadow-sm" id="theme-toggle-btn" title="Theme Settings">
+                    <span class="material-symbols-outlined text-lg" id="theme-icon">dark_mode</span>
+                </button>
+                <div id="theme-menu" class="hidden absolute right-0 top-full mt-2 w-36 bg-surface-container-high border border-outline-variant/30 rounded-xl shadow-xl z-50 overflow-hidden flex flex-col py-1">
+                    <button onclick="setTheme('light')" class="w-full text-left px-4 py-2 text-sm text-on-surface font-title-md hover:bg-surface-container flex items-center gap-3 transition-colors group">
+                        <span class="material-symbols-outlined text-base group-hover:text-primary">light_mode</span> Light
+                    </button>
+                    <button onclick="setTheme('dark')" class="w-full text-left px-4 py-2 text-sm text-on-surface font-title-md hover:bg-surface-container flex items-center gap-3 transition-colors group">
+                        <span class="material-symbols-outlined text-base group-hover:text-primary">dark_mode</span> Dark
+                    </button>
+                    <button onclick="setTheme('system')" class="w-full text-left px-4 py-2 text-sm text-on-surface font-title-md hover:bg-surface-container flex items-center gap-3 transition-colors group">
+                        <span class="material-symbols-outlined text-base group-hover:text-primary">desktop_windows</span> System
+                    </button>
+                </div>
+            </div>
+
             <?php if (isset($_SESSION['user_id'])): ?>
-                <a class="inline-flex items-center gap-space-xs px-space-md py-space-xs rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md hover:bg-primary transition-colors shadow-sm" href="<?= BASEURL ?>/post/create">
+                <a class="hidden sm:inline-flex items-center gap-space-xs px-space-md py-space-xs rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md hover:bg-primary transition-colors shadow-sm" href="<?= BASEURL ?>/post/create">
                     <span class="material-symbols-outlined text-base">edit</span><span>Write</span>
                 </a>
                 <div class="flex items-center gap-space-sm pl-space-xs border-l border-outline-variant/40">
@@ -109,12 +172,49 @@ tailwind.config = {
                             <?= strtoupper(substr($_SESSION['username'], 0, 1)) ?>
                         <?php endif; ?>
                     </a>
-                    <a href="<?= BASEURL ?>/auth/logout" class="text-error hover:text-error-container text-sm font-medium">Logout</a>
+                    <a href="<?= BASEURL ?>/auth/logout" class="hidden sm:block text-error hover:text-error-container text-sm font-medium">Logout</a>
                 </div>
             <?php else: ?>
                 <a href="<?= BASEURL ?>/auth" class="text-primary hover:text-primary-fixed font-medium text-sm">Sign In</a>
             <?php endif; ?>
         </div>
+
+        <script>
+            // Theme Switcher Logic
+            function updateThemeIcon(theme) {
+                const icon = document.getElementById('theme-icon');
+                if (!icon) return;
+                if (theme === 'light') icon.textContent = 'light_mode';
+                else if (theme === 'dark') icon.textContent = 'dark_mode';
+                else icon.textContent = 'desktop_windows';
+            }
+
+            function applyTheme(theme) {
+                if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }
+
+            window.setTheme = function(theme) {
+                localStorage.setItem('blogggle-theme', theme);
+                applyTheme(theme);
+                updateThemeIcon(theme);
+                const menu = document.getElementById('theme-menu');
+                if(menu) menu.classList.add('hidden');
+            };
+
+            // Listen for system theme changes
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                if (localStorage.getItem('blogggle-theme') === 'system') {
+                    applyTheme('system');
+                }
+            });
+
+            // Init icon
+            updateThemeIcon(localStorage.getItem('blogggle-theme') || 'system');
+        </script>
     </header>
 
     <!-- Left Sidebar -->
