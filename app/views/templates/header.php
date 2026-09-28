@@ -1,4 +1,22 @@
 <?php
+// Ensure PHP uses the correct local timezone to match the database
+date_default_timezone_set('Asia/Jakarta');
+
+if (!function_exists('timeAgo')) {
+    function timeAgo($timestamp) {
+        $time = strtotime($timestamp);
+        $diff = time() - $time;
+
+        // Catch negative differences or immediate posts
+        if ($diff < 1) return 'now';
+        if ($diff < 60) return $diff . 's';
+        if ($diff < 3600) return floor($diff / 60) . 'm';
+        if ($diff < 86400) return floor($diff / 3600) . 'h';
+        
+        return date('Y', $time) === date('Y') ? date('M j', $time) : date('M j, Y', $time);
+    }
+}
+
 require_once dirname(__DIR__, 2) . '/models/Notification_model.php';
 $unreadNotifCount = (isset($_SESSION['user_id'])) ? (new Notification_model())->getUnreadCount((int)$_SESSION['user_id']) : 0;
 ?>

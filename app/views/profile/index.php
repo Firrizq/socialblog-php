@@ -168,7 +168,7 @@ $user = $data['profile_user'] ?? null;
                                     <div class="flex items-center gap-1.5 min-w-0">
                                         <span class="font-title-md text-on-surface font-semibold truncate"><?= htmlspecialchars($post['username'] ?? 'Anonymous') ?></span>
                                         <span class="font-caption text-on-surface-variant whitespace-nowrap">@<?= htmlspecialchars($post['username'] ?? 'anon') ?></span>
-                                        <span class="font-caption text-on-surface-variant whitespace-nowrap">· <?= date('M j', strtotime($post['created_at'])) ?></span>
+                                        <span class="font-caption text-on-surface-variant whitespace-nowrap">· <time class="timeago" datetime="<?= date('c', strtotime($post['created_at'])) ?>"></time></span>
                                     </div>
                                 </div>
                             </div>

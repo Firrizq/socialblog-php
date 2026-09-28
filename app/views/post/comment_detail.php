@@ -103,7 +103,7 @@ $replies = $data['replies'] ?? [];
                                 </a>
                                 <span class="font-caption text-xs text-on-surface-variant">@<?= htmlspecialchars($parentComment['username'] ?? 'anon') ?></span>
                                 <span class="font-caption text-xs text-on-surface-variant">
-                                    · <?= date('M j, Y', strtotime($parentComment['created_at'])) ?>
+                                    · <time class="timeago" datetime="<?= date('c', strtotime($parentComment['created_at'])) ?>"></time>
                                 </span>
                             </div>
                             <a href="<?= BASEURL ?>/post/commentDetail/<?= $parentComment['id'] ?>" class="text-xs text-primary hover:underline font-caption flex items-center gap-1">
@@ -180,7 +180,7 @@ $replies = $data['replies'] ?? [];
             <!-- Comment Full Timestamp -->
             <div class="text-xs text-on-surface-variant font-caption flex items-center gap-2 pt-1 border-t border-outline-variant/20">
                 <span class="material-symbols-outlined text-sm">schedule</span>
-                <span><?= date('g:i A · F j, Y', strtotime($comment['created_at'])) ?></span>
+                <span><time class="timeago" datetime="<?= date('c', strtotime($comment['created_at'])) ?>"></time></span>
             </div>
 
             <!-- Metrics Bar -->
@@ -288,7 +288,7 @@ $replies = $data['replies'] ?? [];
                                             </a>
                                             <span class="font-caption text-xs text-on-surface-variant">@<?= htmlspecialchars($reply['username'] ?? 'anon') ?></span>
                                             <a href="<?= BASEURL ?>/post/commentDetail/<?= $reply['id'] ?>" class="font-caption text-xs text-on-surface-variant hover:text-primary transition-colors">
-                                                · <?= date('M j, Y · g:i A', strtotime($reply['created_at'])) ?>
+                                                · <time class="timeago" datetime="<?= date('c', strtotime($reply['created_at'])) ?>"></time>
                                             </a>
                                         </div>
                                         <a href="<?= BASEURL ?>/post/commentDetail/<?= $reply['id'] ?>" class="text-on-surface-variant hover:text-primary p-1 rounded-full hover:bg-surface-container transition-colors" title="Focus this thread">

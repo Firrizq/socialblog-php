@@ -92,7 +92,7 @@ $countNodes($comments);
 
             <!-- Story Date Timestamp -->
             <div class="text-xs text-on-surface-variant pb-1 flex items-center gap-1.5 font-caption">
-                <span>Published on <?= date('F j, Y · g:i A', strtotime($post['created_at'])) ?></span>
+                <span>Published on <?= date('M j, Y', strtotime($post['created_at'])) ?></span>
             </div>
 
             <!-- Post Rich Content (Quill Rendered) -->
@@ -219,7 +219,7 @@ $countNodes($comments);
                                         </a>
                                         <span class="font-caption text-xs text-on-surface-variant">@<?= htmlspecialchars($comment['username'] ?? 'anon') ?></span>
                                         <a href="<?= BASEURL ?>/post/commentDetail/<?= $comment['id'] ?>" class="font-caption text-xs text-on-surface-variant hover:text-primary transition-colors" title="View thread detail">
-                                            · <?= date('M j, Y · g:i A', strtotime($comment['created_at'])) ?>
+                                            · <time class="timeago" datetime="<?= date('c', strtotime($comment['created_at'])) ?>"></time>
                                         </a>
                                     </div>
                                     <a href="<?= BASEURL ?>/post/commentDetail/<?= $comment['id'] ?>" class="text-on-surface-variant hover:text-primary p-1 rounded-full hover:bg-surface-container transition-colors" title="Focus thread">

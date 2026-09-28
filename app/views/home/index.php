@@ -59,7 +59,7 @@
                                         <?= htmlspecialchars($post['name'] ?? $post['username'] ?? 'Anonymous') ?>
                                     </a>
                                     <span class="font-caption text-on-surface-variant truncate">@<?= htmlspecialchars($post['username'] ?? 'anon') ?></span>
-                                    <span class="font-caption text-on-surface-variant whitespace-nowrap"> • <?= date('M j, Y', strtotime($post['created_at'])) ?></span>
+                                    <span class="font-caption text-on-surface-variant whitespace-nowrap"> • <time class="timeago" datetime="<?= date('c', strtotime($post['created_at'])) ?>"></time></span>
                                 </div>
                             </div>
                         </div>

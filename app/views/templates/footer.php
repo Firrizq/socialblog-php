@@ -574,5 +574,34 @@
         }
     });
     </script>
+
+    <!-- Global Relative Time Updater -->
+    <script>
+    function updateTimeAgo() {
+        const elements = document.querySelectorAll('.timeago');
+        const now = new Date();
+        elements.forEach(el => {
+            const date = new Date(el.getAttribute('datetime'));
+            const diffSeconds = Math.floor((now - date) / 1000);
+
+            if (diffSeconds < 1) {
+                el.textContent = 'now';
+            } else if (diffSeconds < 60) {
+                el.textContent = diffSeconds + 's';
+            } else if (diffSeconds < 3600) {
+                el.textContent = Math.floor(diffSeconds / 60) + 'm';
+            } else if (diffSeconds < 86400) {
+                el.textContent = Math.floor(diffSeconds / 3600) + 'h';
+            } else {
+                const options = { month: 'short', day: 'numeric' };
+                if (date.getFullYear() !== now.getFullYear()) options.year = 'numeric';
+                el.textContent = date.toLocaleDateString('en-US', options);
+            }
+        });
+    }
+    // Run immediately, then update continuously every minute
+    updateTimeAgo();
+    setInterval(updateTimeAgo, 60000);
+    </script>
 </body>
 </html>
