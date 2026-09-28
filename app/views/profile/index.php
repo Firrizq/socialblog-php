@@ -134,15 +134,21 @@ $data['user'] = $user;
             </div>
 
             <!-- Tabs Navigation -->
-            <div class="flex border-b border-outline-variant/30 overflow-x-auto hide-scrollbar px-2 sm:px-0">
-                <a href="#" class="px-6 py-3.5 font-title-md text-[15px] font-bold text-on-surface border-b-4 border-primary hover:bg-surface-container-low transition-colors whitespace-nowrap">
-                    Posts
+            <div class="flex border-b border-outline-variant/30 w-full mt-2">
+                <a href="#" class="flex-1 flex justify-center hover:bg-surface-container-low transition-colors cursor-pointer group">
+                    <div class="py-3.5 font-title-md text-[15px] font-bold text-on-surface border-b-4 border-primary relative">
+                        Posts
+                    </div>
                 </a>
-                <a href="#" class="px-6 py-3.5 font-title-md text-[15px] font-medium text-on-surface-variant border-b-4 border-transparent hover:bg-surface-container-low hover:text-on-surface transition-colors whitespace-nowrap">
-                    Replies
+                <a href="#" class="flex-1 flex justify-center hover:bg-surface-container-low transition-colors cursor-pointer group">
+                    <div class="py-3.5 font-title-md text-[15px] font-medium text-on-surface-variant border-b-4 border-transparent group-hover:text-on-surface relative transition-colors">
+                        Replies
+                    </div>
                 </a>
-                <a href="#" class="px-6 py-3.5 font-title-md text-[15px] font-medium text-on-surface-variant border-b-4 border-transparent hover:bg-surface-container-low hover:text-on-surface transition-colors whitespace-nowrap">
-                    Media
+                <a href="#" class="flex-1 flex justify-center hover:bg-surface-container-low transition-colors cursor-pointer group">
+                    <div class="py-3.5 font-title-md text-[15px] font-medium text-on-surface-variant border-b-4 border-transparent group-hover:text-on-surface relative transition-colors">
+                        Media
+                    </div>
                 </a>
             </div>
         </div>
