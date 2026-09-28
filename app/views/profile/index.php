@@ -86,30 +86,50 @@ $data['user'] = $user;
                     </div>
                 <?php endif; ?>
 
-                <div class="flex items-center gap-4 mt-3 text-on-surface-variant font-body-md text-sm flex-wrap">
+                <!-- Metadata Row 1: Date, Location, Link -->
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-on-surface-variant font-body-md text-sm">
                     <div class="flex items-center gap-1.5">
-                        <span class="material-symbols-outlined text-[16px]">calendar_month</span>
+                        <span class="material-symbols-outlined text-[16px] opacity-80">calendar_month</span>
                         <span>Joined <?= date('F Y', strtotime($data['user']['created_at'] ?? 'now')) ?></span>
                     </div>
-
+                    
                     <?php if (!empty($data['user']['location'])): ?>
-                        <div class="flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[16px]">location_on</span>
+                        <div class="flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-[16px] opacity-80">location_on</span>
                             <span><?= htmlspecialchars($data['user']['location']) ?></span>
                         </div>
                     <?php endif; ?>
 
-                    <?php if (!empty($data['user']['profile_link'])): ?>
-                        <a href="<?= htmlspecialchars($data['user']['profile_link']) ?>" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1 text-primary hover:underline">
-                            <span class="material-symbols-outlined text-[16px]">link</span>
-                            <span><?= htmlspecialchars(parse_url($data['user']['profile_link'], PHP_URL_HOST) ?: $data['user']['profile_link']) ?></span>
-                        </a>
+                    <?php 
+                        $website = !empty($data['user']['website']) ? $data['user']['website'] : ($data['user']['profile_link'] ?? '');
+                    ?>
+                    <?php if (!empty($website)): ?>
+                        <div class="flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-[16px] opacity-80">link</span>
+                            <a href="<?= htmlspecialchars(str_starts_with($website, 'http') ? $website : 'https://' . $website) ?>" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">
+                                <?= htmlspecialchars(str_replace(['http://', 'https://', 'www.'], '', $website)) ?>
+                            </a>
+                        </div>
                     <?php endif; ?>
 
-                    <div class="flex items-center gap-4">
-                        <span class="text-on-surface font-bold"><?= (int)($data['user']['following_count'] ?? 0) ?> <span class="font-normal text-on-surface-variant">Following</span></span>
-                        <span class="text-on-surface font-bold"><span id="profile-follower-count"><?= (int)($data['user']['follower_count'] ?? 0) ?></span> <span class="font-normal text-on-surface-variant">Followers</span></span>
-                    </div>
+                    <?php if (!empty($data['user']['tipping_link'])): ?>
+                        <div class="flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-[16px] opacity-80">volunteer_activism</span>
+                            <a href="<?= htmlspecialchars(str_starts_with($data['user']['tipping_link'], 'http') ? $data['user']['tipping_link'] : 'https://' . $data['user']['tipping_link']) ?>" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">
+                                Support
+                            </a>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Metadata Row 2: Following / Followers -->
+                <div class="flex flex-wrap items-center gap-4 mt-3 text-sm text-on-surface-variant font-body-md">
+                    <a href="#" class="hover:underline flex gap-1">
+                        <span class="font-bold text-on-surface"><?= number_format($data['user']['following_count'] ?? 0) ?></span> Following
+                    </a>
+                    <a href="#" class="hover:underline flex gap-1">
+                        <span class="font-bold text-on-surface" id="profile-follower-count"><?= number_format($data['user']['follower_count'] ?? 0) ?></span> Followers
+                    </a>
                 </div>
             </div>
 
