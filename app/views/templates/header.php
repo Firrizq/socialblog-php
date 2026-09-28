@@ -133,7 +133,7 @@ $unreadNotifCount = (isset($_SESSION['user_id'])) ? (new Notification_model())->
     </script>
 </head>
 <body class="bg-surface text-on-surface min-h-screen">
-    
+
     <!-- Top Header -->
     <header class="fixed top-0 left-0 right-0 h-16 bg-surface-container-low/95 backdrop-blur-xl border-b border-outline-variant/30 z-50 flex items-center justify-between px-gutter">
         <div class="flex items-center gap-space-sm">

@@ -391,23 +391,106 @@
 
     function processSidebarContent(mainContent, sidebar) {
         if (mainContent) {
-            // Remove the sticky top header ("<- Story")
+            // Remove the sticky top header ("<- Story") and back navigation
             const topBar = mainContent.querySelector('.sticky.top-0');
             if (topBar) topBar.remove();
             
+            mainContent.querySelectorAll('button').forEach(btn => {
+                if (btn.innerText.includes('Back') || btn.getAttribute('onclick')?.includes('history.back')) {
+                    const backWrapper = btn.closest('div.mb-8') || btn.closest('div');
+                    if (backWrapper) backWrapper.remove();
+                }
+            });
+
+            // Adjust main container for comfortable sidebar padding
+            const container = mainContent.querySelector('.max-w-2xl') || mainContent.firstElementChild;
+            if (container) {
+                container.className = 'w-full p-4 sm:p-5 pb-16';
+            }
+
+            // Adjust Post Title for compact sidebar
+            const titleEl = mainContent.querySelector('h1');
+            if (titleEl) {
+                titleEl.className = 'text-xl sm:text-2xl font-black text-on-surface tracking-tight mb-4 leading-snug';
+            }
+
+            // Adjust author meta margin
+            const authorMeta = mainContent.querySelector('article > div.flex.items-center.justify-between');
+            if (authorMeta) {
+                authorMeta.classList.remove('mb-10');
+                authorMeta.classList.add('mb-4');
+            }
+            
             // COMPLETELY remove the image grids and standalone cover images from the sidebar
             mainContent.querySelectorAll('div.grid').forEach(grid => {
-                if(grid.querySelector('img')) grid.remove();
+                if (grid.querySelector('img')) grid.remove();
             });
             mainContent.querySelectorAll('img').forEach(im => {
-                if(im.classList.contains('object-cover') && !im.classList.contains('rounded-full')) {
-                    const wrapper = im.closest('div.mt-2.mb-3') || im.closest('div.mt-1.mb-2');
+                if (im.classList.contains('object-cover') && !im.classList.contains('rounded-full')) {
+                    const wrapper = im.closest('div.mt-4.mb-10') || im.closest('div.mt-2.mb-3') || im.closest('div.mt-1.mb-2');
                     if (wrapper) wrapper.remove();
                     else im.remove();
                 }
             });
+
+            // 1. Update the Post Content Container:
+            const contentContainer = mainContent.querySelector('.quill-content') || mainContent.querySelector('article > div.font-body-md');
+            if (contentContainer) {
+                contentContainer.id = 'lightbox-post-content';
+                contentContainer.className = 'font-body-md text-on-surface text-[15px] sm:text-[16px] leading-[1.7] whitespace-pre-line mb-6 break-words quill-content';
+            }
+
+            // 2. Update the Action Bar (Like, Comment, Repost, Bookmark, Share):
+            const actionBar = mainContent.querySelector('article .border-y') || mainContent.querySelector('.border-y.border-outline-variant\\/40');
+            if (actionBar) {
+                actionBar.className = 'flex items-center justify-between py-3 border-y border-outline-variant/40 mb-6 text-on-surface-variant';
+                actionBar.querySelectorAll('button, a').forEach(btn => {
+                    const icon = btn.querySelector('.material-symbols-outlined');
+                    if (icon && !btn.querySelector('.w-8')) {
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'w-8 h-8 rounded-full hover:bg-surface-container flex items-center justify-center transition-colors';
+                        icon.parentNode.insertBefore(wrapper, icon);
+                        wrapper.appendChild(icon);
+                    }
+                    if (btn.querySelector('.material-symbols-outlined')?.textContent.trim() === 'chat_bubble') {
+                        btn.onclick = () => {
+                            const commentInput = sidebar.querySelector('#lightbox-comment-input') || sidebar.querySelector('textarea[name="content"]');
+                            if (commentInput) commentInput.focus();
+                        };
+                    }
+                });
+            }
+
+            // 3. Refine the Discussion Section:
+            const discussionHeader = mainContent.querySelector('section h3');
+            if (discussionHeader) {
+                discussionHeader.className = 'font-title-md font-bold text-lg text-on-surface mb-4';
+            }
+
+            // Upgrade comment input box to textarea with sleek reply button
+            const commentInput = mainContent.querySelector('#comment-input') || mainContent.querySelector('textarea[name="content"]') || mainContent.querySelector('input[name="content"]');
+            if (commentInput) {
+                let textarea = commentInput;
+                if (commentInput.tagName === 'INPUT') {
+                    textarea = document.createElement('textarea');
+                    textarea.name = 'content';
+                    textarea.required = true;
+                    commentInput.parentNode.replaceChild(textarea, commentInput);
+                }
+                textarea.id = 'lightbox-comment-input';
+                textarea.rows = 2;
+                textarea.className = 'w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl p-3 text-on-surface text-sm font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none';
+                textarea.placeholder = 'What are your thoughts?';
+
+                const submitBtn = textarea.closest('form')?.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.textContent = 'Reply';
+                    submitBtn.className = 'px-4 py-1.5 rounded-full bg-primary text-on-primary font-title-md text-xs sm:text-sm hover:opacity-90 transition-opacity font-medium shadow-sm';
+                }
+            }
             
             sidebar.innerHTML = mainContent.innerHTML;
+            if (window.updateTimeAgo) window.updateTimeAgo();
         } else {
             sidebar.innerHTML = '<div class="p-8 text-center text-error">Failed to load content.</div>';
         }
