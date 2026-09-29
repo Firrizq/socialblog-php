@@ -19,6 +19,7 @@ class Bookmarks extends Controller
 
     /**
      * Display all bookmarked posts of the logged-in user
+     * Redirects to the unified History / Library Hub
      */
     public function index(): void
     {
@@ -28,19 +29,7 @@ class Bookmarks extends Controller
             exit;
         }
 
-        $userId = (int)$_SESSION['user_id'];
-        $posts = $this->postModel->getBookmarkedPosts($userId);
-
-        $likedPosts = $this->interactionModel->getUserLikedPostIds($userId);
-        $bookmarkedPosts = $this->interactionModel->getUserBookmarkedPostIds($userId);
-
-        $data = [
-            'title' => 'Bookmarks - Blogggle',
-            'posts' => $posts,
-            'liked_posts' => $likedPosts,
-            'bookmarked_posts' => $bookmarkedPosts
-        ];
-
-        $this->view('bookmarks/index', $data);
+        header('Location: ' . BASEURL . '/history?tab=bookmarks');
+        exit;
     }
 }

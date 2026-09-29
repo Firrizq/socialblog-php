@@ -134,8 +134,9 @@ $comments = $data['comments'] ?? [];
                 
                 <div class="flex items-center gap-4">
                     <?php $isBookmarked = in_array((int)$post['id'], $data['bookmarked_posts'] ?? []) || !empty($data['is_bookmarked']); ?>
-                    <button type="button" class="btn-bookmark group flex items-center transition-colors <?= $isBookmarked ? 'text-primary' : 'hover:text-primary' ?> active:scale-95" data-id="<?= (int)$post['id'] ?>" title="Bookmark">
+                    <button type="button" class="btn-bookmark group flex items-center gap-2 transition-colors <?= $isBookmarked ? 'text-primary' : 'hover:text-primary' ?> active:scale-95" data-id="<?= (int)$post['id'] ?>" title="Bookmark">
                         <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' <?= $isBookmarked ? 1 : 0 ?>;">bookmark</span>
+                        <span class="bookmark-count font-body-md text-sm"><?= (int)($post['bookmark_count'] ?? 0) ?></span>
                     </button>
                     <button type="button" class="group flex items-center transition-colors hover:text-primary" onclick="navigator.clipboard.writeText(window.location.href); showToast('Link copied to clipboard!', 'success');">
                         <span class="material-symbols-outlined text-[22px]">share</span>
@@ -241,12 +242,62 @@ $comments = $data['comments'] ?? [];
 </style>
 
 <script>
-    window.addEventListener('scroll', () => {
-        const winScroll = document.documentElement.scrollTop || document.body.scrollTop;
-        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-        const scrolled = (winScroll / height) * 100;
-        document.getElementById('reading-progress').style.width = scrolled + '%';
-    });
+    (function() {
+        const progressBar = document.getElementById('reading-progress');
+        const postId = <?= (int)$post['id'] ?>;
+        const isLoggedIn = <?= isset($_SESSION['user_id']) ? 'true' : 'false' ?>;
+        let maxProgress = <?= isset($data['reading_progress']) ? (int)$data['reading_progress'] : 0 ?>;
+        let lastReportedProgress = maxProgress;
+        let reportTimer = null;
+
+        function reportProgress(progress) {
+            if (!isLoggedIn || postId <= 0 || progress <= lastReportedProgress) return;
+            lastReportedProgress = progress;
+
+            fetch('<?= BASEURL ?>/history/progress/' + postId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ progress: progress })
+            }).catch(function(err) {
+                console.debug('Failed to report reading progress:', err);
+            });
+        }
+
+        window.addEventListener('scroll', () => {
+            const winScroll = document.documentElement.scrollTop || document.body.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            if (height > 0) {
+                const scrolled = Math.min(100, Math.max(0, Math.round((winScroll / height) * 100)));
+                if (progressBar) {
+                    progressBar.style.width = scrolled + '%';
+                }
+
+                if (isLoggedIn && scrolled > maxProgress) {
+                    maxProgress = scrolled;
+                    clearTimeout(reportTimer);
+                    reportTimer = setTimeout(() => {
+                        reportProgress(maxProgress);
+                    }, 1200);
+                }
+            }
+        }, { passive: true });
+
+        // Flush progress when navigating away
+        window.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden' && isLoggedIn && maxProgress > lastReportedProgress) {
+                try {
+                    navigator.sendBeacon(
+                        '<?= BASEURL ?>/history/progress/' + postId,
+                        new Blob([JSON.stringify({ progress: maxProgress })], { type: 'application/json' })
+                    );
+                    lastReportedProgress = maxProgress;
+                } catch (e) {}
+            }
+        });
+    })();
 </script>
 
 <?php require_once __DIR__ . '/../templates/footer.php'; ?>

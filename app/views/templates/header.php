@@ -261,8 +261,8 @@ $unreadNotifCount = (isset($_SESSION['user_id'])) ? (new Notification_model())->
                 <a class="<?= ($activePage === 'explore') ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/explore">
                     <span class="material-symbols-outlined text-xl">explore</span><span>Explore</span>
                 </a>
-                <a class="<?= ($activePage === 'bookmarks') ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/bookmarks">
-                    <span class="material-symbols-outlined text-xl">bookmark</span><span>Bookmarks</span>
+                <a class="<?= ($activePage === 'history' || $activePage === 'bookmarks') ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/history">
+                    <span class="material-symbols-outlined text-xl">history</span><span>History</span>
                 </a>
                 <a class="<?= ($activePage === 'notifications') ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/notifications">
                     <span class="material-symbols-outlined text-xl">notifications</span>

@@ -27,7 +27,8 @@ class Post_model
                     posts.*,
                     users.username,
                     users.email,
-                    users.profile_picture
+                    users.profile_picture,
+                    (SELECT COUNT(*) FROM bookmarks WHERE post_id = posts.id) AS bookmark_count
                   FROM {$this->table}
                   INNER JOIN users ON posts.user_id = users.id
                   WHERE posts.status = 'published'
@@ -83,7 +84,8 @@ class Post_model
                     posts.*,
                     users.username,
                     users.email,
-                    users.profile_picture
+                    users.profile_picture,
+                    (SELECT COUNT(*) FROM bookmarks WHERE post_id = posts.id) AS bookmark_count
                   FROM {$this->table}
                   INNER JOIN users ON posts.user_id = users.id
                   WHERE posts.user_id = :user_id {$statusCondition}
@@ -106,7 +108,8 @@ class Post_model
                     posts.*,
                     users.username,
                     users.profile_picture,
-                    users.email
+                    users.email,
+                    (SELECT COUNT(*) FROM bookmarks WHERE post_id = posts.id) AS bookmark_count
                   FROM {$this->table}
                   INNER JOIN users ON posts.user_id = users.id
                   WHERE posts.id = :id
@@ -127,7 +130,8 @@ class Post_model
      */
     public function getBookmarkedPosts(int $userId): array
     {
-        $query = "SELECT posts.*, users.username, users.profile_picture, users.email, bookmarks.created_at AS bookmarked_at 
+        $query = "SELECT posts.*, users.username, users.profile_picture, users.email, bookmarks.created_at AS bookmarked_at,
+                    (SELECT COUNT(*) FROM bookmarks WHERE post_id = posts.id) AS bookmark_count 
                   FROM posts 
                   INNER JOIN bookmarks ON posts.id = bookmarks.post_id 
                   INNER JOIN users ON posts.user_id = users.id 
@@ -147,7 +151,8 @@ class Post_model
      */
     public function getPopularPosts(int $limit = 10): array
     {
-        $query = "SELECT posts.*, users.username, users.name, users.profile_picture 
+        $query = "SELECT posts.*, users.username, users.name, users.profile_picture,
+                    (SELECT COUNT(*) FROM bookmarks WHERE post_id = posts.id) AS bookmark_count 
                   FROM {$this->table} 
                   INNER JOIN users ON posts.user_id = users.id 
                   WHERE posts.status = 'published' AND posts.title IS NOT NULL AND posts.title != '' 
@@ -165,7 +170,8 @@ class Post_model
      */
     public function getTrendingPosts(): array
     {
-        $query = "SELECT posts.*, users.username, users.name, users.profile_picture, users.email 
+        $query = "SELECT posts.*, users.username, users.name, users.profile_picture, users.email,
+                    (SELECT COUNT(*) FROM bookmarks WHERE post_id = posts.id) AS bookmark_count 
                   FROM {$this->table} 
                   INNER JOIN users ON posts.user_id = users.id 
                   WHERE posts.status = 'published' 
@@ -183,7 +189,8 @@ class Post_model
      */
     public function searchPosts(string $keyword): array
     {
-        $query = "SELECT posts.*, users.username, users.name, users.profile_picture 
+        $query = "SELECT posts.*, users.username, users.name, users.profile_picture,
+                    (SELECT COUNT(*) FROM bookmarks WHERE post_id = posts.id) AS bookmark_count 
                   FROM {$this->table} 
                   INNER JOIN users ON posts.user_id = users.id 
                   WHERE (posts.title LIKE :keyword OR posts.content LIKE :keyword OR users.username LIKE :keyword OR users.name LIKE :keyword) 
@@ -219,7 +226,8 @@ class Post_model
      */
     public function getFollowingFeedPosts(int $userId): array
     {
-        $query = "SELECT posts.*, users.username, users.name, users.profile_picture, users.email 
+        $query = "SELECT posts.*, users.username, users.name, users.profile_picture, users.email,
+                    (SELECT COUNT(*) FROM bookmarks WHERE post_id = posts.id) AS bookmark_count 
                   FROM {$this->table} 
                   INNER JOIN users ON posts.user_id = users.id 
                   INNER JOIN followings ON users.id = followings.target_id 

@@ -114,8 +114,15 @@ class Interaction_model
             $status = 'bookmarked';
         }
 
+        // 2. Fetch updated bookmark count
+        $this->db->query("SELECT COUNT(*) AS count FROM bookmarks WHERE post_id = :post_id");
+        $this->db->bind(':post_id', $postId);
+        $countRow = $this->db->single();
+        $count = (int)($countRow['count'] ?? 0);
+
         return [
-            'status' => $status
+            'status' => $status,
+            'count' => $count
         ];
     }
 

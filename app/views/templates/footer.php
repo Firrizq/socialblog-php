@@ -205,7 +205,7 @@
                             if (typeof showToast === 'function') showToast('Removed from bookmarks', 'info');
 
                             // Dim post card if currently on the Bookmarks page
-                            if (window.location.pathname.includes('/bookmarks')) {
+                            if (window.location.pathname.includes('/bookmarks') || window.location.search.includes('tab=bookmarks')) {
                                 const card = bookmarkBtn.closest('article');
                                 if (card) {
                                     card.style.transition = 'opacity 0.3s ease, filter 0.3s ease';
@@ -215,10 +215,16 @@
                             }
                         }
 
+                        const countSpan = bookmarkBtn.querySelector('.bookmark-count');
+                        if (countSpan && typeof data.count !== 'undefined') {
+                            countSpan.textContent = data.count;
+                        }
+
                         // Sync any duplicate bookmark buttons
                         document.querySelectorAll(`.btn-bookmark[data-id="${postId}"]`).forEach(btn => {
                             if (btn !== bookmarkBtn) {
                                 const otherIcon = btn.querySelector('.material-symbols-outlined');
+                                const otherCount = btn.querySelector('.bookmark-count');
                                 if (isBookmarked) {
                                     btn.classList.add('text-primary');
                                     btn.classList.remove('hover:text-primary');
@@ -228,6 +234,9 @@
                                     btn.classList.remove('text-primary');
                                     btn.classList.add('hover:text-primary');
                                     if (otherIcon) otherIcon.style.fontVariationSettings = "'FILL' 0";
+                                }
+                                if (otherCount && typeof data.count !== 'undefined') {
+                                    otherCount.textContent = data.count;
                                 }
                             }
                         });
