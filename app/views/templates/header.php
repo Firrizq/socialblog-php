@@ -261,6 +261,77 @@ if (!$activeUser && !empty($_SESSION['user_id'])) {
 
             // Init icon on load
             updateThemeIcon(localStorage.getItem('blogggle-theme') || 'system');
+
+            // Global Non-Blocking Toast Notification System (Twitter/Substack Style)
+            window.showToast = function(message, type = 'success') {
+                if (!message) return;
+
+                let container = document.getElementById('toast-container');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = 'toast-container';
+                    container.className = 'fixed bottom-5 left-1/2 -translate-x-1/2 sm:left-auto sm:right-6 sm:translate-x-0 z-[9999] flex flex-col gap-2.5 pointer-events-none max-w-[90vw] sm:max-w-md w-max';
+                    document.body.appendChild(container);
+                }
+
+                const toast = document.createElement('div');
+                const isError = type === 'error';
+                const isInfo = type === 'info';
+                const isWarning = type === 'warning';
+
+                let iconName = 'check_circle';
+                let iconColor = 'text-primary';
+                let bgClasses = 'bg-surface-container-high/95 text-on-surface border-outline-variant/40';
+
+                if (isError) {
+                    iconName = 'error';
+                    iconColor = 'text-error';
+                    bgClasses = 'bg-surface-container-high/95 text-on-surface border-error/40';
+                } else if (isInfo) {
+                    iconName = 'info';
+                    iconColor = 'text-sky-400';
+                    bgClasses = 'bg-surface-container-high/95 text-on-surface border-sky-500/30';
+                } else if (isWarning) {
+                    iconName = 'warning';
+                    iconColor = 'text-amber-400';
+                    bgClasses = 'bg-surface-container-high/95 text-on-surface border-amber-500/30';
+                }
+
+                toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-2xl backdrop-blur-xl border font-title-md text-sm transition-all duration-300 ease-out transform translate-y-4 opacity-0 scale-95 cursor-pointer select-none ${bgClasses}`;
+                
+                toast.innerHTML = `
+                    <span class="material-symbols-outlined text-[20px] shrink-0 ${iconColor}" style="font-variation-settings: 'FILL' 1;">${iconName}</span>
+                    <span class="leading-snug break-words">${message}</span>
+                    <button type="button" class="ml-2 -mr-1 text-on-surface-variant hover:text-on-surface transition-colors shrink-0" aria-label="Dismiss">
+                        <span class="material-symbols-outlined text-base">close</span>
+                    </button>
+                `;
+
+                container.appendChild(toast);
+
+                // Animate in
+                requestAnimationFrame(() => {
+                    toast.classList.remove('translate-y-4', 'opacity-0', 'scale-95');
+                    toast.classList.add('translate-y-0', 'opacity-100', 'scale-100');
+                });
+
+                // Auto dismiss after 3 seconds
+                let dismissed = false;
+                const dismiss = () => {
+                    if (dismissed) return;
+                    dismissed = true;
+                    toast.classList.remove('translate-y-0', 'opacity-100', 'scale-100');
+                    toast.classList.add('translate-y-2', 'opacity-0', 'scale-95');
+                    setTimeout(() => toast.remove(), 250);
+                };
+
+                toast.addEventListener('click', dismiss);
+                setTimeout(dismiss, 3000);
+            };
+
+            function showToast(message, type = 'success') {
+                window.showToast(message, type);
+            }
         </script>
     </header>
 

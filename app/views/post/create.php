@@ -147,11 +147,7 @@
         const subtitle = subtitleEl ? subtitleEl.value : '';
         const content = quill ? quill.root.innerHTML : '';
         localStorage.setItem('blogggle_story_draft', JSON.stringify({ title, subtitle, content, time: Date.now() }));
-        if (typeof showToast === 'function') {
-            showToast('Saved to Drafts!', 'success');
-        } else {
-            alert('Saved to Drafts!');
-        }
+        showToast('Saved to Drafts!', 'success');
     };
 
     document.addEventListener("DOMContentLoaded", function() {
@@ -192,8 +188,7 @@
                     quill.insertEmbed(range.index, 'image', BASE_URL + data.url);
                     quill.setSelection(range.index + 1);
                 } else {
-                    if (typeof showToast === 'function') showToast(data.message || 'Image upload failed', 'error');
-                    else alert(data.message || 'Image upload failed');
+                    showToast(data.message || 'Image upload failed', 'error');
                 }
             } catch (err) {
                 console.error('Image upload error:', err);
@@ -304,8 +299,7 @@
             
             if (html === '<p><br></p>' || html.trim() === '') {
                 e.preventDefault();
-                if(typeof showToast === 'function') showToast('Content cannot be empty', 'error');
-                else alert('Content cannot be empty');
+                showToast('Content cannot be empty', 'error');
                 return;
             }
 

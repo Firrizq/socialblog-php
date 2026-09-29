@@ -21,7 +21,7 @@
         <!-- Right: Actions -->
         <div class="flex-1 flex items-center justify-end gap-2 sm:gap-3">
             <span id="word-count-badge" class="hidden md:flex items-center text-xs font-title-md text-on-surface-variant mr-3"><span id="draft-status" class="mr-2 text-primary font-bold"></span><span id="word-count-text">0 words</span></span>
-            <button type="button" onclick="if(typeof showToast === 'function') showToast('Saved to Drafts!', 'success');" class="hidden sm:block px-4 py-2 rounded-full text-on-surface-variant font-title-md text-sm hover:bg-surface-container-low transition-colors">Save Draft</button>
+            <button type="button" onclick="showToast('Saved to Drafts!', 'success');" class="hidden sm:block px-4 py-2 rounded-full text-on-surface-variant font-title-md text-sm hover:bg-surface-container-low transition-colors">Save Draft</button>
             <button type="button" id="preview-btn" class="px-4 py-2 rounded-full bg-surface-container-lowest border border-outline-variant/50 text-on-surface font-title-md text-sm hover:bg-surface-container-low transition-colors shadow-sm">Preview</button>
             <button type="submit" form="story-form" class="px-5 py-2 rounded-full bg-primary text-on-primary font-title-md text-sm hover:opacity-90 transition-opacity shadow-sm font-bold">Save Changes</button>
         </div>
@@ -162,8 +162,7 @@
                     quill.insertEmbed(range.index, 'image', BASE_URL + data.url);
                     quill.setSelection(range.index + 1);
                 } else {
-                    if (typeof showToast === 'function') showToast(data.message || 'Image upload failed', 'error');
-                    else alert(data.message || 'Image upload failed');
+                    showToast(data.message || 'Image upload failed', 'error');
                 }
             } catch (err) {
                 console.error('Image upload error:', err);
@@ -258,8 +257,7 @@
             
             if (html === '<p><br></p>' || html.trim() === '') {
                 e.preventDefault();
-                if(typeof showToast === 'function') showToast('Content cannot be empty', 'error');
-                else alert('Content cannot be empty');
+                showToast('Content cannot be empty', 'error');
                 return;
             }
 

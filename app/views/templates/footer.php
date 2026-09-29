@@ -259,6 +259,7 @@
                     }
                 } catch (err) {
                     console.error('Bookmark error:', err);
+                    showToast(err.message || 'Bookmark action failed', 'error');
                 } finally {
                     bookmarkBtn.disabled = false;
                 }
@@ -333,6 +334,7 @@
                     }
                 } catch (err) {
                     console.error('Repost error:', err);
+                    showToast(err.message || 'Repost action failed', 'error');
                 } finally {
                     repostBtn.disabled = false;
                 }
@@ -395,9 +397,15 @@
                                 followBtn.className = 'follow-btn btn-follow px-space-sm py-space-xs rounded-full bg-surface-container border border-outline-variant text-on-surface hover:border-primary hover:text-primary font-caption text-xs transition-colors shrink-0';
                             }
                         }
+
+                        // Modern non-blocking feedback
+                        showToast(isFollowed ? 'Following author' : 'Unfollowed author', isFollowed ? 'success' : 'info');
+                    } else if (data.message) {
+                        showToast(data.message, 'error');
                     }
                 } catch (err) {
                     console.error('Follow error:', err);
+                    showToast(err.message || 'Network error occurred', 'error');
                 } finally {
                     followBtn.disabled = false;
                 }
@@ -804,43 +812,52 @@
     setInterval(updateTimeAgo, 60000);
     </script>
 
-    <!-- Global Dynamic Toast Container -->
-    <div id="toast-container" class="fixed bottom-6 right-6 z-[200] flex flex-col gap-3 pointer-events-none"></div>
-
+    <!-- Fallback Toast Definition if not already loaded from header -->
     <script>
-    window.showToast = function(message, type = 'success') {
-        const container = document.getElementById('toast-container');
-        if (!container) return;
+    if (typeof window.showToast !== 'function') {
+        window.showToast = function(message, type = 'success') {
+            if (!message) return;
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                container.className = 'fixed bottom-5 left-1/2 -translate-x-1/2 sm:left-auto sm:right-6 sm:translate-x-0 z-[9999] flex flex-col gap-2.5 pointer-events-none max-w-[90vw] sm:max-w-md w-max';
+                document.body.appendChild(container);
+            }
+            const toast = document.createElement('div');
+            const isError = type === 'error';
+            const isInfo = type === 'info';
+            const isWarning = type === 'warning';
+            let iconName = isError ? 'error' : (isInfo ? 'info' : (isWarning ? 'warning' : 'check_circle'));
+            let iconColor = isError ? 'text-error' : (isInfo ? 'text-sky-400' : (isWarning ? 'text-amber-400' : 'text-primary'));
+            let bgClasses = isError ? 'border-error/40' : (isInfo ? 'border-sky-500/30' : (isWarning ? 'border-amber-500/30' : 'border-outline-variant/40'));
 
-        const toast = document.createElement('div');
-        const isError = type === 'error';
-        const icon = isError ? 'error' : 'check_circle';
-        const colorClass = isError 
-            ? 'text-error border-error/40 bg-error-container/20' 
-            : 'text-primary border-primary/40 bg-surface-container-high';
-
-        toast.className = `transform translate-y-10 opacity-0 transition-all duration-300 pointer-events-auto px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 text-sm font-title-md border text-on-surface backdrop-blur-md ${colorClass}`;
-        
-        toast.innerHTML = `
-            <span class="material-symbols-outlined text-base ${isError ? 'text-error' : 'text-primary'}">${icon}</span>
-            <span>${message}</span>
-        `;
-
-        container.appendChild(toast);
-
-        // Animate in
-        requestAnimationFrame(() => {
-            toast.classList.remove('translate-y-10', 'opacity-0');
-            toast.classList.add('translate-y-0', 'opacity-100');
-        });
-
-        // Animate out and remove after 3.5 seconds
-        setTimeout(() => {
-            toast.classList.remove('translate-y-0', 'opacity-100');
-            toast.classList.add('translate-y-10', 'opacity-0');
-            setTimeout(() => toast.remove(), 300);
-        }, 3500);
-    };
+            toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-2xl backdrop-blur-xl border font-title-md text-sm transition-all duration-300 ease-out transform translate-y-4 opacity-0 scale-95 cursor-pointer select-none bg-surface-container-high/95 text-on-surface ${bgClasses}`;
+            toast.innerHTML = `
+                <span class="material-symbols-outlined text-[20px] shrink-0 ${iconColor}" style="font-variation-settings: 'FILL' 1;">${iconName}</span>
+                <span class="leading-snug break-words">${message}</span>
+                <button type="button" class="ml-2 -mr-1 text-on-surface-variant hover:text-on-surface transition-colors shrink-0" aria-label="Dismiss">
+                    <span class="material-symbols-outlined text-base">close</span>
+                </button>
+            `;
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-4', 'opacity-0', 'scale-95');
+                toast.classList.add('translate-y-0', 'opacity-100', 'scale-100');
+            });
+            let dismissed = false;
+            const dismiss = () => {
+                if (dismissed) return;
+                dismissed = true;
+                toast.classList.remove('translate-y-0', 'opacity-100', 'scale-100');
+                toast.classList.add('translate-y-2', 'opacity-0', 'scale-95');
+                setTimeout(() => toast.remove(), 250);
+            };
+            toast.addEventListener('click', dismiss);
+            setTimeout(dismiss, 3000);
+        };
+        window.showToast = window.showToast;
+    }
     </script>
 </body>
 </html>
