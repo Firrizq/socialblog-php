@@ -177,14 +177,32 @@ class User
 
     /**
      * Get suggested community writers ordered by follower count
+     * Excludes self and any users currently followed by the active user.
      *
      * @param int $currentUserId
      * @return array
      */
     public function getSuggestedWriters(int $currentUserId): array
     {
-        $this->db->query("SELECT id, username, profile_picture, bio, follower_count FROM {$this->table} WHERE id != :current_user_id ORDER BY follower_count DESC, created_at DESC LIMIT 4");
-        $this->db->bind(':current_user_id', $currentUserId);
+        if ($currentUserId > 0) {
+            $this->db->query("SELECT id, username, profile_picture, bio, follower_count 
+                              FROM {$this->table} 
+                              WHERE id != :current_user_id 
+                                AND id NOT IN (
+                                    SELECT target_id 
+                                    FROM followings 
+                                    WHERE user_id = :current_user_id AND target_id IS NOT NULL
+                                )
+                              ORDER BY follower_count DESC, created_at DESC 
+                              LIMIT 4");
+            $this->db->bind(':current_user_id', $currentUserId);
+        } else {
+            $this->db->query("SELECT id, username, profile_picture, bio, follower_count 
+                              FROM {$this->table} 
+                              ORDER BY follower_count DESC, created_at DESC 
+                              LIMIT 4");
+        }
+
         return $this->db->resultSet();
     }
 }

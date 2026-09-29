@@ -6,8 +6,8 @@
                 require_once __DIR__ . '/../../models/User.php';
                 require_once __DIR__ . '/../../models/Post_model.php';
                 require_once __DIR__ . '/../../models/Interaction_model.php';
-                $currentUserId = $_SESSION['user_id'] ?? 0;
-                $suggestedWriters = (new User())->getSuggestedWriters((int)$currentUserId);
+                $currentUserId = (int)($_SESSION['active_user_id'] ?? $_SESSION['user_id'] ?? 0);
+                $suggestedWriters = (new User())->getSuggestedWriters($currentUserId);
                 $popularPosts = array_slice((new Post_model())->getPopularPosts(), 0, 4);
                 $interactionModel = new Interaction_model();
                 ?>
@@ -51,36 +51,40 @@
                     <div class="flex flex-col gap-space-md">
                         <span class="font-title-md text-on-surface">Suggested Writers</span>
                         <div class="flex flex-col gap-space-md">
-                            <?php foreach($suggestedWriters as $writer): ?>
-                                <?php 
-                                    $isWriterFollowing = false;
-                                    if ($currentUserId > 0) {
-                                        $isWriterFollowing = $interactionModel->isFollowing((int)$currentUserId, (int)$writer['id']);
-                                    }
-                                ?>
-                                <div class="flex items-center justify-between">
-                                    <a href="<?= BASEURL ?>/<?= urlencode($writer['username']) ?>" class="flex items-center gap-space-sm min-w-0 group hover:opacity-80 transition-opacity">
-                                        <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary shrink-0 overflow-hidden">
-                                            <?php if (!empty($writer['profile_picture'])): ?>
-                                                <img src="<?= BASEURL ?><?= htmlspecialchars($writer['profile_picture']) ?>" alt="avatar" class="w-full h-full object-cover">
-                                            <?php else: ?>
-                                                <?= strtoupper(substr($writer['username'], 0, 1)) ?>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div class="flex flex-col min-w-0">
-                                            <p class="font-title-md text-sm text-on-surface leading-tight truncate group-hover:text-primary transition-colors"><?= htmlspecialchars($writer['username']) ?></p>
-                                            <p class="font-caption text-xs text-on-surface-variant truncate max-w-[120px]"><?= htmlspecialchars($writer['bio'] ?: 'Community Writer') ?></p>
-                                        </div>
-                                    </a>
-                                    <button type="button" 
-                                            class="follow-btn btn-follow px-space-sm py-space-xs rounded-full border font-caption text-xs transition-colors shrink-0 <?= $isWriterFollowing ? 'border-outline-variant bg-surface text-on-surface hover:border-error hover:text-error hover:bg-error-container/20' : 'bg-surface-container border-outline-variant text-on-surface hover:border-primary hover:text-primary' ?>" 
-                                            data-user-id="<?= (int)$writer['id'] ?>" 
-                                            data-id="<?= (int)$writer['id'] ?>" 
-                                            data-scope="sidebar">
-                                        <?= $isWriterFollowing ? 'Following' : 'Follow' ?>
-                                    </button>
-                                </div>
-                            <?php endforeach; ?>
+                            <?php if (!empty($suggestedWriters)): ?>
+                                <?php foreach($suggestedWriters as $writer): ?>
+                                    <?php 
+                                        $isWriterFollowing = false;
+                                        if ($currentUserId > 0) {
+                                            $isWriterFollowing = $interactionModel->isFollowing((int)$currentUserId, (int)$writer['id']);
+                                        }
+                                    ?>
+                                    <div class="flex items-center justify-between">
+                                        <a href="<?= BASEURL ?>/<?= urlencode($writer['username']) ?>" class="flex items-center gap-space-sm min-w-0 group hover:opacity-80 transition-opacity">
+                                            <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary shrink-0 overflow-hidden">
+                                                <?php if (!empty($writer['profile_picture'])): ?>
+                                                    <img src="<?= BASEURL ?><?= htmlspecialchars($writer['profile_picture']) ?>" alt="avatar" class="w-full h-full object-cover">
+                                                <?php else: ?>
+                                                    <?= strtoupper(substr($writer['username'], 0, 1)) ?>
+                                                <?php endif; ?>
+                                            </div>
+                                            <div class="flex flex-col min-w-0">
+                                                <p class="font-title-md text-sm text-on-surface leading-tight truncate group-hover:text-primary transition-colors"><?= htmlspecialchars($writer['username']) ?></p>
+                                                <p class="font-caption text-xs text-on-surface-variant truncate max-w-[120px]"><?= htmlspecialchars($writer['bio'] ?: 'Community Writer') ?></p>
+                                            </div>
+                                        </a>
+                                        <button type="button" 
+                                                class="follow-btn btn-follow px-space-sm py-space-xs rounded-full border font-caption text-xs transition-colors shrink-0 <?= $isWriterFollowing ? 'border-outline-variant bg-surface text-on-surface hover:border-error hover:text-error hover:bg-error-container/20' : 'bg-surface-container border-outline-variant text-on-surface hover:border-primary hover:text-primary' ?>" 
+                                                data-user-id="<?= (int)$writer['id'] ?>" 
+                                                data-id="<?= (int)$writer['id'] ?>" 
+                                                data-scope="sidebar">
+                                            <?= $isWriterFollowing ? 'Following' : 'Follow' ?>
+                                        </button>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <p class="font-caption text-xs text-on-surface-variant">No suggestions available.</p>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
