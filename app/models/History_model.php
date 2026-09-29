@@ -26,6 +26,7 @@ class History_model
         $query = "SELECT 
                     reading_history.progress,
                     reading_history.last_read_at,
+                    reading_history.last_read_at AS history_date,
                     posts.*,
                     users.username,
                     users.name,

@@ -77,7 +77,7 @@ $likedPosts = $data['liked_posts_list'] ?? [];
             </div>
         <?php else: ?>
 
-            <!-- Continue Reading Section (Unfinished, progress < 90%) -->
+            <!-- Continue Reading Section (Unfinished, progress < 100%) -->
             <?php if (!empty($unfinishedStories)): ?>
                 <div class="mb-8">
                     <div class="flex items-center justify-between pb-2 mb-2 border-b border-outline-variant/20">
@@ -98,7 +98,7 @@ $likedPosts = $data['liked_posts_list'] ?? [];
                 </div>
             <?php endif; ?>
 
-            <!-- Finished Stories Section (progress >= 90%) -->
+            <!-- Finished Stories Section (progress >= 100%) -->
             <?php if (!empty($finishedStories)): ?>
                 <div class="mb-8">
                     <div class="flex items-center justify-between pb-2 mb-2 border-b border-outline-variant/20">
@@ -217,7 +217,7 @@ function renderLibraryPostRow(array $post, array $data, bool $showProgressBar = 
                         </span>
                     <?php endif; ?>
 
-                    <?php if($isCompleted): ?>
+                    <?php if($isCompleted || $progress >= 100): ?>
                         <span class="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary font-caption text-[11px] font-bold">
                             <span class="material-symbols-outlined text-[13px]">check_circle</span> Finished
                         </span>
@@ -240,8 +240,30 @@ function renderLibraryPostRow(array $post, array $data, bool $showProgressBar = 
                 <?php endif; ?>
             </div>
 
-            <!-- Reading Progress Bar (Continue Reading Mode) -->
-            <?php if($showProgressBar && $progress > 0): ?>
+            <!-- Reading Progress Bar (Continue Reading Mode) & Exact Timestamp -->
+            <?php 
+                $historyDateRaw = $post['history_date'] ?? $post['last_read_at'] ?? null;
+            ?>
+            <?php if (!empty($historyDateRaw)): ?>
+                <?php $dateFormatted = date('M d, Y', strtotime((string)$historyDateRaw)); ?>
+                <div class="mt-1 mb-2 flex flex-col">
+                    <?php if ($progress < 100): ?>
+                        <div class="flex items-center gap-3">
+                            <div class="flex-1 h-1.5 bg-surface-container rounded-full overflow-hidden">
+                                <div class="bg-primary h-full rounded-full transition-all duration-300" style="width: <?= $progress ?>%;"></div>
+                            </div>
+                            <span class="font-caption text-xs font-bold text-primary shrink-0"><?= $progress ?>% read</span>
+                        </div>
+                    <?php endif; ?>
+                    <div class="text-xs text-on-surface-variant/80 dark:text-slate-400 mt-1">
+                        <?php if ($progress >= 100): ?>
+                            finished on <?= $dateFormatted ?>
+                        <?php else: ?>
+                            last read on <?= $dateFormatted ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php elseif($showProgressBar && $progress > 0): ?>
                 <div class="mt-1 mb-2.5 flex items-center gap-3">
                     <div class="flex-1 h-1.5 bg-surface-container rounded-full overflow-hidden">
                         <div class="bg-primary h-full rounded-full transition-all duration-300" style="width: <?= $progress ?>%;"></div>

@@ -35,13 +35,13 @@ class History extends Controller
         $bookmarkedPosts = $this->historyModel->getBookmarkedPosts($userId);
         $likedPosts = $this->historyModel->getLikedPosts($userId);
 
-        // 2. Split reading history into finished and unfinished
+        // 2. Split reading history into finished and unfinished (100% completed vs in progress)
         $finishedStories = array_values(array_filter($readingHistory, function ($post) {
-            return (int)($post['progress'] ?? 0) >= 90;
+            return (int)($post['progress'] ?? 0) >= 100;
         }));
 
         $unfinishedStories = array_values(array_filter($readingHistory, function ($post) {
-            return (int)($post['progress'] ?? 0) < 90;
+            return (int)($post['progress'] ?? 0) < 100;
         }));
 
         // Interaction IDs for UI states
