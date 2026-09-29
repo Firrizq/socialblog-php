@@ -45,6 +45,33 @@ class Controller
                 $_SESSION['active_user_id'] = $activeId;
             }
 
+            // AUTO-SYNC: Refresh account data from DB to eliminate any corrupted/polluted session data
+            if (class_exists('Database')) {
+                try {
+                    require_once __DIR__ . '/../models/User.php';
+                    $userModel = new User();
+                    foreach ($_SESSION['accounts'] as $accKey => $accVal) {
+                        $accId = (int)($accVal['id'] ?? $accKey);
+                        if ($accId > 0) {
+                            $freshUser = $userModel->getUserById($accId);
+                            if ($freshUser) {
+                                $avatar = !empty($freshUser['profile_picture']) ? $freshUser['profile_picture'] : null;
+                                $_SESSION['accounts'][$accId] = [
+                                    'id' => (int)$freshUser['id'],
+                                    'name' => $freshUser['name'] ?? $freshUser['username'],
+                                    'username' => $freshUser['username'],
+                                    'email' => $freshUser['email'] ?? '',
+                                    'profile_picture' => $avatar,
+                                    'avatar' => $avatar
+                                ];
+                            }
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    // Fallback to existing session data if database is temporarily unavailable
+                }
+            }
+
             // Sync active account data across top-level $_SESSION for backward compatibility
             $activeUser = $_SESSION['accounts'][$activeId] ?? $_SESSION['accounts'][(string)$activeId] ?? $_SESSION['accounts'][(int)$activeId] ?? null;
             if ($activeUser) {

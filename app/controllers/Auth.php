@@ -188,13 +188,16 @@ class Auth extends Controller
                     $_SESSION['accounts'] = [];
                 }
 
-                // Append / update user account data in $_SESSION['accounts']
+                $avatar = !empty($user['profile_picture']) ? $user['profile_picture'] : null;
+
+                // STRICTLY assign fresh DB user data to its dedicated session key without merging
                 $_SESSION['accounts'][$userId] = [
                     'id' => $userId,
                     'name' => $user['name'] ?? $user['username'],
                     'username' => $user['username'],
                     'email' => $user['email'] ?? '',
-                    'profile_picture' => $user['profile_picture'] ?? null
+                    'profile_picture' => $avatar,
+                    'avatar' => $avatar
                 ];
 
                 // Set as active user

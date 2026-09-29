@@ -88,6 +88,21 @@ class User
     }
 
     /**
+     * Fetch user data by user ID
+     *
+     * @param int $userId
+     * @return array|false
+     */
+    public function getUserById(int $userId): array|false
+    {
+        $this->db->query("SELECT id, name, username, email, bio, profile_picture, banner_picture, location, profile_link, tipping_link, follower_count, following_count, created_at FROM {$this->table} WHERE id = :id LIMIT 1");
+        $this->db->bind(':id', $userId);
+        $row = $this->db->single();
+
+        return $row ?: false;
+    }
+
+    /**
      * Fetch user profile data by username
      *
      * @param string $username
