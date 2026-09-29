@@ -20,36 +20,44 @@ class Profile extends Controller
     }
 
     /**
-     * Default profile route
-     * Redirects authenticated user to their own profile, or guests to login
-     */
-    public function index(): void
-    {
-        if (!empty($_SESSION['username'])) {
-            $queryString = !empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '';
-            header('Location: ' . BASEURL . '/profile/user/' . urlencode($_SESSION['username']) . $queryString);
-            exit;
-        }
-
-        header('Location: ' . BASEURL . '/auth');
-        exit;
-    }
-
-    /**
-     * Display a specific user's public profile and published stories
+     * Display a user's public profile and authored stories
+     * Supports:
+     *   /{username} -> Profile@index($username)
+     *   /profile    -> Redirects to /{active_username} or /auth
      *
      * @param string $username
      */
-    public function user(string $username = ''): void
+    public function index(string $username = ''): void
     {
         $username = trim($username);
 
+        // If no username is provided in URL (/profile)
         if (empty($username)) {
-            header('Location: ' . BASEURL . '/home');
+            $activeUserId = $_SESSION['active_user_id'] ?? $_SESSION['user_id'] ?? null;
+            if (!empty($activeUserId)) {
+                $sessionUser = $_SESSION['accounts'][$activeUserId] ?? null;
+                $activeUsername = $sessionUser['username'] ?? $_SESSION['username'] ?? null;
+                if (!empty($activeUsername)) {
+                    $queryString = !empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '';
+                    header('Location: ' . BASEURL . '/' . urlencode($activeUsername) . $queryString);
+                    exit;
+                }
+            }
+
+            header('Location: ' . BASEURL . '/auth');
             exit;
         }
 
+        // Clean username from leading '@'
+        $username = ltrim($username, '@');
+
+        // Fetch user profile by string username
         $profileUser = $this->userModel->getUserProfile($username);
+
+        // If not found, attempt fallback by integer ID if numeric
+        if (!$profileUser && is_numeric($username)) {
+            $profileUser = $this->userModel->getUserById((int)$username);
+        }
 
         if (!$profileUser) {
             http_response_code(404);
@@ -57,6 +65,8 @@ class Profile extends Controller
                 'title' => 'User Not Found - Blogggle',
                 'username' => $username,
                 'profile_user' => null,
+                'user' => null,
+                'is_owner' => false,
                 'posts' => [],
                 'replies' => [],
                 'media_posts' => [],
@@ -66,8 +76,10 @@ class Profile extends Controller
             return;
         }
 
-        $isOwner = (!empty($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)$profileUser['id']);
-        $currentUserId = !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
+        // Determine if logged-in active_user_id owns this profile to show "Edit profile"
+        $activeUserId = $_SESSION['active_user_id'] ?? $_SESSION['user_id'] ?? null;
+        $isOwner = (!empty($activeUserId) && (int)$activeUserId === (int)$profileUser['id']);
+        $currentUserId = !empty($activeUserId) ? (int)$activeUserId : null;
 
         $tab = $_GET['tab'] ?? 'posts';
         if (!in_array($tab, ['posts', 'replies', 'reposts', 'media'], true)) {
@@ -101,19 +113,29 @@ class Profile extends Controller
         }
 
         $data = [
-            'title' => '@' . $profileUser['username'] . ' - Profile | Blogggle',
+            'title' => ($profileUser['name'] ?? $profileUser['username']) . ' (@' . $profileUser['username'] . ') - Profile | Blogggle',
             'profile_user' => $profileUser,
+            'user' => $profileUser,
+            'is_owner' => $isOwner,
+            'is_following' => $isFollowing,
             'posts' => $posts,
             'replies' => $replies,
             'media_posts' => $mediaPosts,
             'active_tab' => $tab,
-            'is_following' => $isFollowing,
             'liked_posts' => $likedPosts,
             'bookmarked_posts' => $bookmarkedPosts,
             'reposted_posts' => $repostedPosts
         ];
 
         $this->view('profile/index', $data);
+    }
+
+    /**
+     * Backward-compatible alias for /profile/user/{username}
+     */
+    public function user(string $username = ''): void
+    {
+        $this->index($username);
     }
 
     /**

@@ -4,8 +4,16 @@ declare(strict_types=1);
 
 /**
  * Core Application Router Class
- * Parses the clean URL and executes the appropriate Controller and Method with parameters.
- * Format: /controller/method/param1/param2/...
+ * Parses clean URLs and executes appropriate Controller, Method and Parameters.
+ * 
+ * Supports both standard MVC patterns:
+ *   /controller/method/param1/...
+ * 
+ * And Twitter/Medium vanity patterns:
+ *   /{username}                              -> Profile@index($username)
+ *   /{username}/note/{uid}                   -> Post@detail($uid)
+ *   /{username}/story/{uid}                  -> Post@detail($uid)
+ *   /{username}/comment/{uid}                -> Post@comment_detail($uid)
  */
 class App
 {
@@ -17,41 +25,64 @@ class App
     {
         $url = $this->parseURL();
 
-        // 1. Determine Controller
+        // 1. Determine Controller & Route Type
         if (!empty($url[0])) {
             $controllerName = ucfirst($url[0]);
             $controllerPath = __DIR__ . '/../controllers/' . $controllerName . '.php';
 
             if (file_exists($controllerPath)) {
+                // Standard MVC route: /controller/method/param1/...
                 $this->controller = $controllerName;
                 unset($url[0]);
+
+                require_once __DIR__ . '/../controllers/' . $this->controller . '.php';
+                $this->controller = new $this->controller();
+
+                if (isset($url[1])) {
+                    if (method_exists($this->controller, $url[1])) {
+                        $this->method = $url[1];
+                        unset($url[1]);
+                    } else {
+                        http_response_code(404);
+                        $controllerClass = get_class($this->controller);
+                        die("404 Not Found: Method [{$url[1]}] not found in Controller [{$controllerClass}].");
+                    }
+                }
+
+                $this->params = $url ? array_values($url) : [];
             } else {
-                // If controller does not exist, return 404 HTTP status
-                http_response_code(404);
-                die("404 Not Found: Controller [{$controllerName}] not found.");
+                // Twitter / Medium Vanity Routing
+                $username = ltrim($url[0], '@');
+                $action = isset($url[1]) ? strtolower($url[1]) : '';
+                $uid = $url[2] ?? '';
+
+                if ($action === 'note' || $action === 'story') {
+                    // Map /{username}/note/{uid} or /{username}/story/{uid} -> Post@detail($uid)
+                    $this->controller = 'Post';
+                    $this->method = 'detail';
+                    $this->params = [$uid];
+                } elseif ($action === 'comment') {
+                    // Map /{username}/comment/{uid} -> Post@comment_detail($uid)
+                    $this->controller = 'Post';
+                    $this->method = 'comment_detail';
+                    $this->params = [$uid];
+                } else {
+                    // Map /{username} -> Profile@index($username)
+                    $this->controller = 'Profile';
+                    $this->method = 'index';
+                    $this->params = [$username];
+                }
+
+                require_once __DIR__ . '/../controllers/' . $this->controller . '.php';
+                $this->controller = new $this->controller();
             }
+        } else {
+            // Default Root Route (Home@index)
+            require_once __DIR__ . '/../controllers/' . $this->controller . '.php';
+            $this->controller = new $this->controller();
         }
 
-        // Require the resolved controller file
-        require_once __DIR__ . '/../controllers/' . $this->controller . '.php';
-        $this->controller = new $this->controller();
-
-        // 2. Determine Method
-        if (isset($url[1])) {
-            if (method_exists($this->controller, $url[1])) {
-                $this->method = $url[1];
-                unset($url[1]);
-            } else {
-                http_response_code(404);
-                $controllerClass = get_class($this->controller);
-                die("404 Not Found: Method [{$url[1]}] not found in Controller [{$controllerClass}].");
-            }
-        }
-
-        // 3. Determine Parameters
-        $this->params = $url ? array_values($url) : [];
-
-        // 4. Run Controller & Method with Params
+        // Execute Controller & Method with Params
         call_user_func_array([$this->controller, $this->method], $this->params);
     }
 

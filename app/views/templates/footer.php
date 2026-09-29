@@ -21,7 +21,12 @@
                         <span class="font-title-md text-on-surface">Popular Stories</span>
                         <div class="flex flex-col gap-2">
                             <?php foreach($popularPosts as $popPost): ?>
-                                <a href="<?= BASEURL ?>/post/detail/<?= $popPost['id'] ?>" class="flex flex-col gap-1 p-3 rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors group">
+                                <?php
+                                    $popType = strtolower($popPost['post_type'] ?? $popPost['type'] ?? 'story');
+                                    $popUid = !empty($popPost['uid']) ? $popPost['uid'] : $popPost['id'];
+                                    $popUrl = BASEURL . '/' . urlencode($popPost['username']) . '/' . $popType . '/' . $popUid;
+                                ?>
+                                <a href="<?= $popUrl ?>" class="flex flex-col gap-1 p-3 rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors group">
                                     <span class="font-title-md text-sm text-on-surface group-hover:text-primary transition-colors line-clamp-2"><?= htmlspecialchars($popPost['title']) ?></span>
                                     <span class="font-caption text-xs text-on-surface-variant">by @<?= htmlspecialchars($popPost['username']) ?> · <?= $popPost['read_time_minutes'] ?> min read</span>
                                 </a>
@@ -54,7 +59,7 @@
                                     }
                                 ?>
                                 <div class="flex items-center justify-between">
-                                    <a href="<?= BASEURL ?>/profile/user/<?= urlencode($writer['username']) ?>" class="flex items-center gap-space-sm min-w-0 group hover:opacity-80 transition-opacity">
+                                    <a href="<?= BASEURL ?>/<?= urlencode($writer['username']) ?>" class="flex items-center gap-space-sm min-w-0 group hover:opacity-80 transition-opacity">
                                         <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary shrink-0 overflow-hidden">
                                             <?php if (!empty($writer['profile_picture'])): ?>
                                                 <img src="<?= BASEURL ?><?= htmlspecialchars($writer['profile_picture']) ?>" alt="avatar" class="w-full h-full object-cover">
@@ -645,7 +650,7 @@
                 
                 if (detailLink) {
                     // Instant load if already on Detail Page
-                    if (window.location.href.includes(detailLink) || window.location.pathname.includes('/post/detail/')) {
+                    if ((detailLink && window.location.href.includes(detailLink)) || window.location.pathname.includes('/post/detail/') || /\/[^\/]+\/(note|story)\/\d{12}/.test(window.location.pathname)) {
                         const mainDOM = document.querySelector('main');
                         if (mainDOM) {
                             const clonedMain = mainDOM.cloneNode(true);
@@ -731,11 +736,11 @@
                 
                 let detailLink = null;
                 if (article) {
-                    const linkTag = article.querySelector('a[href*="/post/detail/"]');
+                    const linkTag = article.querySelector('a[href*="/note/"], a[href*="/story/"], a[href*="/post/detail/"]');
                     if (linkTag) detailLink = linkTag.href;
-                    else if (window.location.href.includes('/post/detail/')) detailLink = window.location.href;
+                    else if (window.location.href.includes('/post/detail/') || /\/[^\/]+\/(note|story)\/\d{12}/.test(window.location.pathname)) detailLink = window.location.href;
                 } else if (quillContent) {
-                    if (window.location.href.includes('/post/detail/')) detailLink = window.location.href;
+                    if (window.location.href.includes('/post/detail/') || /\/[^\/]+\/(note|story)\/\d{12}/.test(window.location.pathname)) detailLink = window.location.href;
                 }
                 
                 openLightboxGallery(imagesToLoad, startIdx, detailLink);

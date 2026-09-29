@@ -49,9 +49,26 @@ class Post_model
     }
 
     /**
+     * Generate a unique 12-digit numeric string for posts
+     *
+     * @return string
+     */
+    public function generateUid(): string
+    {
+        do {
+            $uid = (string)random_int(100000000000, 999999999999);
+            $this->db->query("SELECT id FROM {$this->table} WHERE uid = :uid LIMIT 1");
+            $this->db->bind(':uid', $uid);
+            $existing = $this->db->single();
+        } while (!empty($existing));
+
+        return $uid;
+    }
+
+    /**
      * Create a new post in the database
      *
-     * @param array $data ['user_id', 'title', 'content', 'status']
+     * @param array $data ['user_id', 'title', 'content', 'status', 'uid' => optional]
      * @return int|false
      */
     public function createPost(array $data): int|false
@@ -61,11 +78,13 @@ class Post_model
         $postType = $data['post_type'] ?? 'story';
         $wordCount = str_word_count(strip_tags($data['content'] ?? ''));
         $readTime = max(1, (int)ceil($wordCount / 200));
+        $uid = !empty($data['uid']) ? (string)$data['uid'] : $this->generateUid();
 
-        $query = "INSERT INTO {$this->table} (user_id, post_type, title, content, cover_image, status, read_time_minutes) 
-                  VALUES (:user_id, :post_type, :title, :content, :cover_image, :status, :read_time_minutes)";
+        $query = "INSERT INTO {$this->table} (uid, user_id, post_type, title, content, cover_image, status, read_time_minutes) 
+                  VALUES (:uid, :user_id, :post_type, :title, :content, :cover_image, :status, :read_time_minutes)";
 
         $this->db->query($query);
+        $this->db->bind(':uid', $uid);
         $this->db->bind(':user_id', $data['user_id']);
         $this->db->bind(':post_type', $postType);
         $this->db->bind(':title', $data['title']);
@@ -114,6 +133,42 @@ class Post_model
         $this->db->query($query);
         $this->db->bind(':user_id', $user_id);
         return $this->db->resultSet();
+    }
+
+    /**
+     * Fetch a single post by its 12-digit UID, joined with author information
+     *
+     * @param string $uid
+     * @param int|null $currentUserId
+     * @return array|false
+     */
+    public function getPostByUid(string $uid, ?int $currentUserId = null): array|false
+    {
+        $isRepostedSelect = $currentUserId
+            ? "EXISTS(SELECT 1 FROM reposts WHERE reposts.post_id = posts.id AND reposts.user_id = " . (int)$currentUserId . ") AS is_reposted,"
+            : "0 AS is_reposted,";
+
+        $query = "SELECT 
+                    posts.*,
+                    users.username,
+                    users.profile_picture,
+                    users.email,
+                    (SELECT COUNT(*) FROM bookmarks WHERE post_id = posts.id) AS bookmark_count,
+                    (SELECT COUNT(*) FROM reposts WHERE post_id = posts.id) AS repost_count,
+                    {$isRepostedSelect}
+                    NULL AS repost_user_id,
+                    NULL AS repost_username,
+                    NULL AS repost_name
+                  FROM {$this->table}
+                  INNER JOIN users ON posts.user_id = users.id
+                  WHERE posts.uid = :uid
+                  LIMIT 1";
+
+        $this->db->query($query);
+        $this->db->bind(':uid', $uid);
+        $row = $this->db->single();
+
+        return $row ?: false;
     }
 
     /**

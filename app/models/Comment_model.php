@@ -19,15 +19,33 @@ class Comment_model
     }
 
     /**
-     * Fetch a single comment by ID, joined with user profile and post info
+     * Generate a unique 12-digit numeric string for comments
      *
-     * @param int $id
+     * @return string
+     */
+    public function generateUid(): string
+    {
+        do {
+            $uid = (string)random_int(100000000000, 999999999999);
+            $this->db->query("SELECT id FROM {$this->table} WHERE uid = :uid LIMIT 1");
+            $this->db->bind(':uid', $uid);
+            $existing = $this->db->single();
+        } while (!empty($existing));
+
+        return $uid;
+    }
+
+    /**
+     * Fetch a single comment by 12-digit UID, joined with user profile and post info
+     *
+     * @param string $uid
      * @return array|false
      */
-    public function getCommentById(int $id): array|false
+    public function getCommentByUid(string $uid): array|false
     {
         $query = "SELECT 
                     comments.id,
+                    comments.uid,
                     comments.post_id,
                     comments.user_id,
                     comments.parent_id,
@@ -37,7 +55,45 @@ class Comment_model
                     comments.created_at,
                     users.username,
                     users.profile_picture,
-                    posts.title AS post_title
+                    posts.title AS post_title,
+                    posts.uid AS post_uid,
+                    posts.post_type AS post_type
+                  FROM {$this->table}
+                  INNER JOIN users ON comments.user_id = users.id
+                  INNER JOIN posts ON comments.post_id = posts.id
+                  WHERE comments.uid = :uid
+                  LIMIT 1";
+
+        $this->db->query($query);
+        $this->db->bind(':uid', $uid);
+        $row = $this->db->single();
+
+        return $row ?: false;
+    }
+
+    /**
+     * Fetch a single comment by ID, joined with user profile and post info
+     *
+     * @param int $id
+     * @return array|false
+     */
+    public function getCommentById(int $id): array|false
+    {
+        $query = "SELECT 
+                    comments.id,
+                    comments.uid,
+                    comments.post_id,
+                    comments.user_id,
+                    comments.parent_id,
+                    comments.comment,
+                    comments.like_count,
+                    comments.reply_count,
+                    comments.created_at,
+                    users.username,
+                    users.profile_picture,
+                    posts.title AS post_title,
+                    posts.uid AS post_uid,
+                    posts.post_type AS post_type
                   FROM {$this->table}
                   INNER JOIN users ON comments.user_id = users.id
                   INNER JOIN posts ON comments.post_id = posts.id
@@ -61,6 +117,7 @@ class Comment_model
     {
         $query = "SELECT 
                     comments.id,
+                    comments.uid,
                     comments.post_id,
                     comments.user_id,
                     comments.parent_id,
@@ -91,6 +148,7 @@ class Comment_model
     {
         $query = "SELECT 
                     comments.id,
+                    comments.uid,
                     comments.post_id,
                     comments.user_id,
                     comments.parent_id,
@@ -150,17 +208,19 @@ class Comment_model
     /**
      * Insert a new comment or reply into the database
      *
-     * @param array $data ['post_id', 'user_id', 'comment', 'parent_id' => null]
+     * @param array $data ['post_id', 'user_id', 'comment', 'parent_id' => null, 'uid' => optional]
      * @return bool
      */
     public function addComment(array $data): bool
     {
+        $uid = !empty($data['uid']) ? (string)$data['uid'] : $this->generateUid();
         $parentId = !empty($data['parent_id']) ? (int)$data['parent_id'] : null;
 
-        $query = "INSERT INTO {$this->table} (post_id, user_id, comment, parent_id) 
-                  VALUES (:post_id, :user_id, :comment, :parent_id)";
+        $query = "INSERT INTO {$this->table} (uid, post_id, user_id, comment, parent_id) 
+                  VALUES (:uid, :post_id, :user_id, :comment, :parent_id)";
 
         $this->db->query($query);
+        $this->db->bind(':uid', $uid);
         $this->db->bind(':post_id', $data['post_id']);
         $this->db->bind(':user_id', $data['user_id']);
         $this->db->bind(':comment', $data['comment']);
@@ -218,6 +278,7 @@ class Comment_model
     {
         $query = "SELECT 
                     comments.id,
+                    comments.uid,
                     comments.post_id,
                     comments.user_id,
                     comments.parent_id,
@@ -229,6 +290,7 @@ class Comment_model
                     replier.name AS replier_name,
                     replier.profile_picture AS replier_profile_picture,
                     posts.title AS post_title,
+                    posts.uid AS post_uid,
                     posts.content AS post_content,
                     posts.cover_image AS post_cover_image,
                     posts.post_type AS post_type,

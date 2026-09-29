@@ -12,9 +12,18 @@ $replies = $data['replies'] ?? [];
     <div class="sticky top-0 z-30 bg-surface/90 backdrop-blur-md px-4 py-2.5 border-b border-outline-variant/30 flex items-center justify-between gap-4">
         <div class="flex items-center gap-3 min-w-0">
             <?php 
-                $backUrl = $post ? BASEURL . '/post/detail/' . (int)$post['id'] : BASEURL . '/home';
+                $postType = strtolower($post['post_type'] ?? $post['type'] ?? 'story');
+                $postUid = !empty($post['uid']) ? $post['uid'] : ($post['id'] ?? '');
+                $postAuthor = $post['username'] ?? '';
+                $postDetailUrl = $post ? (BASEURL . '/' . urlencode($postAuthor) . '/' . $postType . '/' . $postUid) : (BASEURL . '/home');
+
+                $commentUid = !empty($comment['uid']) ? $comment['uid'] : ($comment['id'] ?? '');
+                $currentCommentDetailUrl = $comment ? (BASEURL . '/' . urlencode($comment['username'] ?? '') . '/comment/' . $commentUid) : BASEURL . '/home';
+
+                $backUrl = $postDetailUrl;
                 if ($parentComment) {
-                    $backUrl = BASEURL . '/post/commentDetail/' . (int)$parentComment['id'];
+                    $parentUid = !empty($parentComment['uid']) ? $parentComment['uid'] : $parentComment['id'];
+                    $backUrl = BASEURL . '/' . urlencode($parentComment['username'] ?? '') . '/comment/' . $parentUid;
                 }
             ?>
             <a href="<?= $backUrl ?>" class="w-9 h-9 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors shrink-0" title="Go back">
@@ -33,7 +42,7 @@ $replies = $data['replies'] ?? [];
         </div>
 
         <?php if ($post): ?>
-            <a href="<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-on-surface-variant hover:text-primary hover:border-primary/40 border border-outline-variant/30 font-caption text-xs transition-colors shrink-0">
+            <a href="<?= $postDetailUrl ?>" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-on-surface-variant hover:text-primary hover:border-primary/40 border border-outline-variant/30 font-caption text-xs transition-colors shrink-0">
                 <span class="material-symbols-outlined text-sm">auto_stories</span>
                 <span>Original Story</span>
             </a>
@@ -58,7 +67,7 @@ $replies = $data['replies'] ?? [];
         <!-- Post Reference Context Banner -->
         <?php if ($post): ?>
             <div class="p-4 sm:p-5 pb-0">
-                <a href="<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>" class="flex items-center justify-between p-3.5 rounded-xl bg-surface-container-low/70 hover:bg-surface-container border border-outline-variant/30 transition-all group">
+                <a href="<?= $postDetailUrl ?>" class="flex items-center justify-between p-3.5 rounded-xl bg-surface-container-low/70 hover:bg-surface-container border border-outline-variant/30 transition-all group">
                     <div class="flex items-center gap-2.5 min-w-0">
                         <div class="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
                             <span class="material-symbols-outlined text-primary text-base">auto_stories</span>
@@ -80,13 +89,18 @@ $replies = $data['replies'] ?? [];
 
         <!-- Parent Comment Thread Context (Connected by vertical line) -->
         <?php if ($parentComment): ?>
+            <?php
+                $parentUid = !empty($parentComment['uid']) ? $parentComment['uid'] : $parentComment['id'];
+                $parentCommentUrl = BASEURL . '/' . urlencode($parentComment['username'] ?? '') . '/comment/' . $parentUid;
+                $parentAuthorUrl = BASEURL . '/' . urlencode($parentComment['username'] ?? '');
+            ?>
             <div class="px-4 sm:px-6 pt-4">
                 <div class="relative flex gap-3.5 items-start">
                     <!-- Vertical Connecting Thread Line -->
                     <div class="absolute left-5 top-12 bottom-0 w-0.5 bg-outline-variant/40 -mb-4"></div>
 
                     <!-- Parent Comment Avatar -->
-                    <a href="<?= BASEURL ?>/profile/user/<?= urlencode($parentComment['username'] ?? '') ?>" class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary text-sm shrink-0 overflow-hidden relative z-10 ring-2 ring-surface hover:ring-primary transition-all">
+                    <a href="<?= $parentAuthorUrl ?>" class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary text-sm shrink-0 overflow-hidden relative z-10 ring-2 ring-surface hover:ring-primary transition-all">
                         <?php if (!empty($parentComment['profile_picture'])): ?>
                             <img src="<?= BASEURL ?><?= htmlspecialchars($parentComment['profile_picture']) ?>" alt="<?= htmlspecialchars($parentComment['username'] ?? '') ?>" class="w-full h-full object-cover">
                         <?php else: ?>
@@ -98,7 +112,7 @@ $replies = $data['replies'] ?? [];
                     <div class="flex-1 min-w-0 pb-4">
                         <div class="flex items-center justify-between gap-2">
                             <div class="flex items-center gap-1.5 min-w-0">
-                                <a href="<?= BASEURL ?>/profile/user/<?= urlencode($parentComment['username'] ?? '') ?>" class="font-title-md text-sm text-on-surface font-semibold hover:text-primary transition-colors truncate">
+                                <a href="<?= $parentAuthorUrl ?>" class="font-title-md text-sm text-on-surface font-semibold hover:text-primary transition-colors truncate">
                                     <?= htmlspecialchars($parentComment['name'] ?? $parentComment['username'] ?? 'Anonymous') ?>
                                 </a>
                                 <span class="font-caption text-xs text-on-surface-variant">@<?= htmlspecialchars($parentComment['username'] ?? 'anon') ?></span>
@@ -106,7 +120,7 @@ $replies = $data['replies'] ?? [];
                                     · <time class="timeago" datetime="<?= date('c', strtotime($parentComment['created_at'])) ?>"></time>
                                 </span>
                             </div>
-                            <a href="<?= BASEURL ?>/post/commentDetail/<?= $parentComment['id'] ?>" class="text-xs text-primary hover:underline font-caption flex items-center gap-1">
+                            <a href="<?= $parentCommentUrl ?>" class="text-xs text-primary hover:underline font-caption flex items-center gap-1">
                                 <span>Show earlier thread</span>
                                 <span class="material-symbols-outlined text-xs">north</span>
                             </a>
@@ -124,7 +138,7 @@ $replies = $data['replies'] ?? [];
             <!-- Author Header -->
             <div class="flex items-center justify-between gap-3">
                 <div class="flex items-center gap-3 min-w-0">
-                    <a href="<?= BASEURL ?>/profile/user/<?= urlencode($comment['username'] ?? '') ?>" class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary text-base shrink-0 overflow-hidden ring-2 ring-primary/20 hover:ring-primary transition-all">
+                    <a href="<?= BASEURL ?>/<?= urlencode($comment['username'] ?? '') ?>" class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary text-base shrink-0 overflow-hidden ring-2 ring-primary/20 hover:ring-primary transition-all">
                         <?php if (!empty($comment['profile_picture'])): ?>
                             <img src="<?= BASEURL ?><?= htmlspecialchars($comment['profile_picture']) ?>" alt="<?= htmlspecialchars($comment['username'] ?? '') ?>" class="w-full h-full object-cover">
                         <?php else: ?>
@@ -133,7 +147,7 @@ $replies = $data['replies'] ?? [];
                     </a>
                     <div class="flex flex-col min-w-0">
                         <div class="flex items-center gap-1.5 flex-wrap">
-                            <a href="<?= BASEURL ?>/profile/user/<?= urlencode($comment['username'] ?? '') ?>" class="font-title-md text-base text-on-surface font-bold hover:text-primary transition-colors truncate">
+                            <a href="<?= BASEURL ?>/<?= urlencode($comment['username'] ?? '') ?>" class="font-title-md text-base text-on-surface font-bold hover:text-primary transition-colors truncate">
                                 <?= htmlspecialchars($comment['name'] ?? $comment['username'] ?? 'Anonymous') ?>
                             </a>
                             <?php if ($post && ($comment['user_id'] == $post['user_id'])): ?>
@@ -159,14 +173,14 @@ $replies = $data['replies'] ?? [];
             <?php if ($parentComment): ?>
                 <div class="text-xs font-caption text-on-surface-variant flex items-center gap-1 -mt-1">
                     <span>Replying to</span>
-                    <a href="<?= BASEURL ?>/profile/user/<?= urlencode($parentComment['username'] ?? '') ?>" class="text-primary hover:underline font-semibold">
+                    <a href="<?= BASEURL ?>/<?= urlencode($parentComment['username'] ?? '') ?>" class="text-primary hover:underline font-semibold">
                         @<?= htmlspecialchars($parentComment['username'] ?? '') ?>
                     </a>
                 </div>
             <?php elseif ($post): ?>
                 <div class="text-xs font-caption text-on-surface-variant flex items-center gap-1 -mt-1">
                     <span>Replying to story by</span>
-                    <a href="<?= BASEURL ?>/profile/user/<?= urlencode($post['username'] ?? '') ?>" class="text-primary hover:underline font-semibold">
+                    <a href="<?= BASEURL ?>/<?= urlencode($post['username'] ?? '') ?>" class="text-primary hover:underline font-semibold">
                         @<?= htmlspecialchars($post['username'] ?? '') ?>
                     </a>
                 </div>
@@ -217,7 +231,7 @@ $replies = $data['replies'] ?? [];
             <?php if (isset($_SESSION['user_id'])): ?>
                 <form action="<?= BASEURL ?>/post/comment/<?= (int)($post['id'] ?? $comment['post_id']) ?>" method="POST" class="flex gap-3.5 items-start">
                     <input type="hidden" name="parent_id" value="<?= (int)$comment['id'] ?>">
-                    <input type="hidden" name="redirect_to" value="<?= BASEURL ?>/post/commentDetail/<?= (int)$comment['id'] ?>">
+                    <input type="hidden" name="redirect_to" value="<?= $currentCommentDetailUrl ?>">
                     
                     <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center font-bold text-on-primary text-base shrink-0 shadow-inner">
                         <?= strtoupper(substr($_SESSION['username'] ?? 'U', 0, 1)) ?>
@@ -225,7 +239,7 @@ $replies = $data['replies'] ?? [];
                     <div class="flex-1 flex flex-col gap-3">
                         <textarea 
                             name="comment" 
-                            id="thread-reply-input"
+                            id="thread-reply-input" 
                             rows="3" 
                             placeholder="Write your reply to @<?= htmlspecialchars($comment['username'] ?? '') ?>..." 
                             required 
@@ -268,10 +282,15 @@ $replies = $data['replies'] ?? [];
             <?php if (!empty($replies)): ?>
                 <div class="divide-y divide-outline-variant/20 flex flex-col">
                     <?php foreach ($replies as $reply): ?>
+                        <?php
+                            $replyUid = !empty($reply['uid']) ? $reply['uid'] : $reply['id'];
+                            $replyAuthorUrl = BASEURL . '/' . urlencode($reply['username'] ?? '');
+                            $replyDetailUrl = BASEURL . '/' . urlencode($reply['username'] ?? '') . '/comment/' . $replyUid;
+                        ?>
                         <div class="py-4 flex flex-col gap-2" id="reply-<?= $reply['id'] ?>">
                             <div class="flex gap-3.5 items-start">
                                 <!-- Reply Author Avatar -->
-                                <a href="<?= BASEURL ?>/profile/user/<?= urlencode($reply['username'] ?? '') ?>" class="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary text-xs shrink-0 overflow-hidden hover:ring-2 hover:ring-primary transition-all">
+                                <a href="<?= $replyAuthorUrl ?>" class="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary text-xs shrink-0 overflow-hidden hover:ring-2 hover:ring-primary transition-all">
                                     <?php if (!empty($reply['profile_picture'])): ?>
                                         <img src="<?= BASEURL ?><?= htmlspecialchars($reply['profile_picture']) ?>" alt="<?= htmlspecialchars($reply['username'] ?? '') ?>" class="w-full h-full object-cover">
                                     <?php else: ?>
@@ -283,15 +302,15 @@ $replies = $data['replies'] ?? [];
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center justify-between gap-2">
                                         <div class="flex items-center gap-1.5 min-w-0 flex-wrap">
-                                            <a href="<?= BASEURL ?>/profile/user/<?= urlencode($reply['username'] ?? '') ?>" class="font-title-md text-sm text-on-surface font-semibold hover:text-primary transition-colors truncate">
+                                            <a href="<?= $replyAuthorUrl ?>" class="font-title-md text-sm text-on-surface font-semibold hover:text-primary transition-colors truncate">
                                                 <?= htmlspecialchars($reply['name'] ?? $reply['username'] ?? 'Anonymous') ?>
                                             </a>
                                             <span class="font-caption text-xs text-on-surface-variant">@<?= htmlspecialchars($reply['username'] ?? 'anon') ?></span>
-                                            <a href="<?= BASEURL ?>/post/commentDetail/<?= $reply['id'] ?>" class="font-caption text-xs text-on-surface-variant hover:text-primary transition-colors">
+                                            <a href="<?= $replyDetailUrl ?>" class="font-caption text-xs text-on-surface-variant hover:text-primary transition-colors">
                                                 · <time class="timeago" datetime="<?= date('c', strtotime($reply['created_at'])) ?>"></time>
                                             </a>
                                         </div>
-                                        <a href="<?= BASEURL ?>/post/commentDetail/<?= $reply['id'] ?>" class="text-on-surface-variant hover:text-primary p-1 rounded-full hover:bg-surface-container transition-colors" title="Focus this thread">
+                                        <a href="<?= $replyDetailUrl ?>" class="text-on-surface-variant hover:text-primary p-1 rounded-full hover:bg-surface-container transition-colors" title="Focus this thread">
                                             <span class="material-symbols-outlined text-base">open_in_new</span>
                                         </a>
                                     </div>
@@ -312,7 +331,7 @@ $replies = $data['replies'] ?? [];
                                         </button>
 
                                         <a 
-                                            href="<?= BASEURL ?>/post/commentDetail/<?= $reply['id'] ?>" 
+                                            href="<?= $replyDetailUrl ?>" 
                                             class="inline-flex items-center gap-1 text-xs text-on-surface-variant hover:text-primary transition-colors py-1"
                                         >
                                             <span class="material-symbols-outlined text-base">forum</span>
@@ -325,7 +344,7 @@ $replies = $data['replies'] ?? [];
                                         <?php if (isset($_SESSION['user_id'])): ?>
                                             <form action="<?= BASEURL ?>/post/comment/<?= (int)($post['id'] ?? $comment['post_id']) ?>" method="POST" class="flex flex-col gap-2.5 bg-surface-container-low/70 p-3 rounded-xl border border-outline-variant/30">
                                                 <input type="hidden" name="parent_id" value="<?= $reply['id'] ?>">
-                                                <input type="hidden" name="redirect_to" value="<?= BASEURL ?>/post/commentDetail/<?= (int)$comment['id'] ?>">
+                                                <input type="hidden" name="redirect_to" value="<?= $currentCommentDetailUrl ?>">
                                                 <textarea 
                                                     name="comment" 
                                                     rows="2" 

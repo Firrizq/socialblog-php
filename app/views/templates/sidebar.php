@@ -66,7 +66,10 @@ $unreadCount = $unreadNotifCount ?? ((isset($_SESSION['user_id'])) ? (new Notifi
                     </span>
                 <?php endif; ?>
             </a>
-            <a class="<?= ($activePage === 'profile') ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/profile">
+            <?php 
+                $isProfileActive = ($activePage === 'profile') || (!empty($activeUsername) && strtolower($activePage) === strtolower($activeUsername));
+            ?>
+            <a class="<?= $isProfileActive ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/profile">
                 <span class="material-symbols-outlined text-xl">account_circle</span><span>Profile</span>
             </a>
         </nav>

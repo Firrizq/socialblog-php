@@ -181,11 +181,15 @@ function renderLibraryPostRow(array $post, array $data, bool $showProgressBar = 
     $isLiked = in_array((int)$post['id'], $data['liked_posts'] ?? []);
     $isBookmarked = in_array((int)$post['id'], $data['bookmarked_posts'] ?? []);
     $isReposted = in_array((int)$post['id'], $data['reposted_posts'] ?? []) || !empty($post['is_reposted']);
+    $postType = strtolower($post['post_type'] ?? $post['type'] ?? 'story');
+    $postUid = !empty($post['uid']) ? $post['uid'] : $post['id'];
+    $postUrl = BASEURL . '/' . urlencode($post['username'] ?? '') . '/' . $postType . '/' . $postUid;
+    $authorUrl = BASEURL . '/' . urlencode($post['username'] ?? '');
     ?>
-    <article class="p-4 sm:p-5 hover:bg-surface-container-lowest/40 transition-colors flex gap-3 sm:gap-4 cursor-pointer" onclick="if(!event.target.closest('a') && !event.target.closest('button')) window.location.href='<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>';">
+    <article class="p-4 sm:p-5 hover:bg-surface-container-lowest/40 transition-colors flex gap-3 sm:gap-4 cursor-pointer" onclick="if(!event.target.closest('a') && !event.target.closest('button')) window.location.href='<?= $postUrl ?>';">
         <!-- Left: Avatar -->
         <div class="shrink-0">
-            <a href="<?= BASEURL ?>/profile/user/<?= urlencode($post['username'] ?? '') ?>" class="block w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary hover:opacity-80 transition-opacity overflow-hidden relative z-10" title="View Profile">
+            <a href="<?= $authorUrl ?>" class="block w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary hover:opacity-80 transition-opacity overflow-hidden relative z-10" title="View Profile">
                 <?php if (!empty($post['profile_picture'])): ?>
                     <img src="<?= BASEURL ?><?= htmlspecialchars($post['profile_picture']) ?>" alt="<?= htmlspecialchars($post['username'] ?? '') ?>" class="w-full h-full object-cover">
                 <?php else: ?>
@@ -199,7 +203,7 @@ function renderLibraryPostRow(array $post, array $data, bool $showProgressBar = 
             <!-- Author Header -->
             <div class="flex items-center justify-between gap-2 mb-1">
                 <div class="flex items-center gap-1.5 min-w-0 flex-wrap text-[15px]">
-                    <a href="<?= BASEURL ?>/profile/user/<?= urlencode($post['username'] ?? '') ?>" class="font-title-md font-bold text-on-surface hover:underline truncate relative z-10">
+                    <a href="<?= $authorUrl ?>" class="font-title-md font-bold text-on-surface hover:underline truncate relative z-10">
                         <?= htmlspecialchars($post['name'] ?? $post['username'] ?? 'Anonymous') ?>
                     </a>
                     <span class="font-body-md text-on-surface-variant truncate">@<?= htmlspecialchars($post['username'] ?? 'anon') ?></span>
@@ -298,7 +302,7 @@ function renderLibraryPostRow(array $post, array $data, bool $showProgressBar = 
 
             <!-- Action Bar (Twitter/X Style with Bookmark Count) -->
             <div class="flex items-center justify-between mt-2 max-w-md text-on-surface-variant relative z-10 -ml-2">
-                <a href="<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>" class="group flex items-center gap-1 hover:text-primary transition-colors">
+                <a href="<?= $postUrl ?>" class="group flex items-center gap-1 hover:text-primary transition-colors">
                     <div class="w-8 h-8 rounded-full group-hover:bg-primary/10 flex items-center justify-center transition-colors">
                         <span class="material-symbols-outlined text-[18px]">chat_bubble</span>
                     </div>
@@ -322,7 +326,7 @@ function renderLibraryPostRow(array $post, array $data, bool $showProgressBar = 
                     </div>
                     <span class="bookmark-count font-body-md text-xs"><?= (int)($post['bookmark_count'] ?? 0) ?></span>
                 </button>
-                <button type="button" class="group flex items-center transition-colors hover:text-primary" onclick="event.stopPropagation(); navigator.clipboard.writeText('<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>'); showToast('Link copied to clipboard!', 'success');">
+                <button type="button" class="group flex items-center transition-colors hover:text-primary" onclick="event.stopPropagation(); navigator.clipboard.writeText('<?= $postUrl ?>'); showToast('Link copied to clipboard!', 'success');">
                     <div class="w-8 h-8 rounded-full group-hover:bg-primary/10 flex items-center justify-center transition-colors">
                         <span class="material-symbols-outlined text-[18px]">share</span>
                     </div>

@@ -172,7 +172,12 @@ class Post extends Controller
             (new Tag_model())->processTags($id, $content);
 
             if ($status === 'published') {
-                header('Location: ' . BASEURL . '/post/detail/' . $id);
+                $postType = strtolower($post['post_type'] ?? 'story');
+                if (!empty($post['uid']) && !empty($post['username'])) {
+                    header('Location: ' . BASEURL . '/' . urlencode($post['username']) . '/' . $postType . '/' . $post['uid']);
+                } else {
+                    header('Location: ' . BASEURL . '/post/detail/' . $id);
+                }
             } else {
                 header('Location: ' . BASEURL . '/profile');
             }
@@ -232,20 +237,26 @@ class Post extends Controller
 
     /**
      * Single Post Detail Page
-     * GET /post/detail/{id}
+     * GET /{username}/{note-or-story}/{uid} or /post/detail/{uid}
      *
-     * @param string|int $id
+     * @param string|int $uid
      */
-    public function detail(string|int $id = 0): void
+    public function detail(string|int $uid = ''): void
     {
-        $id = (int)$id;
+        $uid = trim((string)$uid);
 
-        if ($id <= 0) {
+        if (empty($uid)) {
             header('Location: ' . BASEURL . '/home');
             exit;
         }
 
-        $post = $this->postModel->getPostById($id);
+        // Fetch post by 12-digit UID
+        $post = $this->postModel->getPostByUid($uid);
+
+        // Fallback for legacy numeric IDs
+        if (!$post && is_numeric($uid)) {
+            $post = $this->postModel->getPostById((int)$uid);
+        }
 
         if (!$post) {
             http_response_code(404);
@@ -258,22 +269,24 @@ class Post extends Controller
             return;
         }
 
-        $comments = $this->commentModel->getCommentsByPostId($id);
+        $postId = (int)$post['id'];
+        $comments = $this->commentModel->getCommentsByPostId($postId);
 
         $isLiked = false;
         $isBookmarked = false;
         $isReposted = false;
         $readingProgress = 0;
-        if (!empty($_SESSION['user_id'])) {
+        $currentUserId = $_SESSION['active_user_id'] ?? $_SESSION['user_id'] ?? null;
+        if (!empty($currentUserId)) {
             $interactionModel = $this->model('Interaction_model');
-            $isLiked = $interactionModel->isLiked((int)$_SESSION['user_id'], $id);
-            $isBookmarked = $interactionModel->isBookmarked((int)$_SESSION['user_id'], $id);
-            $isReposted = $interactionModel->isReposted((int)$_SESSION['user_id'], $id);
+            $isLiked = $interactionModel->isLiked((int)$currentUserId, $postId);
+            $isBookmarked = $interactionModel->isBookmarked((int)$currentUserId, $postId);
+            $isReposted = $interactionModel->isReposted((int)$currentUserId, $postId);
             // Record reading history on view
             $historyModel = $this->model('History_model');
-            $readingProgress = $historyModel->getProgress((int)$_SESSION['user_id'], $id);
+            $readingProgress = $historyModel->getProgress((int)$currentUserId, $postId);
             if ($readingProgress < 10) {
-                $historyModel->recordProgress((int)$_SESSION['user_id'], $id, 10);
+                $historyModel->recordProgress((int)$currentUserId, $postId, 10);
                 $readingProgress = 10;
             }
         }
@@ -331,26 +344,38 @@ class Post extends Controller
             }
         }
 
-        header('Location: ' . BASEURL . '/post/detail/' . $post_id);
+        $post = $this->postModel->getPostById($post_id);
+        if ($post && !empty($post['username']) && !empty($post['uid'])) {
+            $postType = strtolower($post['post_type'] ?? 'story');
+            header('Location: ' . BASEURL . '/' . $post['username'] . '/' . $postType . '/' . $post['uid']);
+        } else {
+            header('Location: ' . BASEURL . '/home');
+        }
         exit;
     }
 
     /**
      * Single Comment / Thread Focus View
-     * GET /post/commentDetail/{id}
+     * GET /{username}/comment/{uid} or /post/comment_detail/{uid}
      *
-     * @param string|int $id
+     * @param string|int $uid
      */
-    public function commentDetail(string|int $id = 0): void
+    public function comment_detail(string|int $uid = ''): void
     {
-        $id = (int)$id;
+        $uid = trim((string)$uid);
 
-        if ($id <= 0) {
+        if (empty($uid)) {
             header('Location: ' . BASEURL . '/home');
             exit;
         }
 
-        $comment = $this->commentModel->getCommentById($id);
+        // Fetch comment by 12-digit UID
+        $comment = $this->commentModel->getCommentByUid($uid);
+
+        // Fallback for legacy numeric IDs
+        if (!$comment && is_numeric($uid)) {
+            $comment = $this->commentModel->getCommentById((int)$uid);
+        }
 
         if (!$comment) {
             http_response_code(404);
@@ -369,7 +394,7 @@ class Post extends Controller
         $post = $this->postModel->getPostById((int)$comment['post_id']);
 
         // Fetch direct child replies to this focused comment
-        $replies = $this->commentModel->getRepliesByCommentId($id);
+        $replies = $this->commentModel->getRepliesByCommentId((int)$comment['id']);
 
         // If this comment itself is a reply, fetch parent comment for conversation context
         $parentComment = null;
@@ -386,6 +411,16 @@ class Post extends Controller
         ];
 
         $this->view('post/comment_detail', $data);
+    }
+
+    /**
+     * Backward-compatible alias for commentDetail
+     *
+     * @param string|int $uid
+     */
+    public function commentDetail(string|int $uid = ''): void
+    {
+        $this->comment_detail($uid);
     }
 
     /**
@@ -408,13 +443,15 @@ class Post extends Controller
             exit;
         }
 
+        $post = $this->postModel->getPostById((int)$id);
         $this->postModel->deletePost((int)$id, (int)$_SESSION['user_id']);
 
         $referer = $_SERVER['HTTP_REFERER'] ?? '';
         if (!empty($referer)) {
-            // If the user deleted the post from its own detail page, redirect to /profile to avoid 404
-            if (str_contains($referer, '/post/detail/' . (int)$id)) {
-                header('Location: ' . BASEURL . '/profile');
+            // If the user deleted the post from its own detail page, redirect to profile to avoid 404
+            $isOnDetailPage = str_contains($referer, '/post/detail/' . (int)$id) || (!empty($post['uid']) && str_contains($referer, '/' . $post['uid']));
+            if ($isOnDetailPage) {
+                header('Location: ' . BASEURL . '/' . (!empty($post['username']) ? urlencode($post['username']) : 'profile'));
             } else {
                 header('Location: ' . $referer);
             }

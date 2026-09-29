@@ -43,7 +43,7 @@
                                 $actionText = 'started following you';
                                 $icon = 'person_add';
                                 $iconColor = 'text-primary';
-                                $link = BASEURL . '/profile/user/' . urlencode($notif['actor_username'] ?? '');
+                                $link = BASEURL . '/' . urlencode($notif['actor_username'] ?? '');
                                 break;
                             case 'comment':
                                 $actionText = 'commented on your story';

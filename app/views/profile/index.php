@@ -67,7 +67,7 @@ $data['user'] = $user;
                 </div>
 
                 <!-- Edit Profile Button / Follow Button -->
-                <?php if (isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)($data['user']['id'] ?? 0)): ?>
+                <?php if (!empty($data['is_owner']) || (isset($_SESSION['active_user_id']) && (int)$_SESSION['active_user_id'] === (int)($data['user']['id'] ?? 0)) || (isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)($data['user']['id'] ?? 0))): ?>
                     <a href="<?= BASEURL ?>/profile/edit" class="px-5 py-1.5 rounded-full bg-surface border border-outline-variant/50 text-on-surface font-title-md text-sm hover:bg-surface-container-low transition-colors shadow-sm font-bold relative z-10">
                         Edit profile
                     </a>
@@ -152,22 +152,22 @@ $data['user'] = $user;
                 $profileUsername = $user['username'] ?? $data['profile_user']['username'] ?? '';
             ?>
             <div class="flex border-b border-outline-variant/30 w-full mt-2">
-                <a href="<?= BASEURL ?>/profile/user/<?= urlencode($profileUsername) ?>?tab=posts" class="flex-1 flex justify-center hover:bg-surface-container-low transition-colors cursor-pointer group">
+                <a href="<?= BASEURL ?>/<?= urlencode($profileUsername) ?>?tab=posts" class="flex-1 flex justify-center hover:bg-surface-container-low transition-colors cursor-pointer group">
                     <div class="w-full text-center py-3.5 font-title-md text-[15px] <?= $activeTab === 'posts' ? 'font-bold text-on-surface border-b-4 border-primary' : 'font-medium text-on-surface-variant border-b-4 border-transparent group-hover:text-on-surface' ?> transition-colors">
                         Posts
                     </div>
                 </a>
-                <a href="<?= BASEURL ?>/profile/user/<?= urlencode($profileUsername) ?>?tab=replies" class="flex-1 flex justify-center hover:bg-surface-container-low transition-colors cursor-pointer group">
+                <a href="<?= BASEURL ?>/<?= urlencode($profileUsername) ?>?tab=replies" class="flex-1 flex justify-center hover:bg-surface-container-low transition-colors cursor-pointer group">
                     <div class="w-full text-center py-3.5 font-title-md text-[15px] <?= $activeTab === 'replies' ? 'font-bold text-on-surface border-b-4 border-primary' : 'font-medium text-on-surface-variant border-b-4 border-transparent group-hover:text-on-surface' ?> transition-colors">
                         Replies
                     </div>
                 </a>
-                <a href="<?= BASEURL ?>/profile/user/<?= urlencode($profileUsername) ?>?tab=reposts" class="flex-1 flex justify-center hover:bg-surface-container-low transition-colors cursor-pointer group">
+                <a href="<?= BASEURL ?>/<?= urlencode($profileUsername) ?>?tab=reposts" class="flex-1 flex justify-center hover:bg-surface-container-low transition-colors cursor-pointer group">
                     <div class="w-full text-center py-3.5 font-title-md text-[15px] <?= $activeTab === 'reposts' ? 'font-bold text-on-surface border-b-4 border-primary' : 'font-medium text-on-surface-variant border-b-4 border-transparent group-hover:text-on-surface' ?> transition-colors">
                         Reposts
                     </div>
                 </a>
-                <a href="<?= BASEURL ?>/profile/user/<?= urlencode($profileUsername) ?>?tab=media" class="flex-1 flex justify-center hover:bg-surface-container-low transition-colors cursor-pointer group">
+                <a href="<?= BASEURL ?>/<?= urlencode($profileUsername) ?>?tab=media" class="flex-1 flex justify-center hover:bg-surface-container-low transition-colors cursor-pointer group">
                     <div class="w-full text-center py-3.5 font-title-md text-[15px] <?= $activeTab === 'media' ? 'font-bold text-on-surface border-b-4 border-primary' : 'font-medium text-on-surface-variant border-b-4 border-transparent group-hover:text-on-surface' ?> transition-colors">
                         Media
                     </div>
@@ -180,12 +180,20 @@ $data['user'] = $user;
             <div class="flex flex-col divide-y divide-outline-variant/30 border-b border-outline-variant/30">
                 <?php if (!empty($data['replies']) && is_array($data['replies'])): ?>
                     <?php foreach ($data['replies'] as $reply): ?>
-                        <article class="p-4 sm:p-5 hover:bg-surface-container-lowest/40 transition-colors flex flex-col cursor-pointer" onclick="if(!event.target.closest('a') && !event.target.closest('button')) window.location.href='<?= BASEURL ?>/post/detail/<?= (int)$reply['post_id'] ?>';">
+                        <?php
+                            $replyPostType = strtolower($reply['post_type'] ?? 'story');
+                            $replyPostUid = !empty($reply['post_uid']) ? $reply['post_uid'] : $reply['post_id'];
+                            $replyAuthorUrl = BASEURL . '/' . urlencode($reply['author_username'] ?? '');
+                            $replierUrl = BASEURL . '/' . urlencode($reply['replier_username'] ?? '');
+                            $replyPostUrl = BASEURL . '/' . urlencode($reply['author_username'] ?? '') . '/' . $replyPostType . '/' . $replyPostUid;
+                            $replyCommentUrl = !empty($reply['uid']) ? (BASEURL . '/' . urlencode($reply['replier_username'] ?? '') . '/comment/' . $reply['uid']) : $replyPostUrl;
+                        ?>
+                        <article class="p-4 sm:p-5 hover:bg-surface-container-lowest/40 transition-colors flex flex-col cursor-pointer" onclick="if(!event.target.closest('a') && !event.target.closest('button')) window.location.href='<?= $replyCommentUrl ?>';">
                             <!-- Replying Context Banner -->
                             <div class="flex items-center gap-1.5 text-xs font-semibold text-on-surface-variant mb-2 ml-10 sm:ml-16">
                                 <span class="material-symbols-outlined text-[15px] text-primary">reply</span>
                                 <span>Replying to</span>
-                                <a href="<?= BASEURL ?>/profile/user/<?= urlencode($reply['author_username'] ?? '') ?>" class="font-bold text-primary hover:underline relative z-10" onclick="event.stopPropagation();">
+                                <a href="<?= $replyAuthorUrl ?>" class="font-bold text-primary hover:underline relative z-10" onclick="event.stopPropagation();">
                                     @<?= htmlspecialchars($reply['author_username'] ?? 'author') ?>
                                 </a>
                             </div>
@@ -193,7 +201,7 @@ $data['user'] = $user;
                             <div class="flex gap-3 sm:gap-4 w-full">
                                 <!-- Left Column: Replier Avatar -->
                                 <div class="shrink-0">
-                                    <a href="<?= BASEURL ?>/profile/user/<?= urlencode($reply['replier_username'] ?? '') ?>" class="block w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary hover:opacity-80 transition-opacity overflow-hidden relative z-10" title="View Profile" onclick="event.stopPropagation();">
+                                    <a href="<?= $replierUrl ?>" class="block w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary hover:opacity-80 transition-opacity overflow-hidden relative z-10" title="View Profile" onclick="event.stopPropagation();">
                                         <?php if (!empty($reply['replier_profile_picture'])): ?>
                                             <img src="<?= BASEURL ?><?= htmlspecialchars($reply['replier_profile_picture']) ?>" alt="<?= htmlspecialchars($reply['replier_username'] ?? '') ?>" class="w-full h-full object-cover">
                                         <?php else: ?>
@@ -207,7 +215,7 @@ $data['user'] = $user;
                                     <!-- Replier Header (Name, Username, Time) -->
                                     <div class="flex items-center justify-between gap-2 mb-1">
                                         <div class="flex items-center gap-1.5 min-w-0 flex-wrap text-[15px]">
-                                            <a href="<?= BASEURL ?>/profile/user/<?= urlencode($reply['replier_username'] ?? '') ?>" class="font-title-md font-bold text-on-surface hover:underline truncate relative z-10" onclick="event.stopPropagation();">
+                                            <a href="<?= $replierUrl ?>" class="font-title-md font-bold text-on-surface hover:underline truncate relative z-10" onclick="event.stopPropagation();">
                                                 <?= htmlspecialchars($reply['replier_name'] ?? $reply['replier_username'] ?? 'Anonymous') ?>
                                             </a>
                                             <span class="font-body-md text-on-surface-variant truncate">@<?= htmlspecialchars($reply['replier_username'] ?? 'anon') ?></span>
@@ -222,7 +230,7 @@ $data['user'] = $user;
                                     </div>
 
                                     <!-- Embedded Quoted / Reference Card of Original Post -->
-                                    <div class="rounded-2xl border border-outline-variant/40 hover:border-primary/40 bg-surface-container-lowest/70 hover:bg-surface-container-low/40 p-3 sm:p-3.5 transition-all relative z-10 cursor-pointer flex gap-3 items-center justify-between mt-1 mb-2" onclick="event.stopPropagation(); window.location.href='<?= BASEURL ?>/post/detail/<?= (int)$reply['post_id'] ?>';">
+                                    <div class="rounded-2xl border border-outline-variant/40 hover:border-primary/40 bg-surface-container-lowest/70 hover:bg-surface-container-low/40 p-3 sm:p-3.5 transition-all relative z-10 cursor-pointer flex gap-3 items-center justify-between mt-1 mb-2" onclick="event.stopPropagation(); window.location.href='<?= $replyPostUrl ?>';">
                                         <div class="flex-1 min-w-0">
                                             <div class="flex items-center gap-2 mb-1">
                                                 <div class="w-5 h-5 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-[10px] text-primary overflow-hidden shrink-0">
@@ -269,7 +277,7 @@ $data['user'] = $user;
 
                                     <!-- Bottom Action Bar / View Conversation -->
                                     <div class="flex items-center gap-4 mt-1 text-on-surface-variant text-xs font-medium">
-                                        <a href="<?= BASEURL ?>/post/detail/<?= (int)$reply['post_id'] ?>" class="hover:text-primary flex items-center gap-1.5 transition-colors relative z-10" onclick="event.stopPropagation();">
+                                        <a href="<?= $replyCommentUrl ?>" class="hover:text-primary flex items-center gap-1.5 transition-colors relative z-10" onclick="event.stopPropagation();">
                                             <span class="material-symbols-outlined text-[16px]">chat_bubble_outline</span>
                                             <span>View conversation</span>
                                         </a>
@@ -322,7 +330,9 @@ $data['user'] = $user;
 
                                 $imgCount = count($fullImgs);
                                 $imgJson = htmlspecialchars(json_encode($fullImgs), ENT_QUOTES, 'UTF-8');
-                                $postDetailUrl = BASEURL . '/post/detail/' . (int)$post['id'];
+                                $mediaPostType = strtolower($post['post_type'] ?? $post['type'] ?? 'story');
+                                $mediaPostUid = !empty($post['uid']) ? $post['uid'] : $post['id'];
+                                $postDetailUrl = BASEURL . '/' . urlencode($post['username'] ?? $profileUsername) . '/' . $mediaPostType . '/' . $mediaPostUid;
                             ?>
                             <div class="group relative aspect-square bg-surface-container-high rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-md transition-all">
                                 <a href="<?= $postDetailUrl ?>" class="block w-full h-full">
@@ -380,8 +390,16 @@ $data['user'] = $user;
             <div class="flex flex-col divide-y divide-outline-variant/30 border-b border-outline-variant/30">
                 <?php if (!empty($data['posts']) && is_array($data['posts'])): ?>
                 <?php foreach ($data['posts'] as $post): ?>
+                    <?php
+                        $postType = strtolower($post['post_type'] ?? $post['type'] ?? 'story');
+                        $postUid = !empty($post['uid']) ? $post['uid'] : $post['id'];
+                        $postAuthor = !empty($post['username']) ? $post['username'] : $profileUsername;
+                        $postUrl = BASEURL . '/' . urlencode($postAuthor) . '/' . $postType . '/' . $postUid;
+                        $authorUrl = BASEURL . '/' . urlencode($postAuthor);
+                        $repostAuthorUrl = !empty($post['repost_username']) ? BASEURL . '/' . urlencode($post['repost_username']) : '';
+                    ?>
                     <!-- Asymmetrical Post Row -->
-                    <article class="p-4 sm:p-5 hover:bg-surface-container-lowest/40 transition-colors flex flex-col cursor-pointer" onclick="if(!event.target.closest('a') && !event.target.closest('button')) window.location.href='<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>';">
+                    <article class="p-4 sm:p-5 hover:bg-surface-container-lowest/40 transition-colors flex flex-col cursor-pointer" onclick="if(!event.target.closest('a') && !event.target.closest('button')) window.location.href='<?= $postUrl ?>';">
                         
                         <?php if (!empty($post['repost_user_id'])): ?>
                             <div class="flex items-center gap-2 text-xs font-semibold text-on-surface-variant mb-2 ml-10 sm:ml-16">
@@ -389,7 +407,7 @@ $data['user'] = $user;
                                 <?php if (!empty($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)$post['repost_user_id']): ?>
                                     <span>You reposted</span>
                                 <?php else: ?>
-                                    <a href="<?= BASEURL ?>/profile/user/<?= urlencode($post['repost_username'] ?? '') ?>" class="hover:underline font-bold text-on-surface relative z-10" onclick="event.stopPropagation();">
+                                    <a href="<?= $repostAuthorUrl ?>" class="hover:underline font-bold text-on-surface relative z-10" onclick="event.stopPropagation();">
                                         <?= htmlspecialchars($post['repost_name'] ?? $post['repost_username'] ?? 'Someone') ?>
                                     </a>
                                     <span>reposted</span>
@@ -400,7 +418,7 @@ $data['user'] = $user;
                         <div class="flex gap-3 sm:gap-4 w-full">
                             <!-- Left Column: Avatar -->
                             <div class="shrink-0">
-                            <a href="<?= BASEURL ?>/profile/user/<?= urlencode($post['username'] ?? '') ?>" class="block w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary hover:opacity-80 transition-opacity overflow-hidden relative z-10" title="View Profile">
+                            <a href="<?= $authorUrl ?>" class="block w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary hover:opacity-80 transition-opacity overflow-hidden relative z-10" title="View Profile">
                                 <?php if (!empty($post['profile_picture'])): ?>
                                     <img src="<?= BASEURL ?><?= htmlspecialchars($post['profile_picture']) ?>" alt="<?= htmlspecialchars($post['username'] ?? '') ?>" class="w-full h-full object-cover">
                                 <?php else: ?>
@@ -415,7 +433,7 @@ $data['user'] = $user;
                             <!-- Header (Name, Username, Time, Options) -->
                             <div class="flex items-center justify-between gap-2 mb-1">
                                 <div class="flex items-center gap-1.5 min-w-0 flex-wrap text-[15px]">
-                                    <a href="<?= BASEURL ?>/profile/user/<?= urlencode($post['username'] ?? '') ?>" class="font-title-md font-bold text-on-surface hover:underline truncate relative z-10">
+                                    <a href="<?= $authorUrl ?>" class="font-title-md font-bold text-on-surface hover:underline truncate relative z-10">
                                         <?= htmlspecialchars($post['name'] ?? $post['username'] ?? 'Anonymous') ?>
                                     </a>
                                     <span class="font-body-md text-on-surface-variant truncate">@<?= htmlspecialchars($post['username'] ?? 'anon') ?></span>
@@ -507,7 +525,7 @@ $data['user'] = $user;
                                     ?>
                                     <div class="mt-1 mb-1 grid <?= $imgCount === 1 ? 'grid-cols-1' : 'grid-cols-2' ?> gap-1 sm:gap-1.5 rounded-2xl overflow-hidden border border-outline-variant/30 relative z-10">
                                         <?php foreach($imgs as $idx => $img): ?>
-                                            <img src="<?= BASEURL ?><?= htmlspecialchars(trim($img)) ?>" class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity <?= ($imgCount === 3 && $idx === 0) ? 'row-span-2' : '' ?> <?= $imgCount > 1 ? 'aspect-[4/3] sm:aspect-video' : 'max-h-[500px]' ?>" alt="Attachment" onclick="event.stopPropagation(); window.openLightboxGallery && openLightboxGallery(<?= $imgJson ?>, <?= $idx ?>, '<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>')">
+                                            <img src="<?= BASEURL ?><?= htmlspecialchars(trim($img)) ?>" class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity <?= ($imgCount === 3 && $idx === 0) ? 'row-span-2' : '' ?> <?= $imgCount > 1 ? 'aspect-[4/3] sm:aspect-video' : 'max-h-[500px]' ?>" alt="Attachment" onclick="event.stopPropagation(); window.openLightboxGallery && openLightboxGallery(<?= $imgJson ?>, <?= $idx ?>, '<?= $postUrl ?>')">
                                         <?php endforeach; ?>
                                     </div>
                                 <?php endif; ?>
@@ -515,7 +533,7 @@ $data['user'] = $user;
 
                             <!-- Action Bar (Twitter/X style hit targets) -->
                             <div class="flex items-center justify-between mt-2 max-w-md text-on-surface-variant relative z-10 -ml-2">
-                                <a href="<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>" class="group flex items-center gap-1 hover:text-primary transition-colors">
+                                <a href="<?= $postUrl ?>" class="group flex items-center gap-1 hover:text-primary transition-colors">
                                     <div class="w-8 h-8 rounded-full group-hover:bg-primary/10 flex items-center justify-center transition-colors">
                                         <span class="material-symbols-outlined text-[18px]">chat_bubble</span>
                                     </div>
@@ -544,7 +562,7 @@ $data['user'] = $user;
                                     </div>
                                     <span class="bookmark-count font-body-md text-xs"><?= (int)($post['bookmark_count'] ?? 0) ?></span>
                                 </button>
-                                <button type="button" class="group flex items-center transition-colors hover:text-primary" onclick="event.stopPropagation(); navigator.clipboard.writeText('<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>'); showToast('Link copied to clipboard!', 'success');">
+                                <button type="button" class="group flex items-center transition-colors hover:text-primary" onclick="event.stopPropagation(); navigator.clipboard.writeText('<?= $postUrl ?>'); showToast('Link copied to clipboard!', 'success');">
                                     <div class="w-8 h-8 rounded-full group-hover:bg-primary/10 flex items-center justify-center transition-colors">
                                         <span class="material-symbols-outlined text-[18px]">share</span>
                                     </div>
