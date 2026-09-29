@@ -21,21 +21,39 @@ class Auth extends Controller
      */
     public function index(): void
     {
-        // If already authenticated, redirect to home
-        if (isset($_SESSION['user_id'])) {
+        // If already authenticated and not explicitly adding an account, redirect to home
+        if (isset($_SESSION['active_user_id']) && !isset($_GET['add']) && !isset($_GET['add_account'])) {
             header('Location: ' . BASEURL . '/home');
             exit;
         }
 
         $data = [
-            'title' => 'Sign In - Blogggle',
+            'title' => !empty($_SESSION['accounts']) ? 'Add Account - Blogggle' : 'Sign In - Blogggle',
             'error' => '',
             'success' => $_SESSION['flash_success'] ?? '',
-            'email' => ''
+            'email' => '',
+            'is_add_account' => isset($_GET['add']) || isset($_GET['add_account']) || !empty($_SESSION['accounts'])
         ];
 
         // Clear one-time flash message
         unset($_SESSION['flash_success']);
+
+        $this->view('auth/login', $data);
+    }
+
+    /**
+     * Display Add Existing Account page
+     * GET /auth/add
+     */
+    public function add(): void
+    {
+        $data = [
+            'title' => 'Add Account - Blogggle',
+            'error' => '',
+            'success' => '',
+            'email' => '',
+            'is_add_account' => true
+        ];
 
         $this->view('auth/login', $data);
     }
@@ -141,20 +159,16 @@ class Auth extends Controller
      */
     public function login(): void
     {
-        if (isset($_SESSION['user_id'])) {
-            header('Location: ' . BASEURL . '/home');
-            exit;
-        }
-
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $email = trim($_POST['email'] ?? '');
             $password = $_POST['password'] ?? '';
 
             $data = [
-                'title' => 'Login - Social Blog',
+                'title' => !empty($_SESSION['accounts']) ? 'Add Account - Blogggle' : 'Sign In - Blogggle',
                 'email' => $email,
                 'error' => '',
-                'success' => ''
+                'success' => '',
+                'is_add_account' => !empty($_SESSION['accounts'])
             ];
 
             if (empty($email) || empty($password)) {
@@ -167,12 +181,27 @@ class Auth extends Controller
             $user = $this->userModel->login($email, $password);
 
             if ($user) {
-                // Set session variables
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['name'] = $user['name'];
-                $_SESSION['username'] = $user['username'];
-                $_SESSION['email'] = $user['email'];
-                $_SESSION['profile_picture'] = $user['profile_picture'] ?? null;
+                $userId = (int)$user['id'];
+
+                // Initialize accounts array if not already present
+                if (!isset($_SESSION['accounts']) || !is_array($_SESSION['accounts'])) {
+                    $_SESSION['accounts'] = [];
+                }
+
+                // Append / update user account data in $_SESSION['accounts']
+                $_SESSION['accounts'][$userId] = [
+                    'id' => $userId,
+                    'name' => $user['name'] ?? $user['username'],
+                    'username' => $user['username'],
+                    'email' => $user['email'] ?? '',
+                    'profile_picture' => $user['profile_picture'] ?? null
+                ];
+
+                // Set as active user
+                $_SESSION['active_user_id'] = $userId;
+
+                // Sync top-level session variables for system-wide compatibility
+                Controller::initSession();
 
                 header('Location: ' . BASEURL . '/home');
                 exit;
@@ -183,16 +212,101 @@ class Auth extends Controller
             }
         }
 
-        // If accessed directly via GET, forward to index
+        // If accessed directly via GET:
+        if (isset($_SESSION['active_user_id']) && !isset($_GET['add']) && !isset($_GET['add_account'])) {
+            header('Location: ' . BASEURL . '/home');
+            exit;
+        }
+
+        header('Location: ' . BASEURL . '/auth' . (isset($_GET['add']) ? '?add=1' : ''));
+        exit;
+    }
+
+    /**
+     * Switch active account
+     * GET /auth/switchAccount/{target_user_id}
+     *
+     * @param string|int $targetUserId
+     */
+    public function switchAccount(string|int $targetUserId = 0): void
+    {
+        Controller::initSession();
+
+        $targetId = (int)$targetUserId;
+
+        // Check if target user ID exists in $_SESSION['accounts']
+        if ($targetId > 0 && (isset($_SESSION['accounts'][$targetId]) || isset($_SESSION['accounts'][(string)$targetId]))) {
+            $_SESSION['active_user_id'] = $targetId;
+            Controller::initSession();
+        }
+
+        header('Location: ' . BASEURL . '/home');
+        exit;
+    }
+
+    /**
+     * Alias for switchAccount
+     * GET /auth/switch/{target_user_id}
+     *
+     * @param string|int $targetUserId
+     */
+    public function switch(string|int $targetUserId = 0): void
+    {
+        $this->switchAccount($targetUserId);
+    }
+
+    /**
+     * Log the active user out of the multi-account session
+     * GET /auth/logout
+     */
+    public function logout(): void
+    {
+        Controller::initSession();
+
+        $activeId = (int)($_SESSION['active_user_id'] ?? 0);
+
+        // Unset the current active_user_id from $_SESSION['accounts']
+        if ($activeId > 0) {
+            unset($_SESSION['accounts'][$activeId], $_SESSION['accounts'][(string)$activeId]);
+        }
+
+        // If there are still other accounts left in the array, switch to the first available
+        if (!empty($_SESSION['accounts'])) {
+            $firstKey = array_key_first($_SESSION['accounts']);
+            $_SESSION['active_user_id'] = (int)($_SESSION['accounts'][$firstKey]['id'] ?? $firstKey);
+            Controller::initSession();
+
+            header('Location: ' . BASEURL . '/home');
+            exit;
+        }
+
+        // If no accounts are left, completely destroy session
+        $_SESSION = [];
+
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(
+                session_name(),
+                '',
+                time() - 42000,
+                $params["path"],
+                $params["domain"],
+                $params["secure"],
+                $params["httponly"]
+            );
+        }
+
+        session_destroy();
+
         header('Location: ' . BASEURL . '/auth');
         exit;
     }
 
     /**
-     * Log the user out and destroy session
-     * GET /auth/logout
+     * Completely log out of all accounts
+     * GET /auth/logoutAll
      */
-    public function logout(): void
+    public function logoutAll(): void
     {
         $_SESSION = [];
 

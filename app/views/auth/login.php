@@ -67,8 +67,8 @@ tailwind.config = {
         <div class="bg-surface-container-low border border-outline-variant/30 rounded-2xl p-7 sm:p-9 shadow-xl backdrop-blur-md">
             
             <div class="mb-6 text-center">
-                <h1 class="font-title-md text-2xl font-bold text-on-surface tracking-tight">Welcome Back</h1>
-                <p class="font-body-md text-on-surface-variant text-sm mt-1">Sign in to your account to continue</p>
+                <h1 class="font-title-md text-2xl font-bold text-on-surface tracking-tight"><?= !empty($data['is_add_account']) ? 'Add an Existing Account' : 'Welcome Back' ?></h1>
+                <p class="font-body-md text-on-surface-variant text-sm mt-1"><?= !empty($data['is_add_account']) ? 'Sign in to another account to switch between them seamlessly' : 'Sign in to your account to continue' ?></p>
             </div>
 
             <!-- Error Notification -->

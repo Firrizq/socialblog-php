@@ -28,5 +28,8 @@ require_once __DIR__ . '/../app/core/Database.php';
 require_once __DIR__ . '/../app/core/Controller.php';
 require_once __DIR__ . '/../app/core/App.php';
 
+// Initialize and sync multi-account session state
+Controller::initSession();
+
 // Instantiate Core Application Router
 $app = new App();

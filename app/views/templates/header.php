@@ -239,67 +239,8 @@ $unreadNotifCount = (isset($_SESSION['user_id'])) ? (new Notification_model())->
         </script>
     </header>
 
-    <!-- Left Sidebar -->
-    <aside class="fixed left-0 top-16 bottom-0 w-60 bg-surface-container-low border-r border-outline-variant/30 z-40 hidden md:flex flex-col justify-between p-gutter">
-        <div class="flex flex-col gap-space-lg">
-            <?php
-            $currentUrl = isset($_GET['url']) ? rtrim($_GET['url'], '/') : '';
-            if (empty($currentUrl) && isset($_SERVER['REQUEST_URI'])) {
-                $currentUrl = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '', '/');
-            }
-            $currentUrl = $currentUrl ?: 'home';
-            $urlParts = explode('/', $currentUrl);
-            $activePage = strtolower($urlParts[0] ?? 'home');
-
-            $activeNav = "flex items-center gap-space-md px-space-md py-space-sm transition-colors bg-surface-container text-primary font-title-md rounded-xl border border-outline-variant/40";
-            $inactiveNav = "flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-title-md border border-transparent";
-            ?>
-            <nav class="flex flex-col gap-space-xs">
-                <a class="<?= ($activePage === 'home' || $activePage === '') ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/home">
-                    <span class="material-symbols-outlined text-xl">home</span><span>Home</span>
-                </a>
-                <a class="<?= ($activePage === 'explore') ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/explore">
-                    <span class="material-symbols-outlined text-xl">explore</span><span>Explore</span>
-                </a>
-                <a class="<?= ($activePage === 'history' || $activePage === 'bookmarks') ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/history">
-                    <span class="material-symbols-outlined text-xl">history</span><span>History</span>
-                </a>
-                <a class="<?= ($activePage === 'notifications') ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/notifications">
-                    <span class="material-symbols-outlined text-xl">notifications</span>
-                    <span>Notifications</span>
-                    <?php if($unreadNotifCount > 0): ?>
-                        <span class="ml-auto flex items-center justify-center min-w-[22px] h-[22px] px-1.5 bg-error text-on-error font-bold text-[11px] rounded-full shadow-sm">
-                            <?= $unreadNotifCount > 99 ? '99+' : $unreadNotifCount ?>
-                        </span>
-                    <?php endif; ?>
-                </a>
-                <a class="<?= ($activePage === 'profile') ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/profile">
-                    <span class="material-symbols-outlined text-xl">account_circle</span><span>Profile</span>
-                </a>
-            </nav>
-            <?php if (isset($_SESSION['user_id'])): ?>
-                <a class="flex items-center justify-center gap-space-sm w-full py-space-sm px-space-md rounded-xl bg-primary-container text-on-primary-container font-title-md hover:bg-primary transition-all shadow-[0_0_0_1px_rgba(16,185,129,0.3)]" href="<?= BASEURL ?>/post/create">
-                    <span class="material-symbols-outlined text-xl">edit_note</span><span>New Story</span>
-                </a>
-            <?php endif; ?>
-        </div>
-
-        <?php if (isset($_SESSION['user_id'])): ?>
-        <a href="<?= BASEURL ?>/profile" class="flex items-center gap-space-sm p-space-sm rounded-xl bg-surface-container border border-outline-variant/20 hover:border-primary/40 transition-colors">
-            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center font-bold text-on-primary overflow-hidden shrink-0">
-                <?php if (!empty($_SESSION['profile_picture'])): ?>
-                    <img src="<?= BASEURL ?><?= htmlspecialchars($_SESSION['profile_picture']) ?>" alt="<?= htmlspecialchars($_SESSION['username']) ?>" class="w-full h-full object-cover rounded-full">
-                <?php else: ?>
-                    <?= strtoupper(substr($_SESSION['username'], 0, 1)) ?>
-                <?php endif; ?>
-            </div>
-            <div class="flex flex-col min-w-0 flex-1">
-                <span class="font-label-md text-label-md text-on-surface truncate"><?= htmlspecialchars($_SESSION['name'] ?? $_SESSION['username']) ?></span>
-                <span class="font-caption text-caption text-on-surface-variant truncate">@<?= htmlspecialchars($_SESSION['username']) ?></span>
-            </div>
-        </a>
-        <?php endif; ?>
-    </aside>
+    <!-- Left Navigation Sidebar -->
+    <?php require __DIR__ . '/sidebar.php'; ?>
 
     <!-- Main Content Wrapper -->
     <div class="md:pl-60 pt-16">
