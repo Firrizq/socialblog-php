@@ -56,7 +56,7 @@
                             <?php if (!empty($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)$post['repost_user_id']): ?>
                                 <span>You reposted</span>
                             <?php else: ?>
-                                <a href="<?= BASEURL ?>/<?= urlencode($post['repost_username'] ?? '') ?>" class="hover:underline font-bold text-on-surface relative z-10" onclick="event.stopPropagation();">
+                                <a href="<?= BASEURL ?>/<?= urlencode($post['repost_username'] ?? '') ?>" class="profile-hover-trigger hover:underline font-bold text-on-surface relative z-10" data-username="<?= htmlspecialchars($post['repost_username'] ?? '') ?>" onclick="event.stopPropagation();">
                                     <?= htmlspecialchars($post['repost_name'] ?? $post['repost_username'] ?? 'Someone') ?>
                                 </a>
                                 <span>reposted</span>
@@ -67,7 +67,7 @@
                     <div class="flex gap-3 sm:gap-4 w-full">
                         <!-- Left Column: Avatar -->
                         <div class="shrink-0">
-                        <a href="<?= $authorUrl ?>" class="block w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary hover:opacity-80 transition-opacity overflow-hidden relative z-10" title="View Profile">
+                        <a href="<?= $authorUrl ?>" class="profile-hover-trigger block w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary hover:opacity-80 transition-opacity overflow-hidden relative z-10" data-username="<?= htmlspecialchars($post['username'] ?? '') ?>" title="View Profile">
                             <?php if (!empty($post['profile_picture'])): ?>
                                 <img src="<?= BASEURL ?><?= htmlspecialchars($post['profile_picture']) ?>" alt="<?= htmlspecialchars($post['username'] ?? '') ?>" class="w-full h-full object-cover">
                             <?php else: ?>
@@ -82,10 +82,10 @@
                         <!-- Header (Name, Username, Time, Options) -->
                         <div class="flex items-center justify-between gap-2 mb-1">
                             <div class="flex items-center gap-1.5 min-w-0 flex-wrap text-[15px]">
-                                <a href="<?= $authorUrl ?>" class="font-title-md font-bold text-on-surface hover:underline truncate relative z-10">
+                                <a href="<?= $authorUrl ?>" class="profile-hover-trigger font-title-md font-bold text-on-surface hover:underline truncate relative z-10" data-username="<?= htmlspecialchars($post['username'] ?? '') ?>">
                                     <?= htmlspecialchars($post['name'] ?? $post['username'] ?? 'Anonymous') ?>
                                 </a>
-                                <span class="font-body-md text-on-surface-variant truncate">@<?= htmlspecialchars($post['username'] ?? 'anon') ?></span>
+                                <a href="<?= $authorUrl ?>" class="profile-hover-trigger font-body-md text-on-surface-variant hover:underline truncate relative z-10" data-username="<?= htmlspecialchars($post['username'] ?? '') ?>">@<?= htmlspecialchars($post['username'] ?? 'anon') ?></a>
                                 <span class="text-on-surface-variant font-bold">·</span>
                                 <time class="timeago font-body-md text-on-surface-variant hover:underline relative z-10" datetime="<?= date('c', strtotime($post['created_at'])) ?>"></time>
                                 

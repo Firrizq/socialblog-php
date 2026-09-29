@@ -38,7 +38,7 @@ $comments = $data['comments'] ?? [];
             <!-- Compact Author Metadata -->
             <div class="flex items-center justify-between mb-10">
                 <div class="flex items-center gap-3.5">
-                    <a href="<?= BASEURL ?>/<?= urlencode($post['username'] ?? '') ?>" class="w-12 h-12 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/50 shrink-0 hover:ring-2 hover:ring-primary transition-all">
+                    <a href="<?= BASEURL ?>/<?= urlencode($post['username'] ?? '') ?>" class="profile-hover-trigger w-12 h-12 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/50 shrink-0 hover:ring-2 hover:ring-primary transition-all" data-username="<?= htmlspecialchars($post['username'] ?? '') ?>">
                         <?php if (!empty($post['profile_picture'])): ?>
                             <img src="<?= BASEURL ?><?= htmlspecialchars($post['profile_picture'] ?? '') ?>" class="w-full h-full object-cover">
                         <?php else: ?>
@@ -48,7 +48,7 @@ $comments = $data['comments'] ?? [];
                         <?php endif; ?>
                     </a>
                     <div class="flex flex-col justify-center">
-                        <a href="<?= BASEURL ?>/<?= urlencode($post['username'] ?? '') ?>" class="font-title-md font-bold text-on-surface hover:underline text-base">
+                        <a href="<?= BASEURL ?>/<?= urlencode($post['username'] ?? '') ?>" class="profile-hover-trigger font-title-md font-bold text-on-surface hover:underline text-base" data-username="<?= htmlspecialchars($post['username'] ?? '') ?>">
                             <?= htmlspecialchars($post['name'] ?? $post['username'] ?? 'Anonymous') ?>
                         </a>
                         <div class="flex items-center gap-1.5 font-body-md text-on-surface-variant text-[13px] sm:text-sm mt-0.5 flex-wrap">
@@ -187,7 +187,7 @@ $comments = $data['comments'] ?? [];
                             $commentDetailUrl = BASEURL . '/' . urlencode($comment['username'] ?? '') . '/comment/' . $commentUid;
                         ?>
                         <div class="flex gap-3 sm:gap-4 group">
-                            <a href="<?= $commentAuthorUrl ?>" class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/30 shrink-0">
+                            <a href="<?= $commentAuthorUrl ?>" class="profile-hover-trigger w-10 h-10 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/30 shrink-0" data-username="<?= htmlspecialchars($comment['username'] ?? '') ?>">
                                 <?php if (!empty($comment['profile_picture'])): ?>
                                     <img src="<?= BASEURL ?><?= htmlspecialchars($comment['profile_picture'] ?? '') ?>" class="w-full h-full object-cover">
                                 <?php else: ?>
@@ -199,7 +199,7 @@ $comments = $data['comments'] ?? [];
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center justify-between mb-1">
                                     <div class="flex items-center gap-2 text-sm">
-                                        <a href="<?= $commentAuthorUrl ?>" class="font-title-md font-bold text-on-surface hover:underline">
+                                        <a href="<?= $commentAuthorUrl ?>" class="profile-hover-trigger font-title-md font-bold text-on-surface hover:underline" data-username="<?= htmlspecialchars($comment['username'] ?? '') ?>">
                                             <?= htmlspecialchars($comment['name'] ?? $comment['username'] ?? 'Anonymous') ?>
                                         </a>
                                         <span class="text-on-surface-variant">·</span>

@@ -396,6 +396,20 @@
                             if (followerCountEl && typeof data.follower_count !== 'undefined') {
                                 followerCountEl.textContent = Number(data.follower_count).toLocaleString();
                             }
+                        } else if (followBtn.dataset.scope === 'card') {
+                            // Scoped to hover card
+                            if (isFollowed) {
+                                followBtn.textContent = 'Following';
+                                followBtn.className = 'follow-btn btn-follow px-4 py-1.5 rounded-full border border-outline-variant/50 bg-surface text-on-surface hover:border-error hover:text-error hover:bg-error-container/20 font-caption text-xs font-bold transition-all shadow-sm shrink-0';
+                            } else {
+                                followBtn.textContent = 'Follow';
+                                followBtn.className = 'follow-btn btn-follow px-4 py-1.5 rounded-full bg-on-surface text-surface hover:opacity-85 font-caption text-xs font-bold transition-all shadow-sm shrink-0';
+                            }
+
+                            const cardFollowerCount = followBtn.closest('.hover-card-popover, #profile-hover-card-popover')?.querySelector('.card-follower-count');
+                            if (cardFollowerCount && typeof data.follower_count !== 'undefined') {
+                                cardFollowerCount.textContent = Number(data.follower_count).toLocaleString();
+                            }
                         } else {
                             // Scoped to the specific clicked sidebar button
                             if (isFollowed) {
@@ -405,6 +419,11 @@
                                 followBtn.textContent = 'Follow';
                                 followBtn.className = 'follow-btn btn-follow px-space-sm py-space-xs rounded-full bg-surface-container border border-outline-variant text-on-surface hover:border-primary hover:text-primary font-caption text-xs transition-colors shrink-0';
                             }
+                        }
+
+                        // Invalidate hover card cache so future hovers fetch updated state
+                        if (typeof window.profileHoverCardInvalidate === 'function') {
+                            window.profileHoverCardInvalidate(userId);
                         }
 
                         // Modern non-blocking feedback
@@ -867,6 +886,246 @@
         };
         window.showToast = window.showToast;
     }
+    </script>
+
+    <!-- ================= Twitter/X-Style Profile Hover Card Module ================= -->
+    <script>
+    (function() {
+        'use strict';
+
+        const HOVER_DELAY = 400; // ms debounce before displaying card
+        const HIDE_DELAY = 300;  // ms grace period before hiding card
+
+        let hoverTimer = null;
+        let hideTimer = null;
+        let activeTrigger = null;
+        let currentUsername = null;
+        const cache = new Map(); // username -> HTML string
+        const userToUsername = new Map(); // userId -> username
+
+        // Global cache invalidation (e.g. after following/unfollowing)
+        window.profileHoverCardInvalidate = function(identifier) {
+            if (!identifier) return;
+            if (cache.has(identifier)) {
+                cache.delete(identifier);
+            }
+            if (userToUsername.has(String(identifier))) {
+                const uname = userToUsername.get(String(identifier));
+                cache.delete(uname);
+            }
+        };
+
+        function getPopover() {
+            let pop = document.getElementById('profile-hover-card-popover');
+            if (!pop) {
+                pop = document.createElement('div');
+                pop.id = 'profile-hover-card-popover';
+                pop.className = 'fixed z-[9999] pointer-events-auto transition-all duration-200 ease-out opacity-0 scale-95 pointer-events-none';
+                document.body.appendChild(pop);
+
+                // Keep card open when cursor moves into the card itself
+                pop.addEventListener('mouseenter', () => {
+                    clearTimeout(hideTimer);
+                });
+
+                pop.addEventListener('mouseleave', () => {
+                    startHideTimer();
+                });
+            }
+            return pop;
+        }
+
+        function positionPopover(trigger, popover) {
+            if (!trigger || !popover) return;
+            const triggerRect = trigger.getBoundingClientRect();
+            const popoverRect = popover.getBoundingClientRect();
+
+            const cardWidth = popoverRect.width || 288;
+            const cardHeight = popoverRect.height || 260;
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            // Vertical: check available space below vs above
+            const spaceBelow = viewportHeight - triggerRect.bottom;
+            const spaceAbove = triggerRect.top;
+
+            let top;
+            if (spaceBelow < (cardHeight + 16) && spaceAbove > (cardHeight + 16)) {
+                // Place above trigger
+                top = triggerRect.top - cardHeight - 8;
+            } else {
+                // Place below trigger
+                top = triggerRect.bottom + 8;
+            }
+
+            // Horizontal: align with trigger left, constrained within viewport margins
+            let left = triggerRect.left;
+            if (left + cardWidth > viewportWidth - 16) {
+                left = viewportWidth - cardWidth - 16;
+            }
+            if (left < 16) {
+                left = 16;
+            }
+
+            popover.style.top = `${Math.round(top)}px`;
+            popover.style.left = `${Math.round(left)}px`;
+        }
+
+        async function showHoverCard(trigger) {
+            const rawUsername = trigger.dataset.username || trigger.getAttribute('data-hovercard-user');
+            if (!rawUsername) return;
+            const username = rawUsername.replace(/^@/, '').trim();
+            if (!username) return;
+
+            activeTrigger = trigger;
+            currentUsername = username;
+            const popover = getPopover();
+
+            // Render from cache immediately if available
+            if (cache.has(username)) {
+                popover.innerHTML = cache.get(username);
+                renderCard(trigger, popover);
+                return;
+            }
+
+            // Skeleton loading state
+            popover.innerHTML = `
+                <div class="hover-card-popover w-72 rounded-2xl shadow-2xl bg-surface-container-lowest dark:bg-slate-900 border border-outline-variant/30 dark:border-slate-700/80 p-5 flex items-center justify-center min-h-[140px]">
+                    <div class="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                </div>
+            `;
+            renderCard(trigger, popover);
+
+            try {
+                const baseUrl = typeof BASE_URL !== 'undefined' ? BASE_URL : '';
+                const response = await fetch(`${baseUrl}/profile/hoverCard/${encodeURIComponent(username)}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to load hover card');
+
+                const html = await response.text();
+                cache.set(username, html);
+
+                // If user is still hovering over this trigger
+                if (activeTrigger === trigger && currentUsername === username) {
+                    popover.innerHTML = html;
+                    
+                    // Track userId -> username for cache invalidation
+                    const btn = popover.querySelector('.btn-follow');
+                    if (btn && btn.dataset.userId) {
+                        userToUsername.set(String(btn.dataset.userId), username);
+                    }
+
+                    positionPopover(trigger, popover);
+                }
+            } catch (err) {
+                if (activeTrigger === trigger) {
+                    hideHoverCard();
+                }
+            }
+        }
+
+        function renderCard(trigger, popover) {
+            popover.classList.remove('pointer-events-none');
+            popover.style.visibility = 'hidden';
+            popover.style.display = 'block';
+
+            positionPopover(trigger, popover);
+
+            popover.style.visibility = 'visible';
+            requestAnimationFrame(() => {
+                popover.classList.remove('opacity-0', 'scale-95');
+                popover.classList.add('opacity-100', 'scale-100');
+            });
+        }
+
+        function startHideTimer() {
+            clearTimeout(hideTimer);
+            hideTimer = setTimeout(() => {
+                hideHoverCard();
+            }, HIDE_DELAY);
+        }
+
+        function hideHoverCard() {
+            clearTimeout(hoverTimer);
+            activeTrigger = null;
+            currentUsername = null;
+            const popover = document.getElementById('profile-hover-card-popover');
+            if (popover) {
+                popover.classList.remove('opacity-100', 'scale-100');
+                popover.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+            }
+        }
+
+        // Global Event Delegation for hover triggers
+        document.addEventListener('mouseover', (e) => {
+            const trigger = e.target.closest('.profile-hover-trigger, [data-hovercard-user]');
+            if (!trigger) return;
+
+            // Ignore hovers originating inside the card itself
+            if (trigger.closest('#profile-hover-card-popover')) return;
+
+            clearTimeout(hideTimer);
+
+            // If already hovering the same trigger and card is visible
+            if (activeTrigger === trigger && document.getElementById('profile-hover-card-popover')?.classList.contains('opacity-100')) {
+                return;
+            }
+
+            clearTimeout(hoverTimer);
+            hoverTimer = setTimeout(() => {
+                showHoverCard(trigger);
+            }, HOVER_DELAY);
+        });
+
+        document.addEventListener('mouseout', (e) => {
+            const trigger = e.target.closest('.profile-hover-trigger, [data-hovercard-user]');
+            if (!trigger) return;
+
+            // Ignore when cursor moves to child elements of the trigger
+            if (e.relatedTarget && trigger.contains(e.relatedTarget)) return;
+
+            // Ignore when cursor moves into the popover card
+            const popover = document.getElementById('profile-hover-card-popover');
+            if (popover && e.relatedTarget && popover.contains(e.relatedTarget)) return;
+
+            clearTimeout(hoverTimer);
+            startHideTimer();
+        });
+
+        // Reposition on window scroll/resize if active
+        window.addEventListener('scroll', () => {
+            if (activeTrigger) {
+                const popover = document.getElementById('profile-hover-card-popover');
+                if (popover && popover.classList.contains('opacity-100')) {
+                    const rect = activeTrigger.getBoundingClientRect();
+                    // If scrolled out of viewport, dismiss
+                    if (rect.bottom < 0 || rect.top > window.innerHeight) {
+                        hideHoverCard();
+                    } else {
+                        positionPopover(activeTrigger, popover);
+                    }
+                }
+            }
+        }, { passive: true });
+
+        window.addEventListener('resize', () => {
+            if (activeTrigger) {
+                const popover = document.getElementById('profile-hover-card-popover');
+                if (popover && popover.classList.contains('opacity-100')) {
+                    positionPopover(activeTrigger, popover);
+                }
+            }
+        }, { passive: true });
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') hideHoverCard();
+        });
+    })();
     </script>
 </body>
 </html>

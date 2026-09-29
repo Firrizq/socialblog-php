@@ -297,6 +297,70 @@ class Profile extends Controller
         header('Location: ' . BASEURL . '/profile/edit');
         exit;
     }
-}
 
+    /**
+     * Return Profile Hover Card Partial
+     * Supports:
+     *   /profile/hoverCard/{username}
+     *   /profile/hovercard/{username}
+     *
+     * @param string $username
+     */
+    public function hoverCard(string $username = ''): void
+    {
+        $username = trim(ltrim($username, '@'));
+
+        if (empty($username)) {
+            http_response_code(400);
+            echo '<div class="p-3 text-xs text-on-surface-variant">User not specified</div>';
+            return;
+        }
+
+        $profileUser = $this->userModel->getUserProfile($username);
+        if (!$profileUser && is_numeric($username)) {
+            $profileUser = $this->userModel->getUserById((int)$username);
+        }
+
+        if (!$profileUser) {
+            http_response_code(404);
+            echo '<div class="p-3 text-xs text-on-surface-variant">User not found</div>';
+            return;
+        }
+
+        $activeUserId = $_SESSION['active_user_id'] ?? $_SESSION['user_id'] ?? null;
+        $currentUserId = !empty($activeUserId) ? (int)$activeUserId : null;
+        $isOwner = ($currentUserId && (int)$currentUserId === (int)$profileUser['id']);
+
+        $isFollowing = false;
+        if ($currentUserId && !$isOwner) {
+            $interactionModel = $this->model('Interaction_model');
+            $isFollowing = $interactionModel->isFollowing($currentUserId, (int)$profileUser['id']);
+        }
+
+        $data = [
+            'user' => $profileUser,
+            'is_following' => $isFollowing,
+            'is_owner' => $isOwner,
+            'current_user_id' => $currentUserId
+        ];
+
+        // Support JSON response if requested
+        if ((isset($_GET['format']) && $_GET['format'] === 'json') || 
+            (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json'))) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'success' => true,
+                'user' => $profileUser,
+                'is_following' => $isFollowing,
+                'is_owner' => $isOwner
+            ]);
+            return;
+        }
+
+        // Render HTML Partial
+        header('Content-Type: text/html; charset=utf-8');
+        $this->view('components/hover_card', $data);
+        exit;
+    }
+}
 
