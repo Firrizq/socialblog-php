@@ -73,7 +73,12 @@ $data['user'] = $user;
                     </a>
                 <?php elseif (!empty($data['user']['id'])): ?>
                     <?php $isFollowing = !empty($data['is_following']); ?>
-                    <button class="btn-follow <?= $isFollowing ? 'px-5 py-1.5 rounded-full border border-outline-variant/50 font-title-md text-sm font-bold text-on-surface hover:border-error hover:text-error hover:bg-error-container/20 transition-all shadow-sm relative z-10' : 'px-6 py-1.5 rounded-full bg-on-surface text-surface hover:opacity-80 font-title-md text-sm font-bold transition-all shadow-sm relative z-10' ?>" data-id="<?= (int)$data['user']['id'] ?>">
+                    <button id="profile-follow-btn" 
+                            type="button"
+                            class="follow-btn btn-follow <?= $isFollowing ? 'px-5 py-1.5 rounded-full border border-outline-variant/50 font-title-md text-sm font-bold text-on-surface hover:border-error hover:text-error hover:bg-error-container/20 transition-all shadow-sm relative z-10' : 'px-6 py-1.5 rounded-full bg-on-surface text-surface hover:opacity-80 font-title-md text-sm font-bold transition-all shadow-sm relative z-10' ?>" 
+                            data-user-id="<?= (int)$data['user']['id'] ?>" 
+                            data-id="<?= (int)$data['user']['id'] ?>" 
+                            data-scope="profile">
                         <?= $isFollowing ? 'Following' : 'Follow' ?>
                     </button>
                 <?php endif; ?>
