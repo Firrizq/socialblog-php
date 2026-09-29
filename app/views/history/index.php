@@ -180,6 +180,7 @@ function renderLibraryPostRow(array $post, array $data, bool $showProgressBar = 
     $progress = (int)($post['progress'] ?? 0);
     $isLiked = in_array((int)$post['id'], $data['liked_posts'] ?? []);
     $isBookmarked = in_array((int)$post['id'], $data['bookmarked_posts'] ?? []);
+    $isReposted = in_array((int)$post['id'], $data['reposted_posts'] ?? []) || !empty($post['is_reposted']);
     ?>
     <article class="p-4 sm:p-5 hover:bg-surface-container-lowest/40 transition-colors flex gap-3 sm:gap-4 cursor-pointer" onclick="if(!event.target.closest('a') && !event.target.closest('button')) window.location.href='<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>';">
         <!-- Left: Avatar -->
@@ -303,11 +304,11 @@ function renderLibraryPostRow(array $post, array $data, bool $showProgressBar = 
                     </div>
                     <span class="font-body-md text-xs"><?= $post['comment_count'] ?? 0 ?></span>
                 </a>
-                <button type="button" class="group flex items-center gap-1 hover:text-primary transition-colors">
-                    <div class="w-8 h-8 rounded-full group-hover:bg-primary/10 flex items-center justify-center transition-colors">
-                        <span class="material-symbols-outlined text-[18px]">sync_alt</span>
+                <button type="button" class="btn-repost group flex items-center gap-1 transition-colors <?= $isReposted ? 'text-emerald-500' : 'hover:text-emerald-500' ?> active:scale-95" data-id="<?= (int)$post['id'] ?>" title="Repost">
+                    <div class="w-8 h-8 rounded-full group-hover:bg-emerald-500/10 flex items-center justify-center transition-colors">
+                        <span class="material-symbols-outlined text-[18px] <?= $isReposted ? 'font-bold' : '' ?>">sync_alt</span>
                     </div>
-                    <span class="font-body-md text-xs"><?= $post['repost_count'] ?? 0 ?></span>
+                    <span class="repost-count font-body-md text-xs"><?= (int)($post['repost_count'] ?? 0) ?></span>
                 </button>
                 <button type="button" class="btn-like group flex items-center gap-1 transition-colors <?= $isLiked ? 'text-error' : 'hover:text-error' ?> active:scale-95" data-id="<?= (int)$post['id'] ?>" title="Like">
                     <div class="w-8 h-8 rounded-full group-hover:bg-error/10 flex items-center justify-center transition-colors">

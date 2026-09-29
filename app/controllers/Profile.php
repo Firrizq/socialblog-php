@@ -61,25 +61,40 @@ class Profile extends Controller
         }
 
         $isOwner = (!empty($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)$profileUser['id']);
-        $posts = $this->postModel->getPostsByUser((int)$profileUser['id'], $isOwner);
+        $currentUserId = !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
+
+        $tab = $_GET['tab'] ?? 'posts';
+        if (!in_array($tab, ['posts', 'replies', 'reposts', 'media'], true)) {
+            $tab = 'posts';
+        }
+
+        if ($tab === 'reposts') {
+            $posts = $this->postModel->getRepostedPostsByUser((int)$profileUser['id'], $currentUserId);
+        } else {
+            $posts = $this->postModel->getPostsByUser((int)$profileUser['id'], $isOwner, $currentUserId);
+        }
 
         $isFollowing = false;
         $likedPosts = [];
         $bookmarkedPosts = [];
-        if (!empty($_SESSION['user_id'])) {
+        $repostedPosts = [];
+        if ($currentUserId) {
             $interactionModel = $this->model('Interaction_model');
-            $isFollowing = $interactionModel->isFollowing((int)$_SESSION['user_id'], (int)$profileUser['id']);
-            $likedPosts = $interactionModel->getUserLikedPostIds((int)$_SESSION['user_id']);
-            $bookmarkedPosts = $interactionModel->getUserBookmarkedPostIds((int)$_SESSION['user_id']);
+            $isFollowing = $interactionModel->isFollowing($currentUserId, (int)$profileUser['id']);
+            $likedPosts = $interactionModel->getUserLikedPostIds($currentUserId);
+            $bookmarkedPosts = $interactionModel->getUserBookmarkedPostIds($currentUserId);
+            $repostedPosts = $interactionModel->getUserRepostedPostIds($currentUserId);
         }
 
         $data = [
             'title' => '@' . $profileUser['username'] . ' - Profile | Blogggle',
             'profile_user' => $profileUser,
             'posts' => $posts,
+            'active_tab' => $tab,
             'is_following' => $isFollowing,
             'liked_posts' => $likedPosts,
-            'bookmarked_posts' => $bookmarkedPosts
+            'bookmarked_posts' => $bookmarkedPosts,
+            'reposted_posts' => $repostedPosts
         ];
 
         $this->view('profile/index', $data);

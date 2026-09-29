@@ -41,10 +41,25 @@
         <?php if (!empty($data['posts']) && is_array($data['posts'])): ?>
             <?php foreach ($data['posts'] as $post): ?>
                 <!-- Asymmetrical Post Row -->
-                <article class="p-4 sm:p-5 hover:bg-surface-container-lowest/40 transition-colors flex gap-3 sm:gap-4 cursor-pointer" onclick="if(!event.target.closest('a') && !event.target.closest('button')) window.location.href='<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>';">
+                <article class="p-4 sm:p-5 hover:bg-surface-container-lowest/40 transition-colors flex flex-col cursor-pointer" onclick="if(!event.target.closest('a') && !event.target.closest('button')) window.location.href='<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>';">
                     
-                    <!-- Left Column: Avatar -->
-                    <div class="shrink-0">
+                    <?php if (!empty($post['repost_user_id'])): ?>
+                        <div class="flex items-center gap-2 text-xs font-semibold text-on-surface-variant mb-2 ml-10 sm:ml-16">
+                            <span class="material-symbols-outlined text-[16px] text-emerald-500">sync_alt</span>
+                            <?php if (!empty($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)$post['repost_user_id']): ?>
+                                <span>You reposted</span>
+                            <?php else: ?>
+                                <a href="<?= BASEURL ?>/profile/user/<?= urlencode($post['repost_username'] ?? '') ?>" class="hover:underline font-bold text-on-surface relative z-10" onclick="event.stopPropagation();">
+                                    <?= htmlspecialchars($post['repost_name'] ?? $post['repost_username'] ?? 'Someone') ?>
+                                </a>
+                                <span>reposted</span>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="flex gap-3 sm:gap-4 w-full">
+                        <!-- Left Column: Avatar -->
+                        <div class="shrink-0">
                         <a href="<?= BASEURL ?>/profile/user/<?= urlencode($post['username'] ?? '') ?>" class="block w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary hover:opacity-80 transition-opacity overflow-hidden relative z-10" title="View Profile">
                             <?php if (!empty($post['profile_picture'])): ?>
                                 <img src="<?= BASEURL ?><?= htmlspecialchars($post['profile_picture']) ?>" alt="<?= htmlspecialchars($post['username'] ?? '') ?>" class="w-full h-full object-cover">
@@ -166,16 +181,17 @@
                                 </div>
                                 <span class="font-body-md text-xs"><?= $post['comment_count'] ?? 0 ?></span>
                             </a>
-                            <button type="button" class="group flex items-center gap-1 hover:text-primary transition-colors" onclick="event.stopPropagation();">
-                                <div class="w-8 h-8 rounded-full group-hover:bg-primary/10 flex items-center justify-center transition-colors">
-                                    <span class="material-symbols-outlined text-[18px]">sync_alt</span>
-                                </div>
-                                <span class="font-body-md text-xs"><?= $post['repost_count'] ?? 0 ?></span>
-                            </button>
                             <?php 
                                  $isLiked = in_array((int)$post['id'], $data['liked_posts'] ?? []);
                                  $isBookmarked = in_array((int)$post['id'], $data['bookmarked_posts'] ?? []);
+                                 $isReposted = in_array((int)$post['id'], $data['reposted_posts'] ?? []) || !empty($post['is_reposted']);
                             ?>
+                            <button type="button" class="btn-repost group flex items-center gap-1 transition-colors <?= $isReposted ? 'text-emerald-500' : 'hover:text-emerald-500' ?> active:scale-95" data-id="<?= (int)$post['id'] ?>" title="Repost">
+                                <div class="w-8 h-8 rounded-full group-hover:bg-emerald-500/10 flex items-center justify-center transition-colors">
+                                    <span class="material-symbols-outlined text-[18px] <?= $isReposted ? 'font-bold' : '' ?>">sync_alt</span>
+                                </div>
+                                <span class="repost-count font-body-md text-xs"><?= (int)($post['repost_count'] ?? 0) ?></span>
+                            </button>
                             <button type="button" class="btn-like group flex items-center gap-1 transition-colors <?= $isLiked ? 'text-error' : 'hover:text-error' ?> active:scale-95" data-id="<?= (int)$post['id'] ?>" title="Like">
                                 <div class="w-8 h-8 rounded-full group-hover:bg-error/10 flex items-center justify-center transition-colors">
                                     <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' <?= $isLiked ? 1 : 0 ?>;">favorite</span>
@@ -195,7 +211,8 @@
                             </button>
                         </div>
                     </div>
-                </article>
+                </div>
+            </article>
             <?php endforeach; ?>
         <?php else: ?>
             <!-- Empty State Handling -->

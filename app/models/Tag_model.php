@@ -69,7 +69,8 @@ class Tag_model
     public function getPostsByTag(string $tagName): array
     {
         $query = "SELECT posts.*, users.username, users.name, users.profile_picture,
-                  (SELECT COUNT(*) FROM bookmarks WHERE post_id = posts.id) AS bookmark_count
+                  (SELECT COUNT(*) FROM bookmarks WHERE post_id = posts.id) AS bookmark_count,
+                  (SELECT COUNT(*) FROM reposts WHERE post_id = posts.id) AS repost_count
                   FROM posts 
                   INNER JOIN users ON posts.user_id = users.id 
                   INNER JOIN post_tags ON posts.id = post_tags.post_id 

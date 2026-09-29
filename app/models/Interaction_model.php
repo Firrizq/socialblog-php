@@ -262,6 +262,111 @@ class Interaction_model
         $this->db->query("SELECT post_id FROM bookmarks WHERE user_id = :user_id");
         $this->db->bind(':user_id', $userId);
         $rows = $this->db->resultSet();
-        return array_column($rows, 'post_id');
+        return array_map('intval', array_column($rows, 'post_id'));
+    }
+
+    /**
+     * Toggle repost status for a post by a user
+     *
+     * @param int $userId
+     * @param int $postId
+     * @return array
+     */
+    public function toggleRepost(int $userId, int $postId): array
+    {
+        // 1. Verify post exists
+        $this->db->query("SELECT id, user_id FROM posts WHERE id = :post_id LIMIT 1");
+        $this->db->bind(':post_id', $postId);
+        $post = $this->db->single();
+
+        if (!$post) {
+            return [
+                'status' => 'error',
+                'message' => 'Post not found',
+                'is_reposted' => false,
+                'repost_count' => 0,
+                'count' => 0
+            ];
+        }
+
+        // 2. Check if already reposted
+        $this->db->query("SELECT id FROM reposts WHERE user_id = :user_id AND post_id = :post_id LIMIT 1");
+        $this->db->bind(':user_id', $userId);
+        $this->db->bind(':post_id', $postId);
+        $existing = $this->db->single();
+
+        if ($existing) {
+            $this->db->query("DELETE FROM reposts WHERE user_id = :user_id AND post_id = :post_id");
+            $this->db->bind(':user_id', $userId);
+            $this->db->bind(':post_id', $postId);
+            $this->db->execute();
+
+            $isReposted = false;
+            $action = 'unreposted';
+        } else {
+            $this->db->query("INSERT INTO reposts (user_id, post_id, created_at) VALUES (:user_id, :post_id, CURRENT_TIMESTAMP)");
+            $this->db->bind(':user_id', $userId);
+            $this->db->bind(':post_id', $postId);
+            $this->db->execute();
+
+            $isReposted = true;
+            $action = 'reposted';
+
+            // Send notification to author
+            $authorId = (int)($post['user_id'] ?? 0);
+            if ($authorId > 0 && $authorId !== $userId) {
+                $notificationModel = new Notification_model();
+                $notificationModel->addNotification($authorId, $userId, 'repost', $postId);
+            }
+        }
+
+        // 3. Fetch updated repost count
+        $this->db->query("SELECT COUNT(*) AS count FROM reposts WHERE post_id = :post_id");
+        $this->db->bind(':post_id', $postId);
+        $countRow = $this->db->single();
+        $count = (int)($countRow['count'] ?? 0);
+
+        // Update posts table column
+        $this->db->query("UPDATE posts SET repost_count = :count WHERE id = :post_id");
+        $this->db->bind(':count', $count);
+        $this->db->bind(':post_id', $postId);
+        $this->db->execute();
+
+        return [
+            'status' => 'success',
+            'action' => $action,
+            'is_reposted' => $isReposted,
+            'repost_count' => $count,
+            'count' => $count
+        ];
+    }
+
+    /**
+     * Check if a user has reposted a post
+     *
+     * @param int $userId
+     * @param int $postId
+     * @return bool
+     */
+    public function isReposted(int $userId, int $postId): bool
+    {
+        $this->db->query("SELECT id FROM reposts WHERE user_id = :user_id AND post_id = :post_id LIMIT 1");
+        $this->db->bind(':user_id', $userId);
+        $this->db->bind(':post_id', $postId);
+        return (bool)$this->db->single();
+    }
+
+    /**
+     * Get all post IDs reposted by a user
+     *
+     * @param int $userId
+     * @return array
+     */
+    public function getUserRepostedPostIds(int $userId): array
+    {
+        $this->db->query("SELECT post_id FROM reposts WHERE user_id = :user_id");
+        $this->db->bind(':user_id', $userId);
+        $rows = $this->db->resultSet();
+        return array_map('intval', array_column($rows, 'post_id'));
     }
 }

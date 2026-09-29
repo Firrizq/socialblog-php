@@ -35,10 +35,12 @@ class Explore extends Controller
 
         $likedPosts = [];
         $bookmarkedPosts = [];
+        $repostedPosts = [];
         if (!empty($_SESSION['user_id'])) {
             $userId = (int)$_SESSION['user_id'];
             $likedPosts = $this->interactionModel->getUserLikedPostIds($userId);
             $bookmarkedPosts = $this->interactionModel->getUserBookmarkedPostIds($userId);
+            $repostedPosts = $this->interactionModel->getUserRepostedPostIds($userId);
         }
 
         $data = [
@@ -46,7 +48,8 @@ class Explore extends Controller
             'keyword' => $keyword,
             'posts' => $posts,
             'liked_posts' => $likedPosts,
-            'bookmarked_posts' => $bookmarkedPosts
+            'bookmarked_posts' => $bookmarkedPosts,
+            'reposted_posts' => $repostedPosts
         ];
 
         $this->view('explore/index', $data);
@@ -71,10 +74,12 @@ class Explore extends Controller
 
         $likedPosts = [];
         $bookmarkedPosts = [];
+        $repostedPosts = [];
         if (!empty($_SESSION['user_id'])) {
             $userId = (int)$_SESSION['user_id'];
             $likedPosts = $this->interactionModel->getUserLikedPostIds($userId);
             $bookmarkedPosts = $this->interactionModel->getUserBookmarkedPostIds($userId);
+            $repostedPosts = $this->interactionModel->getUserRepostedPostIds($userId);
         }
 
         $data = [
@@ -82,7 +87,8 @@ class Explore extends Controller
             'tag_name' => $tagName,
             'posts' => $posts,
             'liked_posts' => $likedPosts,
-            'bookmarked_posts' => $bookmarkedPosts
+            'bookmarked_posts' => $bookmarkedPosts,
+            'reposted_posts' => $repostedPosts
         ];
 
         $this->view('explore/tag', $data);

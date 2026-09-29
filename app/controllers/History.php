@@ -47,6 +47,7 @@ class History extends Controller
         // Interaction IDs for UI states
         $userLikedIds = $this->interactionModel->getUserLikedPostIds($userId);
         $userBookmarkedIds = $this->interactionModel->getUserBookmarkedPostIds($userId);
+        $userRepostedIds = $this->interactionModel->getUserRepostedPostIds($userId);
 
         $activeTab = $_GET['tab'] ?? 'history';
         if (!in_array($activeTab, ['history', 'bookmarks', 'likes'], true)) {
@@ -62,7 +63,8 @@ class History extends Controller
             'bookmarked_posts_list' => $bookmarkedPosts,
             'liked_posts_list' => $likedPosts,
             'liked_posts' => $userLikedIds,
-            'bookmarked_posts' => $userBookmarkedIds
+            'bookmarked_posts' => $userBookmarkedIds,
+            'reposted_posts' => $userRepostedIds
         ];
 
         $this->view('history/index', $data);

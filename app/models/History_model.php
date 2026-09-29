@@ -30,7 +30,8 @@ class History_model
                     users.username,
                     users.name,
                     users.profile_picture,
-                    (SELECT COUNT(*) FROM bookmarks WHERE post_id = posts.id) AS bookmark_count
+                    (SELECT COUNT(*) FROM bookmarks WHERE post_id = posts.id) AS bookmark_count,
+                    (SELECT COUNT(*) FROM reposts WHERE post_id = posts.id) AS repost_count
                   FROM reading_history
                   INNER JOIN posts ON reading_history.post_id = posts.id
                   INNER JOIN users ON posts.user_id = users.id
@@ -56,7 +57,8 @@ class History_model
                     users.username,
                     users.name,
                     users.profile_picture,
-                    (SELECT COUNT(*) FROM bookmarks WHERE post_id = posts.id) AS bookmark_count
+                    (SELECT COUNT(*) FROM bookmarks WHERE post_id = posts.id) AS bookmark_count,
+                    (SELECT COUNT(*) FROM reposts WHERE post_id = posts.id) AS repost_count
                   FROM bookmarks
                   INNER JOIN posts ON bookmarks.post_id = posts.id
                   INNER JOIN users ON posts.user_id = users.id
@@ -82,7 +84,8 @@ class History_model
                     users.username,
                     users.name,
                     users.profile_picture,
-                    (SELECT COUNT(*) FROM bookmarks WHERE post_id = posts.id) AS bookmark_count
+                    (SELECT COUNT(*) FROM bookmarks WHERE post_id = posts.id) AS bookmark_count,
+                    (SELECT COUNT(*) FROM reposts WHERE post_id = posts.id) AS repost_count
                   FROM likes
                   INNER JOIN posts ON likes.post_id = posts.id
                   INNER JOIN users ON posts.user_id = users.id

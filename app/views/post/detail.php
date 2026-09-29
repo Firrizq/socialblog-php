@@ -126,9 +126,10 @@ $comments = $data['comments'] ?? [];
                         <span class="material-symbols-outlined text-[22px]">chat_bubble</span>
                         <span class="font-body-md text-sm"><?= $post['comment_count'] ?? 0 ?></span>
                     </button>
-                    <button type="button" class="group flex items-center gap-2 hover:text-primary transition-colors">
-                        <span class="material-symbols-outlined text-[22px]">sync_alt</span>
-                        <span class="font-body-md text-sm"><?= $post['repost_count'] ?? 0 ?></span>
+                    <?php $isReposted = !empty($data['is_reposted']) || in_array((int)$post['id'], $data['reposted_posts'] ?? []); ?>
+                    <button type="button" class="btn-repost group flex items-center gap-2 transition-colors <?= $isReposted ? 'text-emerald-500' : 'hover:text-emerald-500' ?> active:scale-95" data-id="<?= (int)$post['id'] ?>" title="Repost">
+                        <span class="material-symbols-outlined text-[22px] <?= $isReposted ? 'font-bold' : '' ?>">sync_alt</span>
+                        <span class="repost-count font-body-md text-sm"><?= (int)($post['repost_count'] ?? 0) ?></span>
                     </button>
                 </div>
                 

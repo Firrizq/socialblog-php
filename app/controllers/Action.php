@@ -79,6 +79,41 @@ class Action extends Controller
     }
 
     /**
+     * Toggle repost on a post
+     * POST /action/repost/{post_id}
+     *
+     * @param string|int $postId
+     */
+    public function repost(string|int $postId = 0): void
+    {
+        $this->requireAuth();
+        $this->requirePostMethod();
+
+        $postId = (int)$postId;
+        if ($postId <= 0) {
+            $this->jsonResponse([
+                'status' => 'error',
+                'success' => false,
+                'message' => 'Invalid post ID'
+            ], 400);
+        }
+
+        $userId = (int)$_SESSION['user_id'];
+        $result = $this->interactionModel->toggleRepost($userId, $postId);
+
+        if (($result['status'] ?? '') === 'error') {
+            $this->jsonResponse(array_merge([
+                'success' => false
+            ], $result), 404);
+        }
+
+        $this->jsonResponse(array_merge([
+            'success' => true,
+            'post_id' => $postId
+        ], $result));
+    }
+
+    /**
      * Toggle follow on a user
      * POST /action/follow/{user_id}
      *

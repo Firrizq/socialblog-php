@@ -18,19 +18,22 @@ class Home extends Controller
     public function index(): void
     {
         $feedType = $_GET['feed'] ?? 'for-you';
+        $currentUserId = !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
 
-        if ($feedType === 'following' && isset($_SESSION['user_id'])) {
-            $posts = $this->postModel->getFollowingFeedPosts((int)$_SESSION['user_id']);
+        if ($feedType === 'following' && $currentUserId) {
+            $posts = $this->postModel->getFollowingFeedPosts($currentUserId);
         } else {
-            $posts = $this->postModel->getFeedPosts();
+            $posts = $this->postModel->getFeedPosts($currentUserId);
         }
 
         $likedPosts = [];
         $bookmarkedPosts = [];
-        if (!empty($_SESSION['user_id'])) {
+        $repostedPosts = [];
+        if ($currentUserId) {
             $interactionModel = $this->model('Interaction_model');
-            $likedPosts = $interactionModel->getUserLikedPostIds((int)$_SESSION['user_id']);
-            $bookmarkedPosts = $interactionModel->getUserBookmarkedPostIds((int)$_SESSION['user_id']);
+            $likedPosts = $interactionModel->getUserLikedPostIds($currentUserId);
+            $bookmarkedPosts = $interactionModel->getUserBookmarkedPostIds($currentUserId);
+            $repostedPosts = $interactionModel->getUserRepostedPostIds($currentUserId);
         }
 
         $data = [
@@ -38,7 +41,8 @@ class Home extends Controller
             'feed_type' => $feedType,
             'posts' => $posts,
             'liked_posts' => $likedPosts,
-            'bookmarked_posts' => $bookmarkedPosts
+            'bookmarked_posts' => $bookmarkedPosts,
+            'reposted_posts' => $repostedPosts
         ];
 
         $this->view('home/index', $data);

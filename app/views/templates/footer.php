@@ -251,7 +251,81 @@
                 return;
             }
 
-            // 3. Handle Follow (.btn-follow)
+            // 3. Handle Repost (.btn-repost, .repost-btn)
+            const repostBtn = e.target.closest('.btn-repost, .repost-btn');
+            if (repostBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const postId = repostBtn.dataset.id;
+                if (!postId) return;
+
+                repostBtn.disabled = true;
+
+                try {
+                    const response = await fetch(`${BASE_URL}/repost/toggle/${postId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    if (response.status === 401) {
+                        window.location.href = `${BASE_URL}/auth`;
+                        return;
+                    }
+
+                    const data = await response.json();
+
+                    if (data.status === 'success' || data.success) {
+                        const isReposted = !!data.is_reposted;
+                        const newCount = typeof data.repost_count !== 'undefined' ? data.repost_count : (data.count ?? 0);
+
+                        const updateButtonUI = (btn, active, count) => {
+                            const icon = btn.querySelector('.material-symbols-outlined');
+                            const countSpan = btn.querySelector('.repost-count');
+
+                            if (active) {
+                                btn.classList.add('text-emerald-500');
+                                btn.classList.remove('hover:text-emerald-500');
+                                btn.classList.remove('hover:text-primary');
+                                if (icon) icon.classList.add('font-bold');
+                            } else {
+                                btn.classList.remove('text-emerald-500');
+                                btn.classList.add('hover:text-emerald-500');
+                                if (icon) icon.classList.remove('font-bold');
+                            }
+
+                            if (countSpan && typeof count !== 'undefined') {
+                                countSpan.textContent = count;
+                            }
+                        };
+
+                        updateButtonUI(repostBtn, isReposted, newCount);
+
+                        // Sync any duplicate repost buttons for this post on the page
+                        document.querySelectorAll(`.btn-repost[data-id="${postId}"], .repost-btn[data-id="${postId}"]`).forEach(btn => {
+                            if (btn !== repostBtn) {
+                                updateButtonUI(btn, isReposted, newCount);
+                            }
+                        });
+
+                        if (typeof showToast === 'function') {
+                            showToast(isReposted ? 'Reposted to your profile' : 'Removed repost', isReposted ? 'success' : 'info');
+                        }
+                    } else if (data.message) {
+                        if (typeof showToast === 'function') showToast(data.message, 'error');
+                    }
+                } catch (err) {
+                    console.error('Repost error:', err);
+                } finally {
+                    repostBtn.disabled = false;
+                }
+                return;
+            }
+
+            // 4. Handle Follow (.btn-follow)
             const followBtn = e.target.closest('.btn-follow');
             if (followBtn) {
                 e.preventDefault();

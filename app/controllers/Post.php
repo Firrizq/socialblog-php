@@ -262,11 +262,13 @@ class Post extends Controller
 
         $isLiked = false;
         $isBookmarked = false;
+        $isReposted = false;
         $readingProgress = 0;
         if (!empty($_SESSION['user_id'])) {
             $interactionModel = $this->model('Interaction_model');
             $isLiked = $interactionModel->isLiked((int)$_SESSION['user_id'], $id);
             $isBookmarked = $interactionModel->isBookmarked((int)$_SESSION['user_id'], $id);
+            $isReposted = $interactionModel->isReposted((int)$_SESSION['user_id'], $id);
             // Record reading history on view
             $historyModel = $this->model('History_model');
             $readingProgress = $historyModel->getProgress((int)$_SESSION['user_id'], $id);
@@ -282,6 +284,7 @@ class Post extends Controller
             'comments' => $comments,
             'is_liked' => $isLiked,
             'is_bookmarked' => $isBookmarked,
+            'is_reposted' => $isReposted,
             'reading_progress' => $readingProgress
         ];
 
