@@ -10,11 +10,13 @@ class Profile extends Controller
 {
     private object $userModel;
     private object $postModel;
+    private object $commentModel;
 
     public function __construct()
     {
         $this->userModel = $this->model('User');
         $this->postModel = $this->model('Post_model');
+        $this->commentModel = $this->model('Comment_model');
     }
 
     /**
@@ -24,7 +26,8 @@ class Profile extends Controller
     public function index(): void
     {
         if (!empty($_SESSION['username'])) {
-            header('Location: ' . BASEURL . '/profile/user/' . urlencode($_SESSION['username']));
+            $queryString = !empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '';
+            header('Location: ' . BASEURL . '/profile/user/' . urlencode($_SESSION['username']) . $queryString);
             exit;
         }
 
@@ -54,7 +57,10 @@ class Profile extends Controller
                 'title' => 'User Not Found - Blogggle',
                 'username' => $username,
                 'profile_user' => null,
-                'posts' => []
+                'posts' => [],
+                'replies' => [],
+                'media_posts' => [],
+                'active_tab' => 'posts'
             ];
             $this->view('profile/index', $data);
             return;
@@ -68,8 +74,16 @@ class Profile extends Controller
             $tab = 'posts';
         }
 
+        $posts = [];
+        $replies = [];
+        $mediaPosts = [];
+
         if ($tab === 'reposts') {
             $posts = $this->postModel->getRepostedPostsByUser((int)$profileUser['id'], $currentUserId);
+        } elseif ($tab === 'replies') {
+            $replies = $this->commentModel->getRepliesByUser((int)$profileUser['id']);
+        } elseif ($tab === 'media') {
+            $mediaPosts = $this->postModel->getMediaPostsByUser((int)$profileUser['id'], $isOwner, $currentUserId);
         } else {
             $posts = $this->postModel->getPostsByUser((int)$profileUser['id'], $isOwner, $currentUserId);
         }
@@ -90,6 +104,8 @@ class Profile extends Controller
             'title' => '@' . $profileUser['username'] . ' - Profile | Blogggle',
             'profile_user' => $profileUser,
             'posts' => $posts,
+            'replies' => $replies,
+            'media_posts' => $mediaPosts,
             'active_tab' => $tab,
             'is_following' => $isFollowing,
             'liked_posts' => $likedPosts,

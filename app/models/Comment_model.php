@@ -208,4 +208,46 @@ class Comment_model
         return $executed;
     }
 
+    /**
+     * Fetch all replies/comments authored by a specific user, joined with the replied post and author
+     *
+     * @param int $user_id
+     * @return array
+     */
+    public function getRepliesByUser(int $user_id): array
+    {
+        $query = "SELECT 
+                    comments.id,
+                    comments.post_id,
+                    comments.user_id,
+                    comments.parent_id,
+                    comments.comment,
+                    comments.like_count,
+                    comments.reply_count,
+                    comments.created_at,
+                    replier.username AS replier_username,
+                    replier.name AS replier_name,
+                    replier.profile_picture AS replier_profile_picture,
+                    posts.title AS post_title,
+                    posts.content AS post_content,
+                    posts.cover_image AS post_cover_image,
+                    posts.post_type AS post_type,
+                    posts.created_at AS post_created_at,
+                    author.id AS author_id,
+                    author.username AS author_username,
+                    author.name AS author_name,
+                    author.profile_picture AS author_profile_picture
+                  FROM {$this->table}
+                  INNER JOIN users replier ON comments.user_id = replier.id
+                  INNER JOIN posts ON comments.post_id = posts.id
+                  INNER JOIN users author ON posts.user_id = author.id
+                  WHERE comments.user_id = :user_id 
+                    AND (comments.deleted_at IS NULL)
+                    AND posts.status = 'published'
+                  ORDER BY comments.created_at DESC";
+
+        $this->db->query($query);
+        $this->db->bind(':user_id', $user_id);
+        return $this->db->resultSet();
+    }
 }

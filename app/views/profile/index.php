@@ -29,7 +29,15 @@ $data['user'] = $user;
                     <?= htmlspecialchars($data['user']['name'] ?? $data['user']['username'] ?? 'Profile') ?>
                 </h1>
                 <p class="font-caption text-xs text-on-surface-variant">
-                    <?= count($data['posts'] ?? []) ?> <?= count($data['posts'] ?? []) === 1 ? 'post' : 'posts' ?>
+                    <?php if (($data['active_tab'] ?? 'posts') === 'replies'): ?>
+                        <?= count($data['replies'] ?? []) ?> <?= count($data['replies'] ?? []) === 1 ? 'reply' : 'replies' ?>
+                    <?php elseif (($data['active_tab'] ?? 'posts') === 'media'): ?>
+                        <?= count($data['media_posts'] ?? []) ?> <?= count($data['media_posts'] ?? []) === 1 ? 'media item' : 'media items' ?>
+                    <?php elseif (($data['active_tab'] ?? 'posts') === 'reposts'): ?>
+                        <?= count($data['posts'] ?? []) ?> <?= count($data['posts'] ?? []) === 1 ? 'repost' : 'reposts' ?>
+                    <?php else: ?>
+                        <?= count($data['posts'] ?? []) ?> <?= count($data['posts'] ?? []) === 1 ? 'post' : 'posts' ?>
+                    <?php endif; ?>
                 </p>
             </div>
         </div>
@@ -162,9 +170,210 @@ $data['user'] = $user;
             </div>
         </div>
 
-        <!-- Feed Post Stream -->
-        <div class="flex flex-col divide-y divide-outline-variant/30 border-b border-outline-variant/30">
-            <?php if (!empty($data['posts']) && is_array($data['posts'])): ?>
+        <?php if ($activeTab === 'replies'): ?>
+            <!-- Replies Stream (Twitter-Style Reply Thread) -->
+            <div class="flex flex-col divide-y divide-outline-variant/30 border-b border-outline-variant/30">
+                <?php if (!empty($data['replies']) && is_array($data['replies'])): ?>
+                    <?php foreach ($data['replies'] as $reply): ?>
+                        <article class="p-4 sm:p-5 hover:bg-surface-container-lowest/40 transition-colors flex flex-col cursor-pointer" onclick="if(!event.target.closest('a') && !event.target.closest('button')) window.location.href='<?= BASEURL ?>/post/detail/<?= (int)$reply['post_id'] ?>';">
+                            <!-- Replying Context Banner -->
+                            <div class="flex items-center gap-1.5 text-xs font-semibold text-on-surface-variant mb-2 ml-10 sm:ml-16">
+                                <span class="material-symbols-outlined text-[15px] text-primary">reply</span>
+                                <span>Replying to</span>
+                                <a href="<?= BASEURL ?>/profile/user/<?= urlencode($reply['author_username'] ?? '') ?>" class="font-bold text-primary hover:underline relative z-10" onclick="event.stopPropagation();">
+                                    @<?= htmlspecialchars($reply['author_username'] ?? 'author') ?>
+                                </a>
+                            </div>
+
+                            <div class="flex gap-3 sm:gap-4 w-full">
+                                <!-- Left Column: Replier Avatar -->
+                                <div class="shrink-0">
+                                    <a href="<?= BASEURL ?>/profile/user/<?= urlencode($reply['replier_username'] ?? '') ?>" class="block w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary hover:opacity-80 transition-opacity overflow-hidden relative z-10" title="View Profile" onclick="event.stopPropagation();">
+                                        <?php if (!empty($reply['replier_profile_picture'])): ?>
+                                            <img src="<?= BASEURL ?><?= htmlspecialchars($reply['replier_profile_picture']) ?>" alt="<?= htmlspecialchars($reply['replier_username'] ?? '') ?>" class="w-full h-full object-cover">
+                                        <?php else: ?>
+                                            <?= htmlspecialchars(substr($reply['replier_username'] ?? 'U', 0, 1)) ?>
+                                        <?php endif; ?>
+                                    </a>
+                                </div>
+
+                                <!-- Right Column: Reply Content & Quoted Reference Card -->
+                                <div class="flex-1 min-w-0 flex flex-col">
+                                    <!-- Replier Header (Name, Username, Time) -->
+                                    <div class="flex items-center justify-between gap-2 mb-1">
+                                        <div class="flex items-center gap-1.5 min-w-0 flex-wrap text-[15px]">
+                                            <a href="<?= BASEURL ?>/profile/user/<?= urlencode($reply['replier_username'] ?? '') ?>" class="font-title-md font-bold text-on-surface hover:underline truncate relative z-10" onclick="event.stopPropagation();">
+                                                <?= htmlspecialchars($reply['replier_name'] ?? $reply['replier_username'] ?? 'Anonymous') ?>
+                                            </a>
+                                            <span class="font-body-md text-on-surface-variant truncate">@<?= htmlspecialchars($reply['replier_username'] ?? 'anon') ?></span>
+                                            <span class="text-on-surface-variant font-bold">·</span>
+                                            <time class="timeago font-body-md text-on-surface-variant hover:underline relative z-10" datetime="<?= date('c', strtotime($reply['created_at'])) ?>"></time>
+                                        </div>
+                                    </div>
+
+                                    <!-- User's Reply Text -->
+                                    <div class="font-body-md text-on-surface text-[15px] leading-relaxed whitespace-pre-line mb-2">
+                                        <?= preg_replace('/(^|>|\s)#([a-zA-Z_][a-zA-Z0-9_]*)/', '$1<a href="' . BASEURL . '/explore/tag/$2" class="text-primary font-semibold hover:underline relative z-10" onclick="event.stopPropagation();">#$2</a>', htmlspecialchars((string)($reply['comment'] ?? ''))) ?>
+                                    </div>
+
+                                    <!-- Embedded Quoted / Reference Card of Original Post -->
+                                    <div class="rounded-2xl border border-outline-variant/40 hover:border-primary/40 bg-surface-container-lowest/70 hover:bg-surface-container-low/40 p-3 sm:p-3.5 transition-all relative z-10 cursor-pointer flex gap-3 items-center justify-between mt-1 mb-2" onclick="event.stopPropagation(); window.location.href='<?= BASEURL ?>/post/detail/<?= (int)$reply['post_id'] ?>';">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <div class="w-5 h-5 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-[10px] text-primary overflow-hidden shrink-0">
+                                                    <?php if (!empty($reply['author_profile_picture'])): ?>
+                                                        <img src="<?= BASEURL ?><?= htmlspecialchars($reply['author_profile_picture']) ?>" alt="<?= htmlspecialchars($reply['author_username'] ?? '') ?>" class="w-full h-full object-cover">
+                                                    <?php else: ?>
+                                                        <?= htmlspecialchars(substr($reply['author_username'] ?? 'U', 0, 1)) ?>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <span class="font-bold text-xs text-on-surface truncate"><?= htmlspecialchars($reply['author_name'] ?? $reply['author_username'] ?? 'Author') ?></span>
+                                                <span class="text-xs text-on-surface-variant truncate">@<?= htmlspecialchars($reply['author_username'] ?? 'author') ?></span>
+                                                <span class="text-on-surface-variant text-xs">·</span>
+                                                <time class="timeago text-xs text-on-surface-variant" datetime="<?= date('c', strtotime($reply['post_created_at'])) ?>"></time>
+                                            </div>
+                                            <?php if (!empty($reply['post_title'])): ?>
+                                                <h4 class="font-title-md font-bold text-sm text-on-surface line-clamp-1 mb-0.5">
+                                                    <?= htmlspecialchars($reply['post_title']) ?>
+                                                </h4>
+                                            <?php endif; ?>
+                                            <p class="font-body-md text-xs sm:text-[13px] text-on-surface-variant line-clamp-2 leading-relaxed">
+                                                <?= htmlspecialchars(strip_tags((string)($reply['post_content'] ?? ''))) ?>
+                                            </p>
+                                        </div>
+
+                                        <?php
+                                            $origThumb = '';
+                                            if (!empty($reply['post_cover_image'])) {
+                                                $origDecoded = json_decode($reply['post_cover_image'], true);
+                                                if (is_array($origDecoded) && !empty($origDecoded)) {
+                                                    $origThumb = $origDecoded[0];
+                                                } else {
+                                                    $origThumb = explode(',', $reply['post_cover_image'])[0];
+                                                }
+                                            } elseif (!empty($reply['post_content']) && preg_match('/<img[^>]+src=[\'"]([^\'"]+)[\'"]/i', $reply['post_content'], $origMatch)) {
+                                                $origThumb = $origMatch[1];
+                                            }
+                                        ?>
+                                        <?php if (!empty($origThumb)): ?>
+                                            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden shrink-0 bg-surface-container-high border border-outline-variant/30">
+                                                <img src="<?= str_starts_with($origThumb, 'http') ? $origThumb : BASEURL . (str_starts_with($origThumb, '/') ? $origThumb : '/' . $origThumb) ?>" alt="Attachment" class="w-full h-full object-cover">
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <!-- Bottom Action Bar / View Conversation -->
+                                    <div class="flex items-center gap-4 mt-1 text-on-surface-variant text-xs font-medium">
+                                        <a href="<?= BASEURL ?>/post/detail/<?= (int)$reply['post_id'] ?>" class="hover:text-primary flex items-center gap-1.5 transition-colors relative z-10" onclick="event.stopPropagation();">
+                                            <span class="material-symbols-outlined text-[16px]">chat_bubble_outline</span>
+                                            <span>View conversation</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <!-- Empty State for Replies -->
+                    <div class="text-center p-12 bg-transparent flex flex-col items-center">
+                        <span class="material-symbols-outlined text-4xl text-outline mb-2">chat_bubble_outline</span>
+                        <h2 class="text-xl font-bold text-on-surface">No replies yet</h2>
+                        <p class="text-on-surface-variant mt-2 text-sm max-w-sm">
+                            When @<?= htmlspecialchars($profileUsername ?? 'user') ?> replies to stories or notes, they will appear here.
+                        </p>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+        <?php elseif ($activeTab === 'media'): ?>
+            <!-- Media Tab Grid (Instagram/Twitter Media Grid) -->
+            <div class="p-3 sm:p-4 border-b border-outline-variant/30">
+                <?php if (!empty($data['media_posts']) && is_array($data['media_posts'])): ?>
+                    <div class="grid grid-cols-3 gap-1 sm:gap-2">
+                        <?php foreach ($data['media_posts'] as $post): ?>
+                            <?php
+                                $mediaImgs = [];
+                                if (!empty($post['cover_image'])) {
+                                    $decoded = json_decode($post['cover_image'], true);
+                                    if (is_array($decoded) && !empty($decoded)) {
+                                        $mediaImgs = array_values(array_filter($decoded));
+                                    } elseif (is_string($post['cover_image'])) {
+                                        $mediaImgs = array_values(array_filter(explode(',', $post['cover_image'])));
+                                    }
+                                }
+                                if (empty($mediaImgs) && !empty($post['content']) && preg_match_all('/<img[^>]+src=[\'"]([^\'"]+)[\'"]/i', $post['content'], $matches)) {
+                                    $mediaImgs = array_values(array_filter($matches[1]));
+                                }
+
+                                $firstImg = !empty($mediaImgs) ? $mediaImgs[0] : '';
+                                if (empty($firstImg)) continue;
+
+                                $fullFirstImg = str_starts_with($firstImg, 'http') ? $firstImg : BASEURL . (str_starts_with($firstImg, '/') ? $firstImg : '/' . $firstImg);
+                                $fullImgs = array_map(function($img) {
+                                    $img = trim($img);
+                                    if (str_starts_with($img, 'http')) return $img;
+                                    return BASEURL . (str_starts_with($img, '/') ? $img : '/' . $img);
+                                }, $mediaImgs);
+
+                                $imgCount = count($fullImgs);
+                                $imgJson = htmlspecialchars(json_encode($fullImgs), ENT_QUOTES, 'UTF-8');
+                                $postDetailUrl = BASEURL . '/post/detail/' . (int)$post['id'];
+                            ?>
+                            <div class="group relative aspect-square bg-surface-container-high rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-md transition-all">
+                                <a href="<?= $postDetailUrl ?>" class="block w-full h-full">
+                                    <img src="<?= $fullFirstImg ?>" alt="<?= htmlspecialchars($post['title'] ?? 'Media') ?>" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy">
+                                    
+                                    <!-- Multi-image Indicator -->
+                                    <?php if ($imgCount > 1): ?>
+                                        <div class="absolute top-2 right-2 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-black/60 backdrop-blur-sm text-white flex items-center justify-center shadow-md pointer-events-none">
+                                            <span class="material-symbols-outlined text-[14px] sm:text-[16px]">collections</span>
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <!-- Story Indicator -->
+                                    <?php if (($post['post_type'] ?? 'story') === 'story'): ?>
+                                        <div class="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-sm text-white font-caption text-[10px] flex items-center gap-0.5 pointer-events-none">
+                                            <span class="material-symbols-outlined text-[11px]">auto_stories</span>
+                                            <span class="hidden sm:inline">Story</span>
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <!-- Dark Overlay with Counts on Hover -->
+                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3 sm:gap-6 text-white font-bold text-xs sm:text-sm pointer-events-none">
+                                        <div class="flex items-center gap-1 drop-shadow">
+                                            <span class="material-symbols-outlined text-[16px] sm:text-[18px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+                                            <span><?= number_format((int)($post['like_count'] ?? 0)) ?></span>
+                                        </div>
+                                        <div class="flex items-center gap-1 drop-shadow">
+                                            <span class="material-symbols-outlined text-[16px] sm:text-[18px]">chat_bubble</span>
+                                            <span><?= number_format((int)($post['comment_count'] ?? 0)) ?></span>
+                                        </div>
+                                    </div>
+                                </a>
+
+                                <!-- Quick Lightbox Button -->
+                                <button type="button" class="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20" title="Expand View" onclick="event.preventDefault(); event.stopPropagation(); window.openLightboxGallery && openLightboxGallery(<?= $imgJson ?>, 0, '<?= $postDetailUrl ?>');">
+                                    <span class="material-symbols-outlined text-[18px]">fullscreen</span>
+                                </button>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <!-- Empty State for Media -->
+                    <div class="text-center p-12 bg-transparent flex flex-col items-center">
+                        <span class="material-symbols-outlined text-4xl text-outline mb-2">photo_library</span>
+                        <h2 class="text-xl font-bold text-on-surface">@<?= htmlspecialchars($profileUsername ?? 'user') ?> hasn't posted any media yet</h2>
+                        <p class="text-on-surface-variant mt-2 text-sm max-w-sm">
+                            Photos and media attached to stories or notes will appear here.
+                        </p>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+        <?php else: ?>
+            <!-- Feed Post Stream (Posts & Reposts) -->
+            <div class="flex flex-col divide-y divide-outline-variant/30 border-b border-outline-variant/30">
+                <?php if (!empty($data['posts']) && is_array($data['posts'])): ?>
                 <?php foreach ($data['posts'] as $post): ?>
                     <!-- Asymmetrical Post Row -->
                     <article class="p-4 sm:p-5 hover:bg-surface-container-lowest/40 transition-colors flex flex-col cursor-pointer" onclick="if(!event.target.closest('a') && !event.target.closest('button')) window.location.href='<?= BASEURL ?>/post/detail/<?= (int)$post['id'] ?>';">
@@ -359,6 +568,7 @@ $data['user'] = $user;
             </div>
         <?php endif; ?>
         </div>
+        <?php endif; ?>
     <?php endif; ?>
 </div>
 
