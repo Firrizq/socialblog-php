@@ -31,7 +31,7 @@ $comments = $data['comments'] ?? [];
             <!-- Title (If Story) -->
             <?php if(!empty($post['title'])): ?>
                 <h1 class="text-3xl sm:text-[40px] font-black text-on-surface tracking-tight mb-8 leading-[1.2]">
-                    <?= htmlspecialchars($post['title']) ?>
+                    <?= htmlspecialchars($post['title'] ?? '') ?>
                 </h1>
             <?php endif; ?>
 
@@ -40,7 +40,7 @@ $comments = $data['comments'] ?? [];
                 <div class="flex items-center gap-3.5">
                     <a href="<?= BASEURL ?>/profile/user/<?= urlencode($post['username'] ?? '') ?>" class="w-12 h-12 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/50 shrink-0 hover:ring-2 hover:ring-primary transition-all">
                         <?php if (!empty($post['profile_picture'])): ?>
-                            <img src="<?= BASEURL ?><?= htmlspecialchars($post['profile_picture']) ?>" class="w-full h-full object-cover">
+                            <img src="<?= BASEURL ?><?= htmlspecialchars($post['profile_picture'] ?? '') ?>" class="w-full h-full object-cover">
                         <?php else: ?>
                             <div class="w-full h-full flex items-center justify-center font-bold text-primary text-lg">
                                 <?= htmlspecialchars(substr($post['username'] ?? 'U', 0, 1)) ?>
@@ -56,20 +56,20 @@ $comments = $data['comments'] ?? [];
                                 <span><?= $post['read_time_minutes'] ?? 1 ?> min read</span>
                                 <span class="font-black text-[10px]">·</span>
                             <?php endif; ?>
-                            <span><?= date('M j, Y', strtotime($post['created_at'])) ?></span>
+                            <span><?= !empty($post['created_at']) ? date('M j, Y', strtotime($post['created_at'])) : '' ?></span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Post Options -->
-                <?php if(isset($_SESSION['user_id']) && $_SESSION['user_id'] == $post['user_id']): ?>
+                <?php if(isset($_SESSION['user_id']) && !empty($post['user_id']) && $_SESSION['user_id'] == $post['user_id']): ?>
                     <div class="relative dropdown-container">
-                        <button type="button" onclick="toggleMenu(event, 'menu-detail-<?= $post['id'] ?>')" class="text-on-surface-variant hover:text-on-surface w-9 h-9 rounded-full hover:bg-surface-container transition-colors flex items-center justify-center">
+                        <button type="button" onclick="toggleMenu(event, 'menu-detail-<?= (int)($post['id'] ?? 0) ?>')" class="text-on-surface-variant hover:text-on-surface w-9 h-9 rounded-full hover:bg-surface-container transition-colors flex items-center justify-center">
                             <span class="material-symbols-outlined text-[20px]">more_horiz</span>
                         </button>
-                        <div id="menu-detail-<?= $post['id'] ?>" class="hidden absolute right-0 top-full mt-2 w-40 bg-surface-container-low border border-outline-variant/30 rounded-xl shadow-xl z-50 overflow-hidden flex flex-col py-1.5">
-                            <a href="<?= BASEURL ?>/post/edit<?= ($post['post_type']??'') === 'note' ? '_note' : '' ?>/<?= $post['id'] ?>" class="px-4 py-2.5 text-sm text-on-surface font-title-md hover:bg-surface-container flex items-center gap-3 transition-colors"><span class="material-symbols-outlined text-[18px]">edit</span> Edit</a>
-                            <form action="<?= BASEURL ?>/post/delete/<?= $post['id'] ?>" method="POST" class="m-0 p-0" onsubmit="return confirm('Are you sure you want to delete this?');">
+                        <div id="menu-detail-<?= (int)($post['id'] ?? 0) ?>" class="hidden absolute right-0 top-full mt-2 w-40 bg-surface-container-low border border-outline-variant/30 rounded-xl shadow-xl z-50 overflow-hidden flex flex-col py-1.5">
+                            <a href="<?= BASEURL ?>/post/edit<?= ($post['post_type']??'') === 'note' ? '_note' : '' ?>/<?= (int)($post['id'] ?? 0) ?>" class="px-4 py-2.5 text-sm text-on-surface font-title-md hover:bg-surface-container flex items-center gap-3 transition-colors"><span class="material-symbols-outlined text-[18px]">edit</span> Edit</a>
+                            <form action="<?= BASEURL ?>/post/delete/<?= (int)($post['id'] ?? 0) ?>" method="POST" class="m-0 p-0" onsubmit="return confirm('Are you sure you want to delete this?');">
                                 <button type="submit" class="w-full text-left px-4 py-2.5 text-sm text-error font-title-md hover:bg-error-container/20 flex items-center gap-3 transition-colors"><span class="material-symbols-outlined text-[18px]">delete</span> Delete</button>
                             </form>
                         </div>
@@ -80,11 +80,11 @@ $comments = $data['comments'] ?? [];
             <!-- Dedicated Hero Cover Image -->
             <?php if(($post['post_type'] ?? 'story') === 'story' && !empty($post['cover_image'])): ?>
                 <?php 
-                    $decoded = json_decode($post['cover_image'], true);
-                    $coverPath = is_array($decoded) && !empty($decoded) ? $decoded[0] : (strpos($post['cover_image'], ',') ? explode(',', $post['cover_image'])[0] : $post['cover_image']);
+                    $decoded = json_decode((string)$post['cover_image'], true);
+                    $coverPath = is_array($decoded) && !empty($decoded) ? $decoded[0] : (strpos((string)$post['cover_image'], ',') ? explode(',', (string)$post['cover_image'])[0] : (string)$post['cover_image']);
                 ?>
                 <div class="w-full aspect-[16/9] sm:aspect-video rounded-2xl overflow-hidden mb-10 border border-outline-variant/30">
-                    <img src="<?= BASEURL ?><?= htmlspecialchars(trim($coverPath)) ?>" class="w-full h-full object-cover" alt="Story Cover">
+                    <img src="<?= BASEURL ?><?= htmlspecialchars(trim((string)$coverPath)) ?>" class="w-full h-full object-cover" alt="Story Cover">
                 </div>
             <?php endif; ?>
 
@@ -100,14 +100,14 @@ $comments = $data['comments'] ?? [];
             <!-- Images for Notes -->
             <?php if(($post['post_type'] ?? 'story') === 'note' && !empty($post['cover_image'])): ?>
                 <?php 
-                $decoded = json_decode($post['cover_image'], true);
-                $imgs = is_array($decoded) ? $decoded : array_filter(explode(',', $post['cover_image']));
+                $decoded = json_decode((string)$post['cover_image'], true);
+                $imgs = is_array($decoded) ? $decoded : array_filter(explode(',', (string)$post['cover_image']));
                 $imgCount = count($imgs);
                 $imgJson = htmlspecialchars(json_encode(array_values($imgs)), ENT_QUOTES, 'UTF-8');
                 ?>
                 <div class="mt-4 mb-10 grid <?= $imgCount === 1 ? 'grid-cols-1' : 'grid-cols-2' ?> gap-2 rounded-2xl overflow-hidden border border-outline-variant/30">
                     <?php foreach($imgs as $idx => $img): ?>
-                        <img src="<?= BASEURL ?><?= htmlspecialchars(trim($img)) ?>" class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity <?= ($imgCount === 3 && $idx === 0) ? 'row-span-2' : '' ?> <?= $imgCount > 1 ? 'aspect-[4/3] sm:aspect-video' : 'max-h-[600px] w-full' ?>" alt="Attachment" onclick="window.openLightboxGallery && openLightboxGallery(<?= $imgJson ?>, <?= $idx ?>)">
+                        <img src="<?= BASEURL ?><?= htmlspecialchars(trim((string)$img)) ?>" class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity <?= ($imgCount === 3 && $idx === 0) ? 'row-span-2' : '' ?> <?= $imgCount > 1 ? 'aspect-[4/3] sm:aspect-video' : 'max-h-[600px] w-full' ?>" alt="Attachment" onclick="window.openLightboxGallery && openLightboxGallery(<?= $imgJson ?>, <?= $idx ?>)">
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
@@ -116,26 +116,26 @@ $comments = $data['comments'] ?? [];
             <div class="flex items-center justify-between py-3 border-y border-outline-variant/40 mb-12 text-on-surface-variant">
                 <div class="flex items-center gap-6">
                     <?php 
-                         $isLiked = in_array((int)$post['id'], $data['liked_posts'] ?? []) || !empty($data['is_liked']);
+                         $isLiked = in_array((int)($post['id'] ?? 0), $data['liked_posts'] ?? []) || !empty($data['is_liked']);
                     ?>
-                    <button type="button" class="btn-like group flex items-center gap-2 transition-colors <?= $isLiked ? 'text-error' : 'hover:text-error' ?> active:scale-95" data-id="<?= (int)$post['id'] ?>" title="Like">
+                    <button type="button" class="btn-like group flex items-center gap-2 transition-colors <?= $isLiked ? 'text-error' : 'hover:text-error' ?> active:scale-95" data-id="<?= (int)($post['id'] ?? 0) ?>" title="Like">
                         <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' <?= $isLiked ? 1 : 0 ?>;">favorite</span>
                         <span class="like-count font-body-md text-sm"><?= (int)($post['like_count'] ?? 0) ?></span>
                     </button>
                     <button type="button" class="group flex items-center gap-2 hover:text-primary transition-colors" onclick="document.getElementById('comment-input').focus();">
                         <span class="material-symbols-outlined text-[22px]">chat_bubble</span>
-                        <span class="font-body-md text-sm"><?= $post['comment_count'] ?? 0 ?></span>
+                        <span class="font-body-md text-sm"><?= (int)($post['comment_count'] ?? 0) ?></span>
                     </button>
-                    <?php $isReposted = !empty($data['is_reposted']) || in_array((int)$post['id'], $data['reposted_posts'] ?? []); ?>
-                    <button type="button" class="btn-repost group flex items-center gap-2 transition-colors <?= $isReposted ? 'text-emerald-500' : 'hover:text-emerald-500' ?> active:scale-95" data-id="<?= (int)$post['id'] ?>" title="Repost">
+                    <?php $isReposted = !empty($data['is_reposted']) || in_array((int)($post['id'] ?? 0), $data['reposted_posts'] ?? []); ?>
+                    <button type="button" class="btn-repost group flex items-center gap-2 transition-colors <?= $isReposted ? 'text-emerald-500' : 'hover:text-emerald-500' ?> active:scale-95" data-id="<?= (int)($post['id'] ?? 0) ?>" title="Repost">
                         <span class="material-symbols-outlined text-[22px] <?= $isReposted ? 'font-bold' : '' ?>">sync_alt</span>
                         <span class="repost-count font-body-md text-sm"><?= (int)($post['repost_count'] ?? 0) ?></span>
                     </button>
                 </div>
                 
                 <div class="flex items-center gap-4">
-                    <?php $isBookmarked = in_array((int)$post['id'], $data['bookmarked_posts'] ?? []) || !empty($data['is_bookmarked']); ?>
-                    <button type="button" class="btn-bookmark group flex items-center gap-2 transition-colors <?= $isBookmarked ? 'text-primary' : 'hover:text-primary' ?> active:scale-95" data-id="<?= (int)$post['id'] ?>" title="Bookmark">
+                    <?php $isBookmarked = in_array((int)($post['id'] ?? 0), $data['bookmarked_posts'] ?? []) || !empty($data['is_bookmarked']); ?>
+                    <button type="button" class="btn-bookmark group flex items-center gap-2 transition-colors <?= $isBookmarked ? 'text-primary' : 'hover:text-primary' ?> active:scale-95" data-id="<?= (int)($post['id'] ?? 0) ?>" title="Bookmark">
                         <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' <?= $isBookmarked ? 1 : 0 ?>;">bookmark</span>
                         <span class="bookmark-count font-body-md text-sm"><?= (int)($post['bookmark_count'] ?? 0) ?></span>
                     </button>
@@ -148,21 +148,21 @@ $comments = $data['comments'] ?? [];
 
         <!-- Discussion Section -->
         <section class="mt-8">
-            <h3 class="font-title-md font-bold text-xl text-on-surface mb-6">Discussion (<?= $post['comment_count'] ?? 0 ?>)</h3>
+            <h3 class="font-title-md font-bold text-xl text-on-surface mb-6">Discussion (<?= (int)($post['comment_count'] ?? 0) ?>)</h3>
             
             <?php if (isset($_SESSION['user_id'])): ?>
                 <div class="flex gap-4 mb-10">
                     <div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/30 shrink-0">
                         <?php if (!empty($_SESSION['profile_picture'])): ?>
-                            <img src="<?= BASEURL ?><?= htmlspecialchars($_SESSION['profile_picture']) ?>" class="w-full h-full object-cover">
+                            <img src="<?= BASEURL ?><?= htmlspecialchars($_SESSION['profile_picture'] ?? '') ?>" class="w-full h-full object-cover">
                         <?php else: ?>
                             <div class="w-full h-full flex items-center justify-center font-bold text-primary text-sm">
-                                <?= htmlspecialchars(substr($_SESSION['username'], 0, 1)) ?>
+                                <?= htmlspecialchars(substr($_SESSION['username'] ?? 'U', 0, 1)) ?>
                             </div>
                         <?php endif; ?>
                     </div>
                     <div class="flex-1">
-                        <form action="<?= BASEURL ?>/post/comment/<?= $post['id'] ?>" method="POST" class="m-0 flex flex-col gap-3">
+                        <form action="<?= BASEURL ?>/post/comment/<?= (int)($post['id'] ?? 0) ?>" method="POST" class="m-0 flex flex-col gap-3">
                             <textarea id="comment-input" name="content" rows="3" class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl p-4 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none" placeholder="What are your thoughts?" required></textarea>
                             <div class="flex justify-end">
                                 <button type="submit" class="px-5 py-2 rounded-full bg-primary text-on-primary font-title-md text-sm hover:opacity-90 transition-opacity">Respond</button>
@@ -182,34 +182,34 @@ $comments = $data['comments'] ?? [];
                 <?php if (!empty($data['comments'])): ?>
                     <?php foreach ($data['comments'] as $comment): ?>
                         <div class="flex gap-3 sm:gap-4 group">
-                            <a href="<?= BASEURL ?>/profile/user/<?= urlencode($comment['username']) ?>" class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/30 shrink-0">
+                            <a href="<?= BASEURL ?>/profile/user/<?= urlencode($comment['username'] ?? '') ?>" class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/30 shrink-0">
                                 <?php if (!empty($comment['profile_picture'])): ?>
-                                    <img src="<?= BASEURL ?><?= htmlspecialchars($comment['profile_picture']) ?>" class="w-full h-full object-cover">
+                                    <img src="<?= BASEURL ?><?= htmlspecialchars($comment['profile_picture'] ?? '') ?>" class="w-full h-full object-cover">
                                 <?php else: ?>
                                     <div class="w-full h-full flex items-center justify-center font-bold text-primary text-sm">
-                                        <?= htmlspecialchars(substr($comment['username'], 0, 1)) ?>
+                                        <?= htmlspecialchars(substr($comment['username'] ?? 'U', 0, 1)) ?>
                                     </div>
                                 <?php endif; ?>
                             </a>
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center justify-between mb-1">
                                     <div class="flex items-center gap-2 text-sm">
-                                        <a href="<?= BASEURL ?>/profile/user/<?= urlencode($comment['username']) ?>" class="font-title-md font-bold text-on-surface hover:underline">
-                                            <?= htmlspecialchars($comment['name'] ?? $comment['username']) ?>
+                                        <a href="<?= BASEURL ?>/profile/user/<?= urlencode($comment['username'] ?? '') ?>" class="font-title-md font-bold text-on-surface hover:underline">
+                                            <?= htmlspecialchars($comment['name'] ?? $comment['username'] ?? 'Anonymous') ?>
                                         </a>
                                         <span class="text-on-surface-variant">·</span>
-                                        <time class="timeago text-on-surface-variant text-xs" datetime="<?= date('c', strtotime($comment['created_at'])) ?>"></time>
+                                        <time class="timeago text-on-surface-variant text-xs" datetime="<?= !empty($comment['created_at']) ? date('c', strtotime($comment['created_at'])) : '' ?>"></time>
                                     </div>
                                 </div>
                                 <div class="font-body-md text-on-surface text-[15px] leading-relaxed mb-2 whitespace-pre-line">
-                                    <?= htmlspecialchars($comment['content']) ?>
+                                    <?= htmlspecialchars($comment['comment'] ?? $comment['content'] ?? '') ?>
                                 </div>
                                 <div class="flex items-center gap-4 text-on-surface-variant">
-                                    <button type="button" class="flex items-center gap-1.5 hover:text-primary transition-colors text-xs font-title-md" onclick="window.location.href='<?= BASEURL ?>/post/commentDetail/<?= $comment['id'] ?>'">
-                                        <span class="material-symbols-outlined text-[18px]">reply</span> Reply (<?= $comment['reply_count'] ?? 0 ?>)
+                                    <button type="button" class="flex items-center gap-1.5 hover:text-primary transition-colors text-xs font-title-md" onclick="window.location.href='<?= BASEURL ?>/post/commentDetail/<?= (int)($comment['id'] ?? 0) ?>'">
+                                        <span class="material-symbols-outlined text-[18px]">reply</span> Reply (<?= (int)($comment['reply_count'] ?? 0) ?>)
                                     </button>
-                                    <?php if(isset($_SESSION['user_id']) && $_SESSION['user_id'] == $comment['user_id']): ?>
-                                        <form action="<?= BASEURL ?>/post/deleteComment/<?= $comment['id'] ?>" method="POST" class="m-0" onsubmit="return confirm('Delete this comment?');">
+                                    <?php if(isset($_SESSION['user_id']) && !empty($comment['user_id']) && $_SESSION['user_id'] == $comment['user_id']): ?>
+                                        <form action="<?= BASEURL ?>/post/deleteComment/<?= (int)($comment['id'] ?? 0) ?>" method="POST" class="m-0" onsubmit="return confirm('Delete this comment?');">
                                             <button type="submit" class="flex items-center gap-1.5 hover:text-error transition-colors text-xs font-title-md opacity-0 group-hover:opacity-100 focus:opacity-100">
                                                 <span class="material-symbols-outlined text-[16px]">delete</span>
                                             </button>
@@ -245,7 +245,7 @@ $comments = $data['comments'] ?? [];
 <script>
     (function() {
         const progressBar = document.getElementById('reading-progress');
-        const postId = <?= (int)$post['id'] ?>;
+        const postId = <?= (int)($post['id'] ?? 0) ?>;
         const isLoggedIn = <?= isset($_SESSION['user_id']) ? 'true' : 'false' ?>;
         let maxProgress = <?= isset($data['reading_progress']) ? (int)$data['reading_progress'] : 0 ?>;
         let lastReportedProgress = maxProgress;
