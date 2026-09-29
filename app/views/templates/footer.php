@@ -339,13 +339,13 @@
                 return;
             }
 
-            // 4. Handle Follow (.btn-follow)
-            const followBtn = e.target.closest('.btn-follow');
+            // 4. Handle Follow (.btn-follow / .follow-btn)
+            const followBtn = e.target.closest('.btn-follow, .follow-btn');
             if (followBtn) {
                 e.preventDefault();
                 e.stopPropagation();
 
-                const userId = followBtn.dataset.id;
+                const userId = followBtn.dataset.userId || followBtn.dataset.id;
                 if (!userId) return;
 
                 followBtn.disabled = true;
@@ -368,29 +368,32 @@
 
                     if (data.success) {
                         const isFollowed = (data.status === 'followed');
+                        const isProfileScope = (followBtn.dataset.scope === 'profile' || followBtn.id === 'profile-follow-btn');
 
-                        const applyFollowStyle = (btn, state) => {
-                            if (state) {
-                                btn.textContent = 'Following';
-                                btn.className = 'btn-follow px-5 py-1.5 rounded-full border border-outline-variant font-title-md text-sm font-semibold text-on-surface hover:border-error hover:text-error hover:bg-error-container/20 transition-all';
+                        // ONLY toggle the exact button that was clicked
+                        if (isProfileScope) {
+                            if (isFollowed) {
+                                followBtn.textContent = 'Following';
+                                followBtn.className = 'follow-btn btn-follow px-5 py-1.5 rounded-full border border-outline-variant/50 font-title-md text-sm font-bold text-on-surface hover:border-error hover:text-error hover:bg-error-container/20 transition-all shadow-sm relative z-10';
                             } else {
-                                btn.textContent = 'Follow';
-                                btn.className = 'btn-follow px-6 py-1.5 rounded-full bg-primary-container text-on-primary-container hover:bg-primary font-title-md text-sm font-semibold transition-all shadow-[0_0_0_1px_rgba(16,185,129,0.3)] active:scale-95';
+                                followBtn.textContent = 'Follow';
+                                followBtn.className = 'follow-btn btn-follow px-6 py-1.5 rounded-full bg-on-surface text-surface hover:opacity-80 font-title-md text-sm font-bold transition-all shadow-sm relative z-10';
                             }
-                        };
 
-                        applyFollowStyle(followBtn, isFollowed);
-
-                        document.querySelectorAll(`.btn-follow[data-id="${userId}"]`).forEach(btn => {
-                            if (btn !== followBtn) {
-                                applyFollowStyle(btn, isFollowed);
+                            // Update follower count on profile header ONLY when following/unfollowing via profile hero button
+                            const followerCountEl = document.getElementById('profile-follower-count');
+                            if (followerCountEl && typeof data.follower_count !== 'undefined') {
+                                followerCountEl.textContent = Number(data.follower_count).toLocaleString();
                             }
-                        });
-
-                        // Update follower count on profile header if present
-                        const followerCountEl = document.getElementById('profile-follower-count');
-                        if (followerCountEl && typeof data.follower_count !== 'undefined') {
-                            followerCountEl.textContent = data.follower_count;
+                        } else {
+                            // Scoped to the specific clicked sidebar button
+                            if (isFollowed) {
+                                followBtn.textContent = 'Following';
+                                followBtn.className = 'follow-btn btn-follow px-space-sm py-space-xs rounded-full border border-outline-variant bg-surface text-on-surface hover:border-error hover:text-error hover:bg-error-container/20 font-caption text-xs transition-colors shrink-0';
+                            } else {
+                                followBtn.textContent = 'Follow';
+                                followBtn.className = 'follow-btn btn-follow px-space-sm py-space-xs rounded-full bg-surface-container border border-outline-variant text-on-surface hover:border-primary hover:text-primary font-caption text-xs transition-colors shrink-0';
+                            }
                         }
                     }
                 } catch (err) {
