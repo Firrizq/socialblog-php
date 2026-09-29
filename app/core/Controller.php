@@ -48,17 +48,14 @@ class Controller
             // Sync active account data across top-level $_SESSION for backward compatibility
             $activeUser = $_SESSION['accounts'][$activeId] ?? $_SESSION['accounts'][(string)$activeId] ?? $_SESSION['accounts'][(int)$activeId] ?? null;
             if ($activeUser) {
-                // Keep avatar in sync if updated during session
-                if (isset($_SESSION['profile_picture']) && $_SESSION['profile_picture'] !== ($activeUser['profile_picture'] ?? null)) {
-                    $activeUser['profile_picture'] = $_SESSION['profile_picture'];
-                    $_SESSION['accounts'][$activeId]['profile_picture'] = $_SESSION['profile_picture'];
-                }
+                $avatar = !empty($activeUser['avatar']) ? $activeUser['avatar'] : (!empty($activeUser['profile_picture']) ? $activeUser['profile_picture'] : null);
 
                 $_SESSION['user_id'] = (int)$activeUser['id'];
                 $_SESSION['name'] = $activeUser['name'] ?? $activeUser['username'];
                 $_SESSION['username'] = $activeUser['username'];
                 $_SESSION['email'] = $activeUser['email'] ?? '';
-                $_SESSION['profile_picture'] = $activeUser['profile_picture'] ?? null;
+                $_SESSION['profile_picture'] = $avatar;
+                $_SESSION['avatar'] = $avatar;
                 $_SESSION['user'] = $activeUser;
             }
         } else {

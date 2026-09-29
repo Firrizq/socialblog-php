@@ -5,10 +5,31 @@ if (class_exists('Controller')) {
 }
 
 $accounts = $_SESSION['accounts'] ?? [];
-$activeUserId = (int)($_SESSION['active_user_id'] ?? ($_SESSION['user_id'] ?? 0));
-$activeUsername = $_SESSION['username'] ?? '';
-$activeName = $_SESSION['name'] ?? $activeUsername;
-$activePicture = $_SESSION['profile_picture'] ?? null;
+$activeUserId = $_SESSION['active_user_id'] ?? ($_SESSION['user_id'] ?? null);
+
+$activeUser = null;
+if (!empty($activeUserId) && !empty($accounts)) {
+    $activeUser = $accounts[$activeUserId] 
+        ?? $accounts[(string)$activeUserId] 
+        ?? $accounts[(int)$activeUserId] 
+        ?? null;
+}
+
+if (!$activeUser && !empty($_SESSION['user_id'])) {
+    $activeUser = [
+        'id' => $_SESSION['user_id'],
+        'username' => $_SESSION['username'] ?? '',
+        'name' => $_SESSION['name'] ?? $_SESSION['username'] ?? '',
+        'avatar' => $_SESSION['avatar'] ?? $_SESSION['profile_picture'] ?? null,
+        'profile_picture' => $_SESSION['profile_picture'] ?? $_SESSION['avatar'] ?? null
+    ];
+}
+
+$activeUserId = (int)($activeUser['id'] ?? 0);
+$activeUsername = $activeUser['username'] ?? '';
+$activeName = $activeUser['name'] ?? $activeUsername;
+$activeAvatar = !empty($activeUser['avatar']) ? $activeUser['avatar'] : (!empty($activeUser['profile_picture']) ? $activeUser['profile_picture'] : null);
+$activeInitial = strtoupper(substr($activeUsername ?: 'U', 0, 1));
 
 $currentUrl = isset($_GET['url']) ? rtrim($_GET['url'], '/') : '';
 if (empty($currentUrl) && isset($_SERVER['REQUEST_URI'])) {
@@ -70,16 +91,19 @@ $unreadCount = $unreadNotifCount ?? ((isset($_SESSION['user_id'])) ? (new Notifi
                         $isCurrentActive = ((int)$acc['id'] === $activeUserId);
                         $accName = $acc['name'] ?? $acc['username'];
                         $accUsername = $acc['username'] ?? '';
-                        $accPic = $acc['profile_picture'] ?? null;
+                        $accAvatar = !empty($acc['avatar']) ? $acc['avatar'] : (!empty($acc['profile_picture']) ? $acc['profile_picture'] : null);
+                        $accInitial = strtoupper(substr($accUsername ?: 'U', 0, 1));
                     ?>
                     <?php if ($isCurrentActive): ?>
                         <!-- Active Account: Highlighted with checkmark -->
                         <div class="flex items-center gap-3 px-3.5 py-2.5 bg-surface-container/60 cursor-default select-none">
-                            <div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center font-bold text-on-primary overflow-hidden shrink-0 ring-2 ring-primary/40">
-                                <?php if (!empty($accPic)): ?>
-                                    <img src="<?= BASEURL ?><?= htmlspecialchars($accPic) ?>" alt="<?= htmlspecialchars($accUsername) ?>" class="w-full h-full object-cover">
+                            <div class="w-9 h-9 rounded-full overflow-hidden shrink-0 ring-2 ring-primary/40 flex items-center justify-center">
+                                <?php if (!empty($accAvatar)): ?>
+                                    <img src="<?= BASEURL ?><?= htmlspecialchars($accAvatar) ?>" alt="<?= htmlspecialchars($accUsername) ?>" class="w-full h-full object-cover">
                                 <?php else: ?>
-                                    <?= strtoupper(substr($accUsername, 0, 1)) ?>
+                                    <div class="w-full h-full rounded-full bg-slate-700 text-white flex items-center justify-center font-bold uppercase text-xs">
+                                        <?= htmlspecialchars($accInitial) ?>
+                                    </div>
                                 <?php endif; ?>
                             </div>
                             <div class="flex flex-col min-w-0 flex-1">
@@ -92,11 +116,13 @@ $unreadCount = $unreadNotifCount ?? ((isset($_SESSION['user_id'])) ? (new Notifi
                         <!-- Other Logged-in Account: Click to switch -->
                         <a href="<?= BASEURL ?>/auth/switchAccount/<?= (int)$acc['id'] ?>" 
                            class="flex items-center gap-3 px-3.5 py-2.5 hover:bg-surface-container transition-colors group">
-                            <div class="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-on-surface overflow-hidden shrink-0 group-hover:ring-2 group-hover:ring-primary/40 transition-all">
-                                <?php if (!empty($accPic)): ?>
-                                    <img src="<?= BASEURL ?><?= htmlspecialchars($accPic) ?>" alt="<?= htmlspecialchars($accUsername) ?>" class="w-full h-full object-cover">
+                            <div class="w-9 h-9 rounded-full overflow-hidden shrink-0 group-hover:ring-2 group-hover:ring-primary/40 transition-all flex items-center justify-center">
+                                <?php if (!empty($accAvatar)): ?>
+                                    <img src="<?= BASEURL ?><?= htmlspecialchars($accAvatar) ?>" alt="<?= htmlspecialchars($accUsername) ?>" class="w-full h-full object-cover">
                                 <?php else: ?>
-                                    <?= strtoupper(substr($accUsername, 0, 1)) ?>
+                                    <div class="w-full h-full rounded-full bg-slate-700 text-white flex items-center justify-center font-bold uppercase text-xs">
+                                        <?= htmlspecialchars($accInitial) ?>
+                                    </div>
                                 <?php endif; ?>
                             </div>
                             <div class="flex flex-col min-w-0 flex-1">
@@ -133,11 +159,13 @@ $unreadCount = $unreadNotifCount ?? ((isset($_SESSION['user_id'])) ? (new Notifi
                 aria-haspopup="true"
                 aria-expanded="false"
                 class="w-full flex items-center gap-space-sm p-2 rounded-2xl bg-surface-container border border-outline-variant/20 hover:border-primary/40 hover:bg-surface-container-high transition-all text-left group cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary/40">
-            <div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center font-bold text-on-primary overflow-hidden shrink-0 shadow-sm">
-                <?php if (!empty($activePicture)): ?>
-                    <img src="<?= BASEURL ?><?= htmlspecialchars($activePicture) ?>" alt="<?= htmlspecialchars($activeUsername) ?>" class="w-full h-full object-cover">
+            <div class="w-9 h-9 rounded-full overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
+                <?php if (!empty($activeAvatar)): ?>
+                    <img src="<?= BASEURL ?><?= htmlspecialchars($activeAvatar) ?>" alt="<?= htmlspecialchars($activeUsername) ?>" class="w-full h-full object-cover">
                 <?php else: ?>
-                    <?= strtoupper(substr($activeUsername, 0, 1)) ?>
+                    <div class="w-full h-full rounded-full bg-slate-700 text-white flex items-center justify-center font-bold uppercase text-xs">
+                        <?= htmlspecialchars($activeInitial) ?>
+                    </div>
                 <?php endif; ?>
             </div>
             <div class="flex flex-col min-w-0 flex-1">

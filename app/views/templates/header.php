@@ -19,6 +19,25 @@ if (!function_exists('timeAgo')) {
 
 require_once dirname(__DIR__, 2) . '/models/Notification_model.php';
 $unreadNotifCount = (isset($_SESSION['user_id'])) ? (new Notification_model())->getUnreadCount((int)$_SESSION['user_id']) : 0;
+
+// Active User Extraction for multi-account support
+$activeUserId = $_SESSION['active_user_id'] ?? ($_SESSION['user_id'] ?? null);
+$activeUser = null;
+if (!empty($activeUserId) && !empty($_SESSION['accounts'])) {
+    $activeUser = $_SESSION['accounts'][$activeUserId] 
+        ?? $_SESSION['accounts'][(string)$activeUserId] 
+        ?? $_SESSION['accounts'][(int)$activeUserId] 
+        ?? null;
+}
+if (!$activeUser && !empty($_SESSION['user_id'])) {
+    $activeUser = [
+        'id' => $_SESSION['user_id'],
+        'name' => $_SESSION['name'] ?? $_SESSION['username'] ?? 'User',
+        'username' => $_SESSION['username'] ?? 'user',
+        'avatar' => $_SESSION['avatar'] ?? $_SESSION['profile_picture'] ?? null,
+        'profile_picture' => $_SESSION['profile_picture'] ?? $_SESSION['avatar'] ?? null
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html class="dark" lang="en">
@@ -162,7 +181,7 @@ $unreadNotifCount = (isset($_SESSION['user_id'])) ? (new Notification_model())->
                 </div>
             </div>
 
-            <?php if (isset($_SESSION['user_id'])): ?>
+            <?php if (!empty($activeUser['id'])): ?>
                 <!-- Write Button: Editorial Style (Inverted Contrast) -->
                 <a class="hidden sm:inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-on-surface text-surface font-title-md text-sm hover:opacity-80 transition-opacity shadow-sm ml-1" href="<?= BASEURL ?>/post/create">
                     <span class="material-symbols-outlined text-[18px]">edit_square</span><span>Write</span>
@@ -171,11 +190,17 @@ $unreadNotifCount = (isset($_SESSION['user_id'])) ? (new Notification_model())->
                 <div class="h-5 w-px bg-outline-variant/60 mx-1 hidden sm:block"></div>
 
                 <!-- Profile Avatar -->
+                <?php 
+                    $userAvatar = !empty($activeUser['avatar']) ? $activeUser['avatar'] : (!empty($activeUser['profile_picture']) ? $activeUser['profile_picture'] : null);
+                    $initial = strtoupper(substr($activeUser['username'] ?? 'U', 0, 1));
+                ?>
                 <a href="<?= BASEURL ?>/profile" class="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center bg-surface-container-high border border-outline-variant/50 font-bold text-xs text-on-surface shrink-0 hover:ring-2 hover:ring-primary transition-all">
-                    <?php if (!empty($_SESSION['profile_picture'])): ?>
-                        <img src="<?= BASEURL ?><?= htmlspecialchars($_SESSION['profile_picture']) ?>" alt="<?= htmlspecialchars($_SESSION['username']) ?>" class="w-full h-full object-cover">
+                    <?php if (!empty($userAvatar)): ?>
+                        <img src="<?= BASEURL ?><?= htmlspecialchars($userAvatar) ?>" alt="<?= htmlspecialchars($activeUser['username'] ?? '') ?>" class="w-full h-full object-cover">
                     <?php else: ?>
-                        <?= strtoupper(substr($_SESSION['username'], 0, 1)) ?>
+                        <div class="w-full h-full rounded-full bg-slate-700 text-white flex items-center justify-center font-bold uppercase text-xs">
+                            <?= htmlspecialchars($initial) ?>
+                        </div>
                     <?php endif; ?>
                 </a>
                 

@@ -231,6 +231,12 @@ class Profile extends Controller
 
         if (isset($updateData['profile_picture'])) {
             $_SESSION['profile_picture'] = $updateData['profile_picture'];
+            $_SESSION['avatar'] = $updateData['profile_picture'];
+            $uid = (int)$_SESSION['user_id'];
+            if (isset($_SESSION['accounts'][$uid])) {
+                $_SESSION['accounts'][$uid]['profile_picture'] = $updateData['profile_picture'];
+                $_SESSION['accounts'][$uid]['avatar'] = $updateData['profile_picture'];
+            }
         }
 
         $this->userModel->updateProfile((int)$_SESSION['user_id'], $updateData);
@@ -259,7 +265,12 @@ class Profile extends Controller
         }
 
         $this->userModel->removeAvatar((int)$_SESSION['user_id']);
-        unset($_SESSION['profile_picture']);
+        unset($_SESSION['profile_picture'], $_SESSION['avatar']);
+        $uid = (int)$_SESSION['user_id'];
+        if (isset($_SESSION['accounts'][$uid])) {
+            $_SESSION['accounts'][$uid]['profile_picture'] = null;
+            $_SESSION['accounts'][$uid]['avatar'] = null;
+        }
 
         header('Location: ' . BASEURL . '/profile/edit');
         exit;
