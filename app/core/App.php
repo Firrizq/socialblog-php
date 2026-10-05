@@ -25,7 +25,7 @@ class App
     {
         if (!headers_sent()) {
             header("Cross-Origin-Opener-Policy: same-origin");
-            header("Cross-Origin-Embedder-Policy: require-corp");
+            header("Cross-Origin-Embedder-Policy: credentialless");
         }
 
         $url = $this->parseURL();

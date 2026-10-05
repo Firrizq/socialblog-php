@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 // Enable Cross-Origin Isolation for FFmpeg.wasm / SharedArrayBuffer
 header("Cross-Origin-Opener-Policy: same-origin");
-header("Cross-Origin-Embedder-Policy: require-corp");
+header("Cross-Origin-Embedder-Policy: credentialless");
 
 /**
  * Front Controller
