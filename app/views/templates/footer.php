@@ -97,6 +97,10 @@
     <!-- Quill.js JS Script diletakkan di footer agar editor bisa jalan -->
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 
+    <!-- FFmpeg.wasm & Client-Side Video Compressor -->
+    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+    <script src="<?= BASEURL ?>/js/video-compressor.js"></script>
+
     <!-- AJAX Interactions Script: Likes, Bookmarks, and Follows -->
     <script>
     (function() {

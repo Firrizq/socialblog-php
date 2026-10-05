@@ -22,8 +22,10 @@
         <div class="flex-1 flex items-center justify-end gap-2 sm:gap-3">
             <span id="word-count-badge" class="hidden md:flex items-center text-xs font-title-md text-on-surface-variant mr-3"><span id="draft-status" class="mr-2 text-primary font-bold"></span><span id="word-count-text">0 words</span></span>
             <button type="button" onclick="showToast('Saved to Drafts!', 'success');" class="hidden sm:block px-4 py-2 rounded-full text-on-surface-variant font-title-md text-sm hover:bg-surface-container-low transition-colors">Save Draft</button>
-            <button type="button" id="preview-btn" class="px-4 py-2 rounded-full bg-surface-container-lowest border border-outline-variant/50 text-on-surface font-title-md text-sm hover:bg-surface-container-low transition-colors shadow-sm">Preview</button>
-            <button type="submit" form="story-form" class="px-5 py-2 rounded-full bg-primary text-on-primary font-title-md text-sm hover:opacity-90 transition-opacity shadow-sm font-bold">Save Changes</button>
+            <button type="submit" form="story-form" id="publish-btn" class="px-5 py-2 rounded-full bg-primary text-on-primary font-title-md text-sm hover:opacity-90 transition-opacity shadow-sm font-bold flex items-center gap-2">
+                <span id="publish-btn-spinner" class="material-symbols-outlined text-[18px] animate-spin hidden">sync</span>
+                <span id="publish-btn-text">Save Changes</span>
+            </button>
         </div>
     </div>
 
@@ -52,7 +54,7 @@
             $existingUrl = !empty($existingCover) ? (str_starts_with($existingCover, 'http') ? $existingCover : BASEURL . htmlspecialchars($existingCover)) : '';
             ?>
             <!-- Dedicated Cover Media Uploader -->
-            <div id="cover-image-container" class="mb-10 w-full flex flex-col items-start" id="cover-dropzone">
+            <div id="cover-image-container" class="mb-10 w-full flex flex-col items-start">
                 <input type="file" name="images[]" id="cover-image-input" accept="image/png, image/jpeg, image/gif, video/mp4, video/webm, video/quicktime, video/ogg" class="hidden">
                 <!-- Flag to tell backend if the existing cover was kept or removed -->
                 <input type="hidden" name="existing_cover" id="existing_cover" value="<?= htmlspecialchars($existingCover) ?>">
@@ -67,6 +69,29 @@
                     <button type="button" id="remove-cover-btn" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-surface/80 backdrop-blur text-on-surface flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-surface border border-outline-variant/30 shadow-sm z-10" title="Remove Media">
                         <span class="material-symbols-outlined text-[20px]">delete</span>
                     </button>
+                </div>
+
+                <!-- Live Video Compression Progress Card -->
+                <div id="cover-compression-card" class="hidden w-full mt-3 p-4 rounded-xl bg-surface-container-high border border-outline-variant/40 shadow-sm transition-all">
+                    <div class="flex items-center justify-between gap-3 mb-2">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <span id="compress-icon" class="material-symbols-outlined text-primary text-[22px] animate-spin shrink-0">sync</span>
+                            <div class="truncate">
+                                <div id="compress-title" class="text-sm font-semibold text-on-surface">Optimizing video for web...</div>
+                                <div id="compress-subtitle" class="text-xs text-on-surface-variant truncate">Compressing to 720p H.264 · 1 Mbps</div>
+                            </div>
+                        </div>
+                        <span id="compress-percent-badge" class="text-sm font-bold text-primary font-mono shrink-0">0%</span>
+                    </div>
+                    <div class="w-full bg-surface-container-highest rounded-full h-2 overflow-hidden">
+                        <div id="compress-progress-bar" class="bg-primary h-2 rounded-full transition-all duration-300" style="width: 0%;"></div>
+                    </div>
+                    <div id="compress-result" class="hidden mt-2 pt-2 border-t border-outline-variant/20 text-xs flex items-center justify-between text-on-surface-variant">
+                        <span id="compress-stats"></span>
+                        <span class="text-primary font-medium flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[16px]">check_circle</span> Ready to save
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -132,8 +157,11 @@
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     
     /* Subtitle rendering inside content */
-    .story-subtitle { font-size: 22px; color: rgb(var(--color-on-surface-variant)); margin-bottom: 24px; line-height: 1.6; }
 </style>
+
+<!-- FFmpeg.wasm for Client-Side Video Compression (Single-Threaded to avoid COOP/COEP isolation) -->
+<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+<script src="<?= BASEURL ?>/js/video-compressor.js"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
@@ -161,9 +189,27 @@
                 return;
             }
 
+            let fileToUpload = file;
+            const isVideo = (file.type && file.type.startsWith('video/')) || /\.(mp4|webm|ogg|mov|mkv)$/i.test(file.name || '');
+
+            if (isVideo && window.VideoCompressor) {
+                try {
+                    showToast('Compressing video for story...', 'info');
+                    setCompressingState(true, 0);
+                    fileToUpload = await window.VideoCompressor.compress(file, {
+                        onProgress: (pct) => setCompressingState(true, pct),
+                        onStatus: (status) => console.log('[Editor Video]', status)
+                    });
+                } catch (compressErr) {
+                    console.warn('Video compression error, using original file:', compressErr);
+                } finally {
+                    setCompressingState(false);
+                }
+            }
+
             const formData = new FormData();
-            formData.append('image', file);
-            formData.append('media', file);
+            formData.append('image', fileToUpload);
+            formData.append('media', fileToUpload);
 
             try {
                 const res = await fetch(`${BASE_URL}/upload/image`, {
@@ -181,7 +227,7 @@
 
                 if (res.ok && data.success && data.url) {
                     const range = quill.getSelection(true);
-                    quill.insertEmbed(range.index, 'image', BASE_URL + data.url);
+                    quill.insertEmbed(range.index, isVideo ? 'video' : 'image', BASE_URL + data.url);
                     quill.setSelection(range.index + 1);
                     showToast('Media inserted into story!', 'success');
                 } else {
@@ -190,13 +236,15 @@
             } catch (err) {
                 console.error('Media upload error:', err);
                 showToast(err.message || 'Failed to upload media', 'error');
+            } finally {
+                setCompressingState(false);
             }
         }
 
-        function imageHandler() {
+        function mediaHandler() {
             const input = document.createElement('input');
             input.setAttribute('type', 'file');
-            input.setAttribute('accept', 'image/*');
+            input.setAttribute('accept', 'image/png, image/jpeg, image/gif, video/mp4, video/webm, video/quicktime, video/ogg');
             input.click();
 
             input.onchange = async () => {
@@ -220,7 +268,8 @@
             handlers: {
                 'undo': function() { this.quill.history.undo(); },
                 'redo': function() { this.quill.history.redo(); },
-                'image': imageHandler
+                'image': mediaHandler,
+                'video': mediaHandler
             }
         };
 
@@ -275,6 +324,12 @@
 
         // Form Submit Logic (Injecting subtitle back in)
         document.getElementById('story-form').addEventListener('submit', function(e) {
+            if (isCompressing) {
+                e.preventDefault();
+                showToast('Please wait for video compression to finish before saving.', 'error');
+                return;
+            }
+
             let html = quill.root.innerHTML;
             const subtitle = document.getElementById('subtitle-input').value.trim();
             
@@ -291,13 +346,6 @@
             document.body.style.overflow = 'auto';
         });
 
-        // Cover Image Upload Logic
-        const coverInput = document.getElementById('cover-image-input');
-        const addCoverBtn = document.getElementById('add-cover-btn');
-        const coverPreviewWrapper = document.getElementById('cover-preview-wrapper');
-        const coverPreviewImg = document.getElementById('cover-preview-img');
-        const removeCoverBtn = document.getElementById('remove-cover-btn');
-
         // Media Upload & Dynamic Preview Logic
         const coverInput = document.getElementById('cover-image-input');
         const addCoverBtn = document.getElementById('add-cover-btn');
@@ -306,8 +354,40 @@
         const coverPreviewVideo = document.getElementById('cover-preview-video');
         const removeCoverBtn = document.getElementById('remove-cover-btn');
 
+        // Live Compression UI Elements
+        const compCard = document.getElementById('cover-compression-card');
+        const compIcon = document.getElementById('compress-icon');
+        const compTitle = document.getElementById('compress-title');
+        const compSubtitle = document.getElementById('compress-subtitle');
+        const compPct = document.getElementById('compress-percent-badge');
+        const compBar = document.getElementById('compress-progress-bar');
+        const compResult = document.getElementById('compress-result');
+        const compStats = document.getElementById('compress-stats');
+
+        const publishBtn = document.getElementById('publish-btn');
+        const publishSpinner = document.getElementById('publish-btn-spinner');
+        const publishText = document.getElementById('publish-btn-text');
+
         let currentObjectUrl = null;
         let isCurrentMediaVideo = <?= $isExistingVideo ? 'true' : 'false' ?>;
+        let isCompressing = false;
+
+        function setCompressingState(compressing, pct = 0) {
+            isCompressing = compressing;
+            if (publishBtn) {
+                if (compressing) {
+                    publishBtn.disabled = true;
+                    publishBtn.classList.add('opacity-75', 'cursor-not-allowed');
+                    if (publishSpinner) publishSpinner.classList.remove('hidden');
+                    if (publishText) publishText.textContent = `Compressing video... ${pct}%`;
+                } else {
+                    publishBtn.disabled = false;
+                    publishBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+                    if (publishSpinner) publishSpinner.classList.add('hidden');
+                    if (publishText) publishText.textContent = 'Save Changes';
+                }
+            }
+        }
 
         function updateMediaPreview(file) {
             if (!file) return;
@@ -332,7 +412,7 @@
             }
 
             currentObjectUrl = URL.createObjectURL(file);
-            isCurrentMediaVideo = file.type.startsWith('video/') || /\.(mp4|webm|ogg|mov)$/i.test(file.name);
+            isCurrentMediaVideo = (file.type && file.type.startsWith('video/')) || /\.(mp4|webm|ogg|mov)$/i.test(file.name || '');
 
             if (isCurrentMediaVideo) {
                 coverPreviewImg.src = '';
@@ -352,11 +432,108 @@
             addCoverBtn.classList.add('hidden');
         }
 
+        async function handleCoverMediaSelection(file) {
+            if (!file) return;
+
+            updateMediaPreview(file);
+
+            const isVideo = (file.type && file.type.startsWith('video/')) || /\.(mp4|webm|ogg|mov|mkv)$/i.test(file.name || '');
+            if (!isVideo) {
+                if (compCard) compCard.classList.add('hidden');
+                return;
+            }
+
+            if (compCard) {
+                compCard.classList.remove('hidden');
+                compResult.classList.add('hidden');
+                compIcon.classList.add('animate-spin');
+                compIcon.textContent = 'sync';
+                compIcon.classList.remove('text-green-500', 'text-amber-500');
+                compIcon.classList.add('text-primary');
+                compTitle.textContent = 'Optimizing video for web...';
+                const origSizeStr = window.VideoCompressor ? window.VideoCompressor.formatBytes(file.size) : `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
+                compSubtitle.textContent = `Original: ${origSizeStr} · Rescaling to 720p HD`;
+                compPct.textContent = '0%';
+                compBar.style.width = '0%';
+            }
+
+            setCompressingState(true, 0);
+
+            try {
+                if (!window.VideoCompressor) {
+                    throw new Error('Video compressor library not loaded');
+                }
+
+                const compressedFile = await window.VideoCompressor.compress(file, {
+                    onProgress: (pct) => {
+                        setCompressingState(true, pct);
+                        if (compPct) compPct.textContent = `${pct}%`;
+                        if (compBar) compBar.style.width = `${pct}%`;
+                    },
+                    onStatus: (status) => {
+                        if (compSubtitle && status) compSubtitle.textContent = status;
+                    }
+                });
+
+                setCompressingState(false);
+
+                if (compressedFile && compressedFile !== file) {
+                    try {
+                        const dt = new DataTransfer();
+                        dt.items.add(compressedFile);
+                        coverInput.files = dt.files;
+                    } catch (dtErr) {
+                        console.warn('DataTransfer input replacement error:', dtErr);
+                    }
+
+                    updateMediaPreview(compressedFile);
+
+                    const origMb = window.VideoCompressor.formatBytes(file.size);
+                    const compMb = window.VideoCompressor.formatBytes(compressedFile.size);
+                    const savedPct = Math.round((1 - compressedFile.size / file.size) * 100);
+
+                    if (compCard) {
+                        compIcon.classList.remove('animate-spin', 'text-primary');
+                        compIcon.classList.add('text-green-500');
+                        compIcon.textContent = 'check_circle';
+                        compTitle.textContent = 'Video compression complete!';
+                        compSubtitle.textContent = `Optimized for fast playback and instant saving`;
+                        compPct.textContent = '100%';
+                        compBar.style.width = '100%';
+                        compResult.classList.remove('hidden');
+                        compStats.textContent = `${origMb} → ${compMb} (${savedPct}% saved)`;
+                    }
+
+                    showToast(`Video compressed: ${origMb} → ${compMb} (${savedPct}% saved)!`, 'success');
+                } else {
+                    if (compCard) {
+                        compIcon.classList.remove('animate-spin');
+                        compIcon.textContent = 'check_circle';
+                        compTitle.textContent = 'Video already optimal';
+                        compSubtitle.textContent = `Using original file`;
+                        compPct.textContent = '100%';
+                        compBar.style.width = '100%';
+                    }
+                }
+            } catch (err) {
+                console.error('Video compression error:', err);
+                setCompressingState(false);
+                if (compCard) {
+                    compIcon.classList.remove('animate-spin', 'text-primary');
+                    compIcon.classList.add('text-amber-500');
+                    compIcon.textContent = 'info';
+                    compTitle.textContent = 'Compression skipped';
+                    compSubtitle.textContent = 'Using original file without compression';
+                }
+                showToast('Compression skipped. Using original video.', 'warning');
+            }
+        }
+
         if(addCoverBtn && coverInput) {
             addCoverBtn.addEventListener('click', () => coverInput.click());
             coverInput.addEventListener('change', function() {
                 if(this.files && this.files[0]) {
-                    updateMediaPreview(this.files[0]);
+                    handleCoverMediaSelection(this.files[0]);
                 }
             });
             removeCoverBtn.addEventListener('click', () => {
@@ -376,6 +553,9 @@
                 coverPreviewWrapper.classList.add('hidden');
                 addCoverBtn.classList.remove('hidden');
                 addCoverBtn.classList.add('flex');
+
+                if (compCard) compCard.classList.add('hidden');
+                setCompressingState(false);
             });
         }
 
@@ -487,10 +667,9 @@
             dropZone.addEventListener('drop', (e) => {
                 let dt = e.dataTransfer;
                 let files = dt.files;
-                if(files && files[0] && files[0].type.startsWith('image/')) {
+                if(files && files[0] && (files[0].type.startsWith('image/') || files[0].type.startsWith('video/'))) {
                     coverInput.files = files;
-                    const event = new Event('change');
-                    coverInput.dispatchEvent(event);
+                    handleCoverMediaSelection(files[0]);
                 }
             }, false);
         }

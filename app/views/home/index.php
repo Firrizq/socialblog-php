@@ -417,9 +417,36 @@ async function uploadNoteImage(file) {
         return;
     }
 
+    let fileToUpload = file;
+    const isVideo = file.type.startsWith('video/') || /\.(mp4|webm|ogg|mov)$/i.test(file.name);
+    if (isVideo && window.VideoCompressor) {
+        const postBtn = document.querySelector('#noteModal button[type="submit"][value="publish"]') || document.querySelector('#noteModal button[type="submit"]');
+        const origBtnText = postBtn ? postBtn.textContent : 'Post';
+        try {
+            if (postBtn) {
+                postBtn.disabled = true;
+                postBtn.classList.add('opacity-75');
+            }
+            showToast('Compressing video on device...', 'info');
+            fileToUpload = await window.VideoCompressor.compress(file, {
+                onProgress: (pct) => {
+                    if (postBtn) postBtn.textContent = `Compressing ${pct}%`;
+                }
+            });
+        } catch (err) {
+            console.warn('Note video compression failed, using original:', err);
+        } finally {
+            if (postBtn) {
+                postBtn.disabled = false;
+                postBtn.classList.remove('opacity-75');
+                postBtn.textContent = origBtnText;
+            }
+        }
+    }
+
     const formData = new FormData();
-    formData.append('media', file);
-    formData.append('image', file);
+    formData.append('media', fileToUpload);
+    formData.append('image', fileToUpload);
 
     try {
         const res = await fetch(`${BASE_URL}/upload/image`, { method: 'POST', body: formData });
