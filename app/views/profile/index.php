@@ -269,8 +269,22 @@ $data['user'] = $user;
                                             }
                                         ?>
                                         <?php if (!empty($origThumb)): ?>
-                                            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden shrink-0 bg-surface-container-high border border-outline-variant/30">
-                                                <img src="<?= str_starts_with($origThumb, 'http') ? $origThumb : BASEURL . (str_starts_with($origThumb, '/') ? $origThumb : '/' . $origThumb) ?>" alt="Attachment" class="w-full h-full object-cover">
+                                            <?php
+                                                $origThumbSrc = (str_starts_with($origThumb, 'http://') || str_starts_with($origThumb, 'https://'))
+                                                    ? $origThumb
+                                                    : ((str_starts_with($origThumb, '/uploads/') || str_starts_with($origThumb, 'uploads/'))
+                                                        ? (BASEURL . '/' . ltrim($origThumb, '/'))
+                                                        : (BASEURL . (str_starts_with($origThumb, '/') ? $origThumb : '/uploads/' . ltrim($origThumb, '/'))));
+                                                $thumbExt = strtolower(pathinfo((string)$origThumb, PATHINFO_EXTENSION));
+                                                $videoExts = ['mp4', 'webm', 'ogg', 'mov'];
+                                                $isThumbVideo = in_array($thumbExt, $videoExts, true);
+                                            ?>
+                                            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden shrink-0 bg-surface-container-high border border-outline-variant/30 flex items-center justify-center bg-black">
+                                                <?php if ($isThumbVideo): ?>
+                                                    <video src="<?= htmlspecialchars($origThumbSrc) ?>" class="w-full h-full object-cover" muted playsinline></video>
+                                                <?php else: ?>
+                                                    <img src="<?= htmlspecialchars($origThumbSrc) ?>" alt="Attachment" class="w-full h-full object-cover">
+                                                <?php endif; ?>
                                             </div>
                                         <?php endif; ?>
                                     </div>
@@ -321,11 +335,20 @@ $data['user'] = $user;
                                 $firstImg = !empty($mediaImgs) ? $mediaImgs[0] : '';
                                 if (empty($firstImg)) continue;
 
-                                $fullFirstImg = str_starts_with($firstImg, 'http') ? $firstImg : BASEURL . (str_starts_with($firstImg, '/') ? $firstImg : '/' . $firstImg);
+                                $fullFirstImg = (str_starts_with($firstImg, 'http://') || str_starts_with($firstImg, 'https://'))
+                                    ? $firstImg
+                                    : ((str_starts_with($firstImg, '/uploads/') || str_starts_with($firstImg, 'uploads/'))
+                                        ? (BASEURL . '/' . ltrim($firstImg, '/'))
+                                        : (BASEURL . (str_starts_with($firstImg, '/') ? $firstImg : '/uploads/' . ltrim($firstImg, '/'))));
+                                $firstExt = strtolower(pathinfo((string)$firstImg, PATHINFO_EXTENSION));
+                                $videoExts = ['mp4', 'webm', 'ogg', 'mov'];
+                                $isMediaVideo = in_array($firstExt, $videoExts, true);
+
                                 $fullImgs = array_map(function($img) {
                                     $img = trim($img);
-                                    if (str_starts_with($img, 'http')) return $img;
-                                    return BASEURL . (str_starts_with($img, '/') ? $img : '/' . $img);
+                                    if (str_starts_with($img, 'http://') || str_starts_with($img, 'https://')) return $img;
+                                    if (str_starts_with($img, '/uploads/') || str_starts_with($img, 'uploads/')) return BASEURL . '/' . ltrim($img, '/');
+                                    return BASEURL . (str_starts_with($img, '/') ? $img : '/uploads/' . ltrim($img, '/'));
                                 }, $mediaImgs);
 
                                 $imgCount = count($fullImgs);
@@ -335,8 +358,15 @@ $data['user'] = $user;
                                 $postDetailUrl = BASEURL . '/' . urlencode($post['username'] ?? $profileUsername) . '/' . $mediaPostType . '/' . $mediaPostUid;
                             ?>
                             <div class="group relative aspect-square bg-surface-container-high rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-md transition-all">
-                                <a href="<?= $postDetailUrl ?>" class="block w-full h-full">
-                                    <img src="<?= $fullFirstImg ?>" alt="<?= htmlspecialchars($post['title'] ?? 'Media') ?>" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy">
+                                <a href="<?= $postDetailUrl ?>" class="block w-full h-full relative">
+                                    <?php if ($isMediaVideo): ?>
+                                        <video src="<?= htmlspecialchars($fullFirstImg) ?>" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" muted playsinline preload="metadata"></video>
+                                        <div class="absolute top-2 right-2 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-black/60 backdrop-blur-sm text-white flex items-center justify-center shadow-md pointer-events-none">
+                                            <span class="material-symbols-outlined text-[14px] sm:text-[16px]">videocam</span>
+                                        </div>
+                                    <?php else: ?>
+                                        <img src="<?= htmlspecialchars($fullFirstImg) ?>" alt="<?= htmlspecialchars($post['title'] ?? 'Media') ?>" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy">
+                                    <?php endif; ?>
                                     
                                     <!-- Multi-image Indicator -->
                                     <?php if ($imgCount > 1): ?>
@@ -480,10 +510,34 @@ $data['user'] = $user;
                                         if (str_starts_with($cover, BASEURL)) $cover = substr($cover, strlen(BASEURL));
                                     }
                                     ?>
-                                    <?php if($cover): ?>
-                                        <div class="relative w-full aspect-[16/9] sm:aspect-video border-b border-outline-variant/30 overflow-hidden bg-surface-container-high">
-                                            <img src="<?= BASEURL ?><?= htmlspecialchars($cover) ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" alt="Story Cover">
-                                        </div>
+                                    <?php if(!empty($cover)): ?>
+                                        <?php
+                                            $ext = strtolower(pathinfo((string)$cover, PATHINFO_EXTENSION));
+                                            $videoExts = ['mp4', 'webm', 'ogg', 'mov'];
+                                            $isVideo = in_array($ext, $videoExts, true);
+                                            $mediaSrc = (str_starts_with($cover, 'http://') || str_starts_with($cover, 'https://'))
+                                                ? $cover
+                                                : ((str_starts_with($cover, '/uploads/') || str_starts_with($cover, 'uploads/'))
+                                                    ? BASEURL . '/' . ltrim($cover, '/')
+                                                    : BASEURL . (str_starts_with($cover, '/') ? $cover : '/uploads/' . ltrim($cover, '/')));
+                                            $mimeType = match($ext) {
+                                                'webm' => 'video/webm',
+                                                'ogg' => 'video/ogg',
+                                                default => 'video/mp4'
+                                            };
+                                        ?>
+                                        <?php if($isVideo): ?>
+                                            <div class="relative w-full border-b border-outline-variant/30 overflow-hidden bg-black" onclick="event.stopPropagation();">
+                                                <video controls class="w-full rounded-xl max-h-96 object-contain bg-black">
+                                                    <source src="<?= htmlspecialchars($mediaSrc) ?>" type="<?= $mimeType ?>">
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="relative w-full aspect-[16/9] sm:aspect-video border-b border-outline-variant/30 overflow-hidden bg-surface-container-high">
+                                                <img src="<?= htmlspecialchars($mediaSrc) ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" alt="Story Cover">
+                                            </div>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                     <div class="p-3.5 sm:p-4 flex flex-col gap-1.5 bg-surface-container-lowest group-hover:bg-surface-container-low/30 transition-colors">
                                         <?php if(!empty($post['title'])): ?>
@@ -525,7 +579,27 @@ $data['user'] = $user;
                                     ?>
                                     <div class="mt-1 mb-1 grid <?= $imgCount === 1 ? 'grid-cols-1' : 'grid-cols-2' ?> gap-1 sm:gap-1.5 rounded-2xl overflow-hidden border border-outline-variant/30 relative z-10">
                                         <?php foreach($imgs as $idx => $img): ?>
-                                            <img src="<?= BASEURL ?><?= htmlspecialchars(trim($img)) ?>" class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity <?= ($imgCount === 3 && $idx === 0) ? 'row-span-2' : '' ?> <?= $imgCount > 1 ? 'aspect-[4/3] sm:aspect-video' : 'max-h-[500px]' ?>" alt="Attachment" onclick="event.stopPropagation(); window.openLightboxGallery && openLightboxGallery(<?= $imgJson ?>, <?= $idx ?>, '<?= $postUrl ?>')">
+                                            <?php 
+                                            $noteFile = trim((string)$img);
+                                            $noteExt = strtolower(pathinfo($noteFile, PATHINFO_EXTENSION));
+                                            $videoExts = ['mp4', 'webm', 'ogg', 'mov'];
+                                            $noteIsVideo = in_array($noteExt, $videoExts, true);
+                                            $noteSrc = (str_starts_with($noteFile, 'http://') || str_starts_with($noteFile, 'https://')) 
+                                                ? $noteFile 
+                                                : ((str_starts_with($noteFile, '/uploads/') || str_starts_with($noteFile, 'uploads/')) 
+                                                    ? (BASEURL . '/' . ltrim($noteFile, '/')) 
+                                                    : (BASEURL . (str_starts_with($noteFile, '/') ? $noteFile : '/uploads/' . ltrim($noteFile, '/'))));
+                                            ?>
+                                            <?php if($noteIsVideo): ?>
+                                                <div class="w-full bg-black rounded-xl overflow-hidden <?= ($imgCount === 3 && $idx === 0) ? 'row-span-2' : '' ?>" onclick="event.stopPropagation();">
+                                                    <video controls class="w-full rounded-xl max-h-96 object-contain bg-black">
+                                                        <source src="<?= htmlspecialchars($noteSrc) ?>" type="video/<?= $noteExt === 'webm' ? 'webm' : ($noteExt === 'ogg' ? 'ogg' : 'mp4') ?>">
+                                                        Your browser does not support the video tag.
+                                                    </video>
+                                                </div>
+                                            <?php else: ?>
+                                                <img src="<?= htmlspecialchars($noteSrc) ?>" class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity <?= ($imgCount === 3 && $idx === 0) ? 'row-span-2' : '' ?> <?= $imgCount > 1 ? 'aspect-[4/3] sm:aspect-video' : 'max-h-[500px]' ?>" alt="Attachment" onclick="event.stopPropagation(); window.openLightboxGallery && openLightboxGallery(<?= $imgJson ?>, <?= $idx ?>, '<?= $postUrl ?>')">
+                                            <?php endif; ?>
                                         <?php endforeach; ?>
                                     </div>
                                 <?php endif; ?>

@@ -287,10 +287,34 @@ function renderLibraryPostRow(array $post, array $data, bool $showProgressBar = 
                         if (str_starts_with($cover, BASEURL)) $cover = substr($cover, strlen(BASEURL));
                     }
                     ?>
-                    <?php if($cover): ?>
-                        <div class="relative w-full aspect-[16/9] sm:aspect-video border-b border-outline-variant/30 overflow-hidden bg-surface-container-high">
-                            <img src="<?= BASEURL ?><?= htmlspecialchars($cover) ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" alt="Story Cover">
-                        </div>
+                    <?php if(!empty($cover)): ?>
+                        <?php
+                            $ext = strtolower(pathinfo((string)$cover, PATHINFO_EXTENSION));
+                            $videoExts = ['mp4', 'webm', 'ogg', 'mov'];
+                            $isVideo = in_array($ext, $videoExts, true);
+                            $mediaSrc = (str_starts_with($cover, 'http://') || str_starts_with($cover, 'https://'))
+                                ? $cover
+                                : ((str_starts_with($cover, '/uploads/') || str_starts_with($cover, 'uploads/'))
+                                    ? BASEURL . '/' . ltrim($cover, '/')
+                                    : BASEURL . (str_starts_with($cover, '/') ? $cover : '/uploads/' . ltrim($cover, '/')));
+                            $mimeType = match($ext) {
+                                'webm' => 'video/webm',
+                                'ogg' => 'video/ogg',
+                                default => 'video/mp4'
+                            };
+                        ?>
+                        <?php if($isVideo): ?>
+                            <div class="relative w-full border-b border-outline-variant/30 overflow-hidden bg-black" onclick="event.stopPropagation();">
+                                <video controls class="w-full rounded-xl max-h-96 object-contain bg-black">
+                                    <source src="<?= htmlspecialchars($mediaSrc) ?>" type="<?= $mimeType ?>">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        <?php else: ?>
+                            <div class="relative w-full aspect-[16/9] sm:aspect-video border-b border-outline-variant/30 overflow-hidden bg-surface-container-high">
+                                <img src="<?= htmlspecialchars($mediaSrc) ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" alt="Story Cover">
+                            </div>
+                        <?php endif; ?>
                     <?php endif; ?>
                     <div class="p-3.5 sm:p-4 flex flex-col gap-1.5 bg-surface-container-lowest group-hover:bg-surface-container-low/30 transition-colors">
                         <?php if(!empty($post['title'])): ?>
@@ -316,10 +340,44 @@ function renderLibraryPostRow(array $post, array $data, bool $showProgressBar = 
                     </div>
                 </div>
             <?php else: ?>
-                <!-- Note Text -->
+                <!-- Note Text & Grid -->
                 <div class="font-body-md text-on-surface text-[15px] leading-relaxed whitespace-pre-line mb-2">
                     <?= preg_replace('/(^|>|\s)#([a-zA-Z_][a-zA-Z0-9_]*)/', '$1<a href="' . BASEURL . '/explore/tag/$2" class="text-primary font-semibold hover:underline relative z-10" onclick="event.stopPropagation();">#$2</a>', strip_tags((string)($post['content'] ?? ''))) ?>
                 </div>
+                <?php if(!empty($post['cover_image'])): ?>
+                    <?php 
+                    $decoded = json_decode($post['cover_image'], true);
+                    $imgs = is_array($decoded) ? $decoded : array_filter(explode(',', $post['cover_image']));
+                    $imgs = array_slice($imgs, 0, 4);
+                    $imgCount = count($imgs);
+                    $imgJson = htmlspecialchars(json_encode(array_values($imgs)), ENT_QUOTES, 'UTF-8');
+                    ?>
+                    <div class="mt-1 mb-1 grid <?= $imgCount === 1 ? 'grid-cols-1' : 'grid-cols-2' ?> gap-1 sm:gap-1.5 rounded-2xl overflow-hidden border border-outline-variant/30 relative z-10">
+                        <?php foreach($imgs as $idx => $img): ?>
+                            <?php 
+                            $noteFile = trim((string)$img);
+                            $noteExt = strtolower(pathinfo($noteFile, PATHINFO_EXTENSION));
+                            $videoExts = ['mp4', 'webm', 'ogg', 'mov'];
+                            $noteIsVideo = in_array($noteExt, $videoExts, true);
+                            $noteSrc = (str_starts_with($noteFile, 'http://') || str_starts_with($noteFile, 'https://')) 
+                                ? $noteFile 
+                                : ((str_starts_with($noteFile, '/uploads/') || str_starts_with($noteFile, 'uploads/')) 
+                                    ? (BASEURL . '/' . ltrim($noteFile, '/')) 
+                                    : (BASEURL . (str_starts_with($noteFile, '/') ? $noteFile : '/uploads/' . ltrim($noteFile, '/'))));
+                            ?>
+                            <?php if($noteIsVideo): ?>
+                                <div class="w-full bg-black rounded-xl overflow-hidden <?= ($imgCount === 3 && $idx === 0) ? 'row-span-2' : '' ?>" onclick="event.stopPropagation();">
+                                    <video controls class="w-full rounded-xl max-h-96 object-contain bg-black">
+                                        <source src="<?= htmlspecialchars($noteSrc) ?>" type="video/<?= $noteExt === 'webm' ? 'webm' : ($noteExt === 'ogg' ? 'ogg' : 'mp4') ?>">
+                                        Your browser does not support the video tag.
+                                    </video>
+                                </div>
+                            <?php else: ?>
+                                <img src="<?= htmlspecialchars($noteSrc) ?>" class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity <?= ($imgCount === 3 && $idx === 0) ? 'row-span-2' : '' ?> <?= $imgCount > 1 ? 'aspect-[4/3] sm:aspect-video' : 'max-h-[500px]' ?>" alt="Attachment" onclick="event.stopPropagation(); window.openLightboxGallery && openLightboxGallery(<?= $imgJson ?>, <?= $idx ?>, '<?= $postUrl ?>')">
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
             <?php endif; ?>
 
             <!-- Action Bar (Twitter/X Style with Bookmark Count) -->

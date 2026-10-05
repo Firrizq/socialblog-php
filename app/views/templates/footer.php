@@ -468,6 +468,7 @@
             </button>
             
             <img id="lightboxImage" src="" alt="Expanded Image" class="max-w-full max-h-full object-contain shadow-2xl scale-95 transition-transform duration-300 cursor-default" onclick="event.stopPropagation();">
+            <video id="lightboxVideo" src="" controls playsinline class="max-w-full max-h-full object-contain shadow-2xl scale-95 transition-transform duration-300 cursor-default hidden" onclick="event.stopPropagation();"></video>
             
             <!-- Next Button -->
             <button type="button" id="lightboxNext" onclick="navigateLightbox(1); event.stopPropagation();" class="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 hover:bg-white/25 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-colors z-[110] hidden" title="Next (Right Arrow)">
@@ -523,11 +524,31 @@
 
     function updateLightboxGalleryUI() {
         const img = document.getElementById('lightboxImage');
+        const vid = document.getElementById('lightboxVideo');
         const prevBtn = document.getElementById('lightboxPrev');
         const nextBtn = document.getElementById('lightboxNext');
         
         if (lightboxImagesArray.length > 0) {
-            img.src = lightboxImagesArray[lightboxCurrentIndex];
+            const currentMedia = lightboxImagesArray[lightboxCurrentIndex] || '';
+            const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(currentMedia.split('?')[0]);
+
+            if (isVideo) {
+                if (img) img.classList.add('hidden');
+                if (vid) {
+                    vid.src = currentMedia;
+                    vid.classList.remove('hidden');
+                }
+            } else {
+                if (vid) {
+                    vid.pause();
+                    vid.src = '';
+                    vid.classList.add('hidden');
+                }
+                if (img) {
+                    img.src = currentMedia;
+                    img.classList.remove('hidden');
+                }
+            }
         }
 
         if (lightboxImagesArray.length > 1) {
@@ -714,13 +735,21 @@
     function closeLightbox() {
         const lightbox = document.getElementById('imageLightbox');
         const img = document.getElementById('lightboxImage');
+        const vid = document.getElementById('lightboxVideo');
         if (lightbox && !lightbox.classList.contains('hidden')) {
             lightbox.classList.add('opacity-0');
-            img.classList.remove('scale-100');
-            img.classList.add('scale-95');
+            if (img) {
+                img.classList.remove('scale-100');
+                img.classList.add('scale-95');
+            }
+            if (vid) {
+                vid.pause();
+                vid.src = '';
+                vid.classList.add('hidden');
+            }
             setTimeout(() => {
                 lightbox.classList.add('hidden');
-                img.src = '';
+                if (img) img.src = '';
                 lightboxImagesArray = [];
                 document.body.style.overflow = '';
             }, 300);
