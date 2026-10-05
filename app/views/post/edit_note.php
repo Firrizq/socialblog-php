@@ -48,16 +48,16 @@
         <div class="w-full">
             <textarea name="content" id="noteEditTextarea" rows="6" class="w-full bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-4 font-body-md text-on-surface text-lg focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all resize-y placeholder:text-outline-variant leading-relaxed" placeholder="What's on your mind?" required><?= htmlspecialchars(strip_tags(str_replace(['<br>', '<br/>', '<br />'], "\n", $data['post']['content'] ?? ''))) ?></textarea>
             
-            <input type="file" id="noteImageInput" accept="image/*" class="hidden" multiple>
+            <input type="file" id="noteImageInput" accept="image/png, image/jpeg, image/gif, video/mp4, video/webm" class="hidden" multiple>
             <input type="hidden" name="cover_image" id="noteCoverImageInput" value="<?= htmlspecialchars($data['post']['cover_image'] ?? '') ?>">
             <div id="noteImagePreviewContainer" class="hidden relative mt-3 w-full"></div>
         </div>
 
         <!-- Footer Section -->
         <div class="border-t border-outline-variant/30 pt-4 flex items-center justify-between">
-            <button type="button" onclick="document.getElementById('noteImageInput').click()" class="flex items-center gap-1.5 text-on-surface-variant hover:text-primary transition-colors text-sm px-2.5 py-1.5 rounded-lg hover:bg-surface-container" title="Add Image">
-                <span class="material-symbols-outlined text-xl">image</span>
-                <span>Attach Image</span>
+            <button type="button" onclick="document.getElementById('noteImageInput').click()" class="flex items-center gap-1.5 text-on-surface-variant hover:text-primary transition-colors text-sm px-2.5 py-1.5 rounded-lg hover:bg-surface-container" title="Add Media">
+                <span class="material-symbols-outlined text-xl">perm_media</span>
+                <span>Attach Media</span>
             </button>
             <div class="flex items-center gap-3">
                 <a href="<?= ($data['post']['status'] ?? '') === 'draft' ? BASEURL . '/profile' : BASEURL . '/home' ?>" class="text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors px-3 py-2 rounded-lg hover:bg-surface-container">Cancel</a>
@@ -82,9 +82,9 @@ if (hiddenInputEl && hiddenInputEl.value) {
 }
 
 async function uploadNoteImage(file) {
-    if (!file || !file.type.startsWith('image/')) return;
+    if (!file || (!file.type.startsWith('image/') && !file.type.startsWith('video/'))) return;
     if (uploadedNoteImages.length >= 4) {
-        showToast('Maksimal 4 gambar diperbolehkan.', 'error');
+        showToast('Maksimal 4 file media diperbolehkan.', 'error');
         return;
     }
     const formData = new FormData();
@@ -95,8 +95,8 @@ async function uploadNoteImage(file) {
         if (data.success && data.url) {
             uploadedNoteImages.push(data.url);
             renderNoteImagePreviews();
-        } else { showToast(data.message || 'Image upload failed', 'error'); }
-    } catch (err) { showToast('Failed to upload image. Please try again.', 'error'); }
+        } else { showToast(data.message || 'Media upload failed', 'error'); }
+    } catch (err) { showToast('Failed to upload media. Please try again.', 'error'); }
 }
 
 function renderNoteImagePreviews() {
@@ -112,8 +112,9 @@ function renderNoteImagePreviews() {
     container.classList.remove('hidden');
     let html = `<div class="grid ${uploadedNoteImages.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-2">`;
     uploadedNoteImages.forEach((url, idx) => {
+        const isVid = /\.(mp4|webm|ogg)$/i.test(url);
         html += `<div class="relative">
-            <img src="${BASE_URL + url}" class="w-full h-32 object-cover rounded-xl border border-outline-variant/30">
+            ${isVid ? `<video src="${BASE_URL + url}" controls class="w-full h-32 object-contain rounded-xl border border-outline-variant/30 bg-black"></video>` : `<img src="${BASE_URL + url}" class="w-full h-32 object-cover rounded-xl border border-outline-variant/30">`}
             <button type="button" onclick="removeNoteImage(${idx})" class="absolute top-1 right-1 w-6 h-6 bg-black/70 text-white rounded-full flex items-center justify-center hover:bg-error transition-colors"><span class="material-symbols-outlined text-[14px]">close</span></button>
         </div>`;
     });

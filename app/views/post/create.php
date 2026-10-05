@@ -40,18 +40,19 @@
             
             <textarea name="subtitle" id="subtitle-input" placeholder="Add a subtitle..." class="w-full bg-transparent border-none p-0 focus:ring-0 text-xl sm:text-[22px] text-on-surface-variant mb-12 placeholder:text-on-surface-variant/40 resize-none overflow-hidden editorial-font" rows="1"></textarea>
 
-            <!-- Dedicated Cover Image Uploader -->
+            <!-- Dedicated Cover Media Uploader -->
             <div id="cover-image-container" class="mb-10 w-full flex flex-col items-start" id="cover-dropzone">
-                <!-- Fallback to images[] array which standard backend controllers use for uploads -->
-                <input type="file" name="images[]" id="cover-image-input" accept="image/*" class="hidden">
+                <!-- File input allowing images and videos -->
+                <input type="file" name="images[]" id="cover-image-input" accept="image/png, image/jpeg, image/gif, video/mp4, video/webm" class="hidden">
                 
                 <button type="button" id="add-cover-btn" class="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors font-title-md text-sm py-2 px-5 rounded-full border border-outline-variant/60 hover:bg-surface-container-low border-dashed mb-2 group">
-                    <span class="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">image</span> Add cover image
+                    <span class="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">perm_media</span> Add cover media
                 </button>
 
                 <div id="cover-preview-wrapper" class="hidden relative w-full group mt-2">
-                    <img id="cover-preview-img" src="" class="w-full h-auto max-h-[500px] object-cover rounded-xl border border-outline-variant/30">
-                    <button type="button" id="remove-cover-btn" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-surface/80 backdrop-blur text-on-surface flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-surface border border-outline-variant/30 shadow-sm" title="Remove Cover Image">
+                    <img id="cover-preview-img" src="" class="hidden w-full h-auto max-h-[500px] object-cover rounded-xl border border-outline-variant/30">
+                    <video id="cover-preview-video" controls class="hidden w-full rounded-xl max-h-96 object-contain bg-black border border-outline-variant/30"></video>
+                    <button type="button" id="remove-cover-btn" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-surface/80 backdrop-blur text-on-surface flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-surface border border-outline-variant/30 shadow-sm z-10" title="Remove Media">
                         <span class="material-symbols-outlined text-[20px]">delete</span>
                     </button>
                 </div>
@@ -74,6 +75,7 @@
         <h1 id="preview-title" class="text-4xl sm:text-[44px] font-black text-on-surface tracking-tight mb-4 leading-[1.2] editorial-font"></h1>
         <h2 id="preview-subtitle" class="text-xl sm:text-[22px] text-on-surface-variant mb-8 editorial-font leading-relaxed"></h2>
         <img id="preview-cover-image" src="" class="hidden w-full h-auto max-h-[500px] object-cover rounded-xl border border-outline-variant/30 mb-10">
+        <video id="preview-cover-video" controls class="hidden w-full rounded-xl max-h-96 object-contain bg-black mb-10 border border-outline-variant/30"></video>
         <!-- Divider -->
         <div class="w-full h-px bg-outline-variant/40 mb-10"></div>
         <div id="preview-content" class="font-body-md text-on-surface text-[19px] leading-[1.8] editorial-font break-words"></div>
@@ -311,31 +313,77 @@
             document.body.style.overflow = 'auto';
         });
 
-        // Cover Image Upload Logic
+        // Media Upload & Dynamic Preview Logic
         const coverInput = document.getElementById('cover-image-input');
         const addCoverBtn = document.getElementById('add-cover-btn');
         const coverPreviewWrapper = document.getElementById('cover-preview-wrapper');
         const coverPreviewImg = document.getElementById('cover-preview-img');
+        const coverPreviewVideo = document.getElementById('cover-preview-video');
         const removeCoverBtn = document.getElementById('remove-cover-btn');
+
+        let currentObjectUrl = null;
+        let isCurrentMediaVideo = false;
+
+        function updateMediaPreview(file) {
+            if (!file) return;
+
+            // Revoke previous object URL to prevent memory leaks
+            if (currentObjectUrl) {
+                URL.revokeObjectURL(currentObjectUrl);
+                currentObjectUrl = null;
+            }
+
+            // Check client-side file size constraint (50MB)
+            const MAX_FILE_SIZE = 50 * 1024 * 1024;
+            if (file.size > MAX_FILE_SIZE) {
+                if (typeof showToast === 'function') {
+                    showToast('File size exceeds the 50MB limit.', 'error');
+                } else {
+                    alert('File size exceeds the 50MB limit.');
+                }
+                coverInput.value = '';
+                return;
+            }
+
+            currentObjectUrl = URL.createObjectURL(file);
+            isCurrentMediaVideo = file.type.startsWith('video/') || /\.(mp4|webm|ogg)$/i.test(file.name);
+
+            if (isCurrentMediaVideo) {
+                coverPreviewImg.src = '';
+                coverPreviewImg.classList.add('hidden');
+                coverPreviewVideo.src = currentObjectUrl;
+                coverPreviewVideo.classList.remove('hidden');
+            } else {
+                coverPreviewVideo.src = '';
+                coverPreviewVideo.classList.add('hidden');
+                coverPreviewImg.src = currentObjectUrl;
+                coverPreviewImg.classList.remove('hidden');
+            }
+
+            coverPreviewWrapper.classList.remove('hidden');
+            coverPreviewWrapper.classList.add('block');
+            addCoverBtn.classList.remove('flex');
+            addCoverBtn.classList.add('hidden');
+        }
 
         if(addCoverBtn && coverInput) {
             addCoverBtn.addEventListener('click', () => coverInput.click());
-            coverInput.addEventListener('change', function(e) {
+            coverInput.addEventListener('change', function() {
                 if(this.files && this.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        coverPreviewImg.src = e.target.result;
-                        coverPreviewWrapper.classList.remove('hidden');
-                        coverPreviewWrapper.classList.add('block');
-                        addCoverBtn.classList.remove('flex');
-                        addCoverBtn.classList.add('hidden');
-                    }
-                    reader.readAsDataURL(this.files[0]);
+                    updateMediaPreview(this.files[0]);
                 }
             });
             removeCoverBtn.addEventListener('click', () => {
                 coverInput.value = '';
+                if (currentObjectUrl) {
+                    URL.revokeObjectURL(currentObjectUrl);
+                    currentObjectUrl = null;
+                }
+                isCurrentMediaVideo = false;
                 coverPreviewImg.src = '';
+                coverPreviewImg.classList.add('hidden');
+                coverPreviewVideo.src = '';
+                coverPreviewVideo.classList.add('hidden');
                 coverPreviewWrapper.classList.remove('block');
                 coverPreviewWrapper.classList.add('hidden');
                 addCoverBtn.classList.remove('hidden');
@@ -343,20 +391,32 @@
             });
         }
 
-        // Preview Modal Logic (including Cover Image)
+        // Preview Modal Logic (including Cover Image or Video)
         const previewModal = document.getElementById('preview-modal');
+        const previewCoverEl = document.getElementById('preview-cover-image');
+        const previewCoverVid = document.getElementById('preview-cover-video');
+
         document.getElementById('preview-btn').addEventListener('click', () => {
             document.getElementById('preview-title').innerText = document.getElementById('title-input').value || 'Untitled';
             document.getElementById('preview-subtitle').innerText = document.getElementById('subtitle-input').value;
             
-            const coverSrc = coverPreviewImg.getAttribute('src');
-            const previewCoverEl = document.getElementById('preview-cover-image');
-            if (coverSrc && coverSrc !== '') {
-                previewCoverEl.src = coverSrc;
-                previewCoverEl.classList.remove('hidden');
+            if (currentObjectUrl) {
+                if (isCurrentMediaVideo) {
+                    previewCoverVid.src = currentObjectUrl;
+                    previewCoverVid.classList.remove('hidden');
+                    previewCoverEl.src = '';
+                    previewCoverEl.classList.add('hidden');
+                } else {
+                    previewCoverEl.src = currentObjectUrl;
+                    previewCoverEl.classList.remove('hidden');
+                    previewCoverVid.src = '';
+                    previewCoverVid.classList.add('hidden');
+                }
             } else {
                 previewCoverEl.src = '';
                 previewCoverEl.classList.add('hidden');
+                previewCoverVid.src = '';
+                previewCoverVid.classList.add('hidden');
             }
 
             document.getElementById('preview-content').innerHTML = quill.root.innerHTML;
@@ -367,6 +427,9 @@
         document.getElementById('close-preview-btn').addEventListener('click', () => {
             previewModal.classList.add('hidden');
             previewModal.classList.remove('flex');
+            if (previewCoverVid) {
+                previewCoverVid.pause();
+            }
         });
 
         // Restore body scroll on exit
@@ -435,10 +498,9 @@
             dropZone.addEventListener('drop', (e) => {
                 let dt = e.dataTransfer;
                 let files = dt.files;
-                if(files && files[0] && files[0].type.startsWith('image/')) {
+                if(files && files[0] && (files[0].type.startsWith('image/') || files[0].type.startsWith('video/'))) {
                     coverInput.files = files;
-                    const event = new Event('change');
-                    coverInput.dispatchEvent(event);
+                    updateMediaPreview(files[0]);
                 }
             }, false);
         }

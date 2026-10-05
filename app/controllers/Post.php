@@ -41,6 +41,19 @@ class Post extends Controller
             exit;
         }
 
+        // Handle post_max_size overflow gracefully
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && empty($_POST) && empty($_FILES) && (int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+            $postMax = ini_get('post_max_size') ?: 'unknown';
+            $data = [
+                'title' => 'Create New Post - Blogggle',
+                'post_title' => '',
+                'content' => '',
+                'error' => "The uploaded file exceeds the server post limit (post_max_size: {$postMax}). Please choose a smaller file."
+            ];
+            $this->view('post/create', $data);
+            return;
+        }
+
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             $title = trim($_POST['title'] ?? '');
             $rawContent = trim($_POST['content'] ?? '');
@@ -63,8 +76,16 @@ class Post extends Controller
                 return;
             }
 
+            $uploadError = null;
+            $coverImage = $this->handleUploadedCover($uploadError);
+
+            if ($uploadError !== null) {
+                $data['error'] = $uploadError;
+                $this->view('post/create', $data);
+                return;
+            }
+
             $status = ($_POST['action'] ?? 'publish') === 'draft' ? 'draft' : 'published';
-            $coverImage = $this->handleUploadedCover();
 
             // Save post
             $newPostId = $this->postModel->createPost([
@@ -138,6 +159,19 @@ class Post extends Controller
 
         $isNote = (($post['post_type'] ?? '') === 'note');
 
+        // Handle post_max_size overflow gracefully
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && empty($_POST) && empty($_FILES) && (int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+            $postMax = ini_get('post_max_size') ?: 'unknown';
+            $viewName = $isNote ? 'post/edit_note' : 'post/edit';
+            $viewTitle = $isNote ? 'Edit Note' : 'Edit Story';
+            $this->view($viewName, [
+                'title' => $viewTitle,
+                'post' => $post,
+                'error' => "The uploaded file exceeds the server post limit (post_max_size: {$postMax}). Please choose a smaller file."
+            ]);
+            return;
+        }
+
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             $rawContent = trim($_POST['content'] ?? '');
             $coverImage = trim($_POST['cover_image'] ?? '');
@@ -154,7 +188,20 @@ class Post extends Controller
                 $content = strip_tags($rawContent, $allowedTags);
             }
 
-            $uploadedCover = $this->handleUploadedCover();
+            $uploadError = null;
+            $uploadedCover = $this->handleUploadedCover($uploadError);
+
+            if ($uploadError !== null) {
+                $viewName = $isNote ? 'post/edit_note' : 'post/edit';
+                $viewTitle = $isNote ? 'Edit Note' : 'Edit Story';
+                $this->view($viewName, [
+                    'title' => $viewTitle,
+                    'post' => $post,
+                    'error' => $uploadError
+                ]);
+                return;
+            }
+
             $finalStoryCover = $post['cover_image'] ?? null;
             if ($uploadedCover !== null) {
                 $finalStoryCover = $uploadedCover;
@@ -462,26 +509,101 @@ class Post extends Controller
     }
 
     /**
-     * Helper to process single cover image file upload from $_FILES['images']
+     * Helper to process single cover image or video upload from $_FILES['images'] or $_FILES['media']
      */
-    private function handleUploadedCover(): ?string
+    private function handleUploadedCover(?string &$uploadError = null): ?string
     {
-        if (!empty($_FILES['images']['name'][0]) && $_FILES['images']['error'][0] === UPLOAD_ERR_OK) {
-            $fileTmp = $_FILES['images']['tmp_name'][0];
-            $fileName = $_FILES['images']['name'][0];
-            $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION)) ?: 'jpg';
-            $allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-            if (in_array($ext, $allowedExts, true)) {
-                $uploadDir = dirname(__DIR__, 2) . '/public/uploads/images';
-                if (!is_dir($uploadDir)) {
-                    @mkdir($uploadDir, 0755, true);
+        $fileInfo = null;
+
+        if (!empty($_FILES['images']['name'])) {
+            if (is_array($_FILES['images']['name'])) {
+                if (!empty($_FILES['images']['name'][0])) {
+                    $fileInfo = [
+                        'name' => $_FILES['images']['name'][0],
+                        'tmp_name' => $_FILES['images']['tmp_name'][0],
+                        'error' => $_FILES['images']['error'][0],
+                        'size' => $_FILES['images']['size'][0]
+                    ];
                 }
-                $filename = 'cover_' . bin2hex(random_bytes(8)) . '.' . $ext;
-                if (@move_uploaded_file($fileTmp, $uploadDir . '/' . $filename)) {
-                    return '/uploads/images/' . $filename;
-                }
+            } else {
+                $fileInfo = $_FILES['images'];
             }
+        } elseif (!empty($_FILES['media']['name'])) {
+            $fileInfo = $_FILES['media'];
         }
+
+        if (!$fileInfo || empty($fileInfo['name'])) {
+            return null;
+        }
+
+        // Handle upload errors
+        if ($fileInfo['error'] !== UPLOAD_ERR_OK) {
+            $uploadError = match ($fileInfo['error']) {
+                UPLOAD_ERR_INI_SIZE => 'Uploaded file exceeds the upload_max_filesize directive in php.ini (' . (ini_get('upload_max_filesize') ?: 'unknown') . ').',
+                UPLOAD_ERR_FORM_SIZE => 'Uploaded file exceeds the MAX_FILE_SIZE directive in the form.',
+                UPLOAD_ERR_PARTIAL => 'File was only partially uploaded.',
+                UPLOAD_ERR_NO_FILE => null,
+                UPLOAD_ERR_NO_TMP_DIR => 'Missing temporary folder on server.',
+                UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk.',
+                UPLOAD_ERR_EXTENSION => 'File upload stopped by a PHP extension.',
+                default => 'Upload error code: ' . $fileInfo['error']
+            };
+            return null;
+        }
+
+        $fileName = $fileInfo['name'];
+        $fileTmp = $fileInfo['tmp_name'];
+        $fileSize = (int)$fileInfo['size'];
+        $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+        $allowedImageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        $allowedVideoExts = ['mp4', 'webm', 'ogg'];
+        $allowedExts = array_merge($allowedImageExts, $allowedVideoExts);
+
+        if (!in_array($ext, $allowedExts, true)) {
+            $uploadError = 'Invalid file extension: .' . $ext . '. Allowed: JPG, PNG, GIF, WEBP, MP4, WEBM, OGG.';
+            return null;
+        }
+
+        // Validate MIME type
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = $finfo ? finfo_file($finfo, $fileTmp) : mime_content_type($fileTmp);
+        if ($finfo) {
+            finfo_close($finfo);
+        }
+
+        $allowedImageMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        $allowedVideoMimes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
+        $allowedMimes = array_merge($allowedImageMimes, $allowedVideoMimes);
+
+        if (!in_array($mimeType, $allowedMimes, true)) {
+            $uploadError = 'Invalid file type (' . htmlspecialchars((string)$mimeType) . '). Please upload a valid image or video.';
+            return null;
+        }
+
+        $isVideo = in_array($ext, $allowedVideoExts, true) || in_array($mimeType, $allowedVideoMimes, true);
+        $maxSizeBytes = $isVideo ? (50 * 1024 * 1024) : (10 * 1024 * 1024); // 50MB for video, 10MB for image
+
+        if ($fileSize > $maxSizeBytes) {
+            $maxMb = $isVideo ? '50MB' : '10MB';
+            $uploadError = "File size exceeds the allowed limit of {$maxMb}.";
+            return null;
+        }
+
+        $subFolder = $isVideo ? 'videos' : 'images';
+        $uploadDir = dirname(__DIR__, 2) . '/public/uploads/' . $subFolder;
+        if (!is_dir($uploadDir)) {
+            @mkdir($uploadDir, 0755, true);
+        }
+
+        $filename = 'cover_' . bin2hex(random_bytes(8)) . '.' . $ext;
+        $dest = $uploadDir . '/' . $filename;
+
+        if (@move_uploaded_file($fileTmp, $dest)) {
+            return '/uploads/' . $subFolder . '/' . $filename;
+        }
+
+        $uploadError = 'Failed to save uploaded file. Check folder permissions.';
         return null;
     }
 }

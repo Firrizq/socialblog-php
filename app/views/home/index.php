@@ -119,20 +119,52 @@
                             <div class="mt-1 mb-1 flex flex-col rounded-2xl border border-outline-variant/40 overflow-hidden group hover:border-primary/40 transition-colors bg-surface-container-lowest relative z-10">
                                 <?php 
                                 $cover = '';
-                                if(!empty($post['cover_image'])) {
-                                    $decoded = json_decode($post['cover_image'], true);
-                                    $imgs = is_array($decoded) ? $decoded : array_filter(explode(',', $post['cover_image']));
+                                if (!empty($post['media'])) {
+                                    $cover = $post['media'];
+                                } elseif (!empty($post['cover_image'])) {
+                                    $decoded = json_decode((string)$post['cover_image'], true);
+                                    $imgs = is_array($decoded) ? $decoded : array_filter(explode(',', (string)$post['cover_image']));
                                     $cover = !empty($imgs) ? trim($imgs[0]) : '';
                                 }
-                                if (empty($cover) && preg_match('/<img[^>]+src="([^">]+)"/i', $post['content'] ?? '', $matches)) {
+                                if (empty($cover) && preg_match('/<(?:img|video|source)[^>]+src="([^">]+)"/i', $post['content'] ?? '', $matches)) {
                                     $cover = $matches[1];
                                     if (str_starts_with($cover, BASEURL)) $cover = substr($cover, strlen(BASEURL));
                                 }
+
+                                $ext = strtolower(pathinfo((string)$cover, PATHINFO_EXTENSION));
+                                $videoExtensions = ['mp4', 'webm', 'ogg', 'mov'];
+                                $isVideo = in_array($ext, $videoExtensions, true);
+
+                                // Resolve media URL
+                                $mediaSrc = '';
+                                if (!empty($cover)) {
+                                    if (str_starts_with($cover, 'http://') || str_starts_with($cover, 'https://')) {
+                                        $mediaSrc = $cover;
+                                    } elseif (str_starts_with($cover, '/uploads/') || str_starts_with($cover, 'uploads/')) {
+                                        $mediaSrc = BASEURL . '/' . ltrim($cover, '/');
+                                    } else {
+                                        $mediaSrc = BASEURL . '/uploads/' . ltrim($cover, '/');
+                                    }
+                                }
+                                $mimeType = match($ext) {
+                                    'webm' => 'video/webm',
+                                    'ogg' => 'video/ogg',
+                                    default => 'video/mp4'
+                                };
                                 ?>
-                                <?php if($cover): ?>
-                                    <div class="relative w-full aspect-[16/9] sm:aspect-video border-b border-outline-variant/30 overflow-hidden bg-surface-container-high">
-                                        <img src="<?= BASEURL ?><?= htmlspecialchars($cover) ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" alt="Story Cover">
-                                    </div>
+                                <?php if(!empty($cover)): ?>
+                                    <?php if($isVideo): ?>
+                                        <div class="relative w-full border-b border-outline-variant/30 overflow-hidden bg-black" onclick="event.stopPropagation();">
+                                            <video controls class="w-full rounded-xl max-h-96 object-contain bg-black">
+                                                <source src="<?= htmlspecialchars($mediaSrc) ?>" type="<?= $mimeType ?>">
+                                                Your browser does not support the video tag.
+                                            </video>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="relative w-full aspect-[16/9] sm:aspect-video border-b border-outline-variant/30 overflow-hidden bg-surface-container-high">
+                                            <img src="<?= htmlspecialchars($mediaSrc) ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" alt="Story Cover">
+                                        </div>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                                 <div class="p-3.5 sm:p-4 flex flex-col gap-1.5 bg-surface-container-lowest group-hover:bg-surface-container-low/30 transition-colors">
                                     <?php if(!empty($post['title'])): ?>
@@ -166,15 +198,34 @@
                             </div>
                             <?php if(!empty($post['cover_image'])): ?>
                                 <?php 
-                                $decoded = json_decode($post['cover_image'], true);
-                                $imgs = is_array($decoded) ? $decoded : array_filter(explode(',', $post['cover_image']));
+                                $decoded = json_decode((string)$post['cover_image'], true);
+                                $imgs = is_array($decoded) ? $decoded : array_filter(explode(',', (string)$post['cover_image']));
                                 $imgs = array_slice($imgs, 0, 4);
                                 $imgCount = count($imgs);
                                 $imgJson = htmlspecialchars(json_encode(array_values($imgs)), ENT_QUOTES, 'UTF-8');
                                 ?>
                                 <div class="mt-1 mb-1 grid <?= $imgCount === 1 ? 'grid-cols-1' : 'grid-cols-2' ?> gap-1 sm:gap-1.5 rounded-2xl overflow-hidden border border-outline-variant/30 relative z-10">
                                     <?php foreach($imgs as $idx => $img): ?>
-                                        <img src="<?= BASEURL ?><?= htmlspecialchars(trim($img)) ?>" class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity <?= ($imgCount === 3 && $idx === 0) ? 'row-span-2' : '' ?> <?= $imgCount > 1 ? 'aspect-[4/3] sm:aspect-video' : 'max-h-[500px]' ?>" alt="Attachment" onclick="event.stopPropagation(); window.openLightboxGallery && openLightboxGallery(<?= $imgJson ?>, <?= $idx ?>, '<?= $postUrl ?>')">
+                                        <?php 
+                                        $noteFile = trim((string)$img);
+                                        $noteExt = strtolower(pathinfo($noteFile, PATHINFO_EXTENSION));
+                                        $noteIsVideo = in_array($noteExt, ['mp4', 'webm', 'ogg', 'mov'], true);
+                                        $noteSrc = (str_starts_with($noteFile, 'http://') || str_starts_with($noteFile, 'https://')) 
+                                            ? $noteFile 
+                                            : ((str_starts_with($noteFile, '/uploads/') || str_starts_with($noteFile, 'uploads/')) 
+                                                ? (BASEURL . '/' . ltrim($noteFile, '/')) 
+                                                : (BASEURL . '/uploads/' . ltrim($noteFile, '/')));
+                                        ?>
+                                        <?php if($noteIsVideo): ?>
+                                            <div class="w-full bg-black rounded-xl overflow-hidden <?= ($imgCount === 3 && $idx === 0) ? 'row-span-2' : '' ?>" onclick="event.stopPropagation();">
+                                                <video controls class="w-full rounded-xl max-h-96 object-contain bg-black">
+                                                    <source src="<?= htmlspecialchars($noteSrc) ?>" type="video/<?= $noteExt === 'webm' ? 'webm' : ($noteExt === 'ogg' ? 'ogg' : 'mp4') ?>">
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                            </div>
+                                        <?php else: ?>
+                                            <img src="<?= htmlspecialchars($noteSrc) ?>" class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity <?= ($imgCount === 3 && $idx === 0) ? 'row-span-2' : '' ?> <?= $imgCount > 1 ? 'aspect-[4/3] sm:aspect-video' : 'max-h-[500px]' ?>" alt="Attachment" onclick="event.stopPropagation(); window.openLightboxGallery && openLightboxGallery(<?= $imgJson ?>, <?= $idx ?>, '<?= $postUrl ?>')">
+                                        <?php endif; ?>
                                     <?php endforeach; ?>
                                 </div>
                             <?php endif; ?>
@@ -262,28 +313,27 @@
             </div>
 
             <!-- Modal Body (Transparent Textarea) -->
-            <div>
-                <textarea 
+            <div>                <textarea 
                     name="content" 
-                    id="noteModalTextarea"
+                    id="noteModalTextarea" 
                     rows="4" 
                     placeholder="What's on your mind?" 
                     required 
                     class="bg-transparent border-none outline-none focus:ring-0 text-on-surface text-lg placeholder:text-outline-variant resize-none w-full p-0 leading-relaxed"
                 ></textarea>
-                <input type="file" id="noteImageInput" accept="image/*" class="hidden" multiple>
+                <input type="file" id="noteImageInput" accept="image/png, image/jpeg, image/gif, video/mp4, video/webm" class="hidden" multiple>
                 <input type="hidden" name="cover_image" id="noteCoverImageInput" value="">
                 <div id="noteImagePreviewContainer" class="hidden relative mt-3 w-full"></div>
             </div>
 
             <!-- Modal Footer -->
             <div class="flex items-center justify-between pt-2 border-t border-outline-variant/20">
-                <!-- Left side: Dummy Material Icons -->
+                <!-- Left side: Media Icons -->
                 <div class="flex items-center gap-1.5 sm:gap-2 text-outline">
                     <button type="button" onclick="document.getElementById('noteImageInput').click()" class="p-1 rounded-full hover:bg-surface-container hover:text-primary transition-colors" title="Add Image">
                         <span class="material-symbols-outlined text-xl">image</span>
                     </button>
-                    <button type="button" class="p-1 rounded-full hover:bg-surface-container hover:text-primary transition-colors" title="Add Video">
+                    <button type="button" onclick="document.getElementById('noteImageInput').click()" class="p-1 rounded-full hover:bg-surface-container hover:text-primary transition-colors" title="Add Video">
                         <span class="material-symbols-outlined text-xl">videocam</span>
                     </button>
                     <button type="button" class="p-1 rounded-full hover:bg-surface-container hover:text-primary transition-colors" title="Add Emoji">
@@ -346,9 +396,9 @@ if (hiddenInputEl && hiddenInputEl.value) {
 }
 
 async function uploadNoteImage(file) {
-    if (!file || !file.type.startsWith('image/')) return;
+    if (!file || (!file.type.startsWith('image/') && !file.type.startsWith('video/'))) return;
     if (uploadedNoteImages.length >= 4) {
-        showToast('Maksimal 4 gambar diperbolehkan.', 'error');
+        showToast('Maksimal 4 file media diperbolehkan.', 'error');
         return;
     }
     const formData = new FormData();
@@ -359,8 +409,8 @@ async function uploadNoteImage(file) {
         if (data.success && data.url) {
             uploadedNoteImages.push(data.url);
             renderNoteImagePreviews();
-        } else { showToast(data.message || 'Image upload failed', 'error'); }
-    } catch (err) { showToast('Failed to upload image. Please try again.', 'error'); }
+        } else { showToast(data.message || 'Media upload failed', 'error'); }
+    } catch (err) { showToast('Failed to upload media. Please try again.', 'error'); }
 }
 
 function renderNoteImagePreviews() {
@@ -376,8 +426,9 @@ function renderNoteImagePreviews() {
     container.classList.remove('hidden');
     let html = `<div class="grid ${uploadedNoteImages.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-2">`;
     uploadedNoteImages.forEach((url, idx) => {
+        const isVid = /\.(mp4|webm|ogg)$/i.test(url);
         html += `<div class="relative">
-            <img src="${BASE_URL + url}" class="w-full h-32 object-cover rounded-xl border border-outline-variant/30">
+            ${isVid ? `<video src="${BASE_URL + url}" controls class="w-full h-32 object-contain rounded-xl border border-outline-variant/30 bg-black"></video>` : `<img src="${BASE_URL + url}" class="w-full h-32 object-cover rounded-xl border border-outline-variant/30">`}
             <button type="button" onclick="removeNoteImage(${idx})" class="absolute top-1 right-1 w-6 h-6 bg-black/70 text-white rounded-full flex items-center justify-center hover:bg-error transition-colors"><span class="material-symbols-outlined text-[14px]">close</span></button>
         </div>`;
     });

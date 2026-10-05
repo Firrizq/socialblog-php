@@ -77,14 +77,45 @@ $comments = $data['comments'] ?? [];
                 <?php endif; ?>
             </div>
 
-            <!-- Dedicated Hero Cover Image -->
-            <?php if(($post['post_type'] ?? 'story') === 'story' && !empty($post['cover_image'])): ?>
-                <?php 
-                    $decoded = json_decode((string)$post['cover_image'], true);
-                    $coverPath = is_array($decoded) && !empty($decoded) ? $decoded[0] : (strpos((string)$post['cover_image'], ',') ? explode(',', (string)$post['cover_image'])[0] : (string)$post['cover_image']);
-                ?>
-                <div class="w-full aspect-[16/9] sm:aspect-video rounded-2xl overflow-hidden mb-10 border border-outline-variant/30">
-                    <img src="<?= BASEURL ?><?= htmlspecialchars(trim((string)$coverPath)) ?>" class="w-full h-full object-cover" alt="Story Cover">
+            <!-- Dedicated Hero Cover Media (Image or Video) -->
+            <?php 
+                $detailMedia = !empty($post['media']) ? $post['media'] : ($post['cover_image'] ?? '');
+                $decoded = json_decode((string)$detailMedia, true);
+                $coverPath = is_array($decoded) && !empty($decoded) ? $decoded[0] : (strpos((string)$detailMedia, ',') ? explode(',', (string)$detailMedia)[0] : (string)$detailMedia);
+                $coverPath = trim((string)$coverPath);
+
+                $detailExt = strtolower(pathinfo($coverPath, PATHINFO_EXTENSION));
+                $videoExtensions = ['mp4', 'webm', 'ogg', 'mov'];
+                $isVideo = in_array($detailExt, $videoExtensions, true);
+
+                $mediaUrl = '';
+                if (!empty($coverPath)) {
+                    if (str_starts_with($coverPath, 'http://') || str_starts_with($coverPath, 'https://')) {
+                        $mediaUrl = $coverPath;
+                    } elseif (str_starts_with($coverPath, '/uploads/') || str_starts_with($coverPath, 'uploads/')) {
+                        $mediaUrl = BASEURL . '/' . ltrim($coverPath, '/');
+                    } else {
+                        $mediaUrl = BASEURL . '/uploads/' . ltrim($coverPath, '/');
+                    }
+                }
+                $mimeType = match($detailExt) {
+                    'webm' => 'video/webm',
+                    'ogg' => 'video/ogg',
+                    default => 'video/mp4'
+                };
+            ?>
+            <?php if(($post['post_type'] ?? 'story') === 'story' && !empty($coverPath)): ?>
+                <div class="w-full mb-10">
+                    <?php if($isVideo): ?>
+                        <video controls class="w-full rounded-xl max-h-96 object-contain bg-black">
+                            <source src="<?= htmlspecialchars($mediaUrl) ?>" type="<?= $mimeType ?>">
+                            Your browser does not support the video tag.
+                        </video>
+                    <?php else: ?>
+                        <div class="w-full aspect-[16/9] sm:aspect-video rounded-2xl overflow-hidden border border-outline-variant/30">
+                            <img src="<?= htmlspecialchars($mediaUrl) ?>" class="w-full h-full object-cover" alt="Story Cover">
+                        </div>
+                    <?php endif; ?>
                 </div>
             <?php endif; ?>
 
@@ -97,7 +128,7 @@ $comments = $data['comments'] ?? [];
                 <?php endif; ?>
             </div>
 
-            <!-- Images for Notes -->
+            <!-- Media for Notes -->
             <?php if(($post['post_type'] ?? 'story') === 'note' && !empty($post['cover_image'])): ?>
                 <?php 
                 $decoded = json_decode((string)$post['cover_image'], true);
@@ -107,7 +138,26 @@ $comments = $data['comments'] ?? [];
                 ?>
                 <div class="mt-4 mb-10 grid <?= $imgCount === 1 ? 'grid-cols-1' : 'grid-cols-2' ?> gap-2 rounded-2xl overflow-hidden border border-outline-variant/30">
                     <?php foreach($imgs as $idx => $img): ?>
-                        <img src="<?= BASEURL ?><?= htmlspecialchars(trim((string)$img)) ?>" class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity <?= ($imgCount === 3 && $idx === 0) ? 'row-span-2' : '' ?> <?= $imgCount > 1 ? 'aspect-[4/3] sm:aspect-video' : 'max-h-[600px] w-full' ?>" alt="Attachment" onclick="window.openLightboxGallery && openLightboxGallery(<?= $imgJson ?>, <?= $idx ?>)">
+                        <?php 
+                        $noteItem = trim((string)$img);
+                        $noteExt = strtolower(pathinfo($noteItem, PATHINFO_EXTENSION));
+                        $noteIsVideo = in_array($noteExt, ['mp4', 'webm', 'ogg', 'mov'], true);
+                        $noteUrl = (str_starts_with($noteItem, 'http://') || str_starts_with($noteItem, 'https://'))
+                            ? $noteItem
+                            : ((str_starts_with($noteItem, '/uploads/') || str_starts_with($noteItem, 'uploads/')) 
+                                ? (BASEURL . '/' . ltrim($noteItem, '/')) 
+                                : (BASEURL . '/uploads/' . ltrim($noteItem, '/')));
+                        ?>
+                        <?php if($noteIsVideo): ?>
+                            <div class="w-full bg-black rounded-xl overflow-hidden <?= ($imgCount === 3 && $idx === 0) ? 'row-span-2' : '' ?>">
+                                <video controls class="w-full rounded-xl max-h-96 object-contain bg-black">
+                                    <source src="<?= htmlspecialchars($noteUrl) ?>" type="video/<?= $noteExt === 'webm' ? 'webm' : ($noteExt === 'ogg' ? 'ogg' : 'mp4') ?>">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        <?php else: ?>
+                            <img src="<?= htmlspecialchars($noteUrl) ?>" class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity <?= ($imgCount === 3 && $idx === 0) ? 'row-span-2' : '' ?> <?= $imgCount > 1 ? 'aspect-[4/3] sm:aspect-video' : 'max-h-[600px] w-full' ?>" alt="Attachment" onclick="window.openLightboxGallery && openLightboxGallery(<?= $imgJson ?>, <?= $idx ?>)">
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
