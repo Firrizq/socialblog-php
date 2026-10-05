@@ -1,17 +1,12 @@
 /**
  * VideoCompressor - Client-Side Video Compression using FFmpeg.wasm
  * 
- * Uses the single-threaded build of FFmpeg.wasm (@ffmpeg/core-st) to eliminate
- * the need for SharedArrayBuffer and strict Cross-Origin Isolation (COOP/COEP) headers.
+ * Automatically detects Cross-Origin Isolation (window.crossOriginIsolated)
+ * and uses multi-threaded FFmpeg core with SharedArrayBuffer when available,
+ * or gracefully falls back to the single-threaded build (@ffmpeg/core-st).
  * 
- * Features:
- * - Automatically rescales to max 720p HD maintaining aspect ratio with even dimensions
- * - Fast H.264 encoding with x264 'ultrafast' preset for rapid browser execution
- * - AAC 128k audio encoding with automatic audio fallback (-an) for silent videos
- * - Web-optimized MP4 with +faststart for immediate streaming playback
- * - Detailed real-time progress callbacks (0-100%) via ffmpeg.setProgress
- * - In-memory virtual filesystem cleanup
- * - Automatic size comparison: keeps original file if output is larger
+ * Strictly aborts and throws on any error to prevent leaking uncompressed
+ * raw video files to the backend.
  */
 
 (function(window) {
@@ -20,6 +15,9 @@
     let ffmpegInstance = null;
     let isFFmpegLoading = false;
 
+    // Multi-threaded core (requires COOP/COEP headers and SharedArrayBuffer)
+    const FFMPEG_CORE_MT_URL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js';
+    // Single-threaded core fallback
     const FFMPEG_CORE_ST_URL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js';
     const FFMPEG_LIB_URL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js';
 
@@ -50,7 +48,7 @@
         if (typeof window.FFmpeg !== 'undefined') return true;
 
         return new Promise((resolve, reject) => {
-            const existing = document.querySelector(`script[src*="ffmpeg.min.js"]`);
+            const existing = document.querySelector('script[src*="ffmpeg.min.js"]');
             if (existing) {
                 existing.addEventListener('load', () => resolve(true));
                 existing.addEventListener('error', (e) => reject(new Error('Failed to load FFmpeg.wasm CDN script')));
@@ -59,6 +57,7 @@
 
             const script = document.createElement('script');
             script.src = FFMPEG_LIB_URL;
+            script.crossOrigin = 'anonymous';
             script.async = true;
             script.onload = () => resolve(true);
             script.onerror = () => reject(new Error('Failed to load FFmpeg.wasm CDN script from jsDelivr'));
@@ -68,6 +67,7 @@
 
     /**
      * Returns a loaded singleton FFmpeg instance.
+     * Selects multi-thread (@ffmpeg/core) if crossOriginIsolated, otherwise single-thread (@ffmpeg/core-st).
      */
     async function getFFmpeg(onStatus) {
         if (ffmpegInstance && ffmpegInstance.isLoaded()) {
@@ -87,12 +87,18 @@
             await loadFFmpegScript();
 
             if (typeof window.FFmpeg === 'undefined' || !window.FFmpeg.createFFmpeg) {
-                throw new Error('FFmpeg UMD library could not be initialized.');
+                throw new Error('FFmpeg UMD library could not be loaded from CDN.');
             }
 
+            // Determine optimal core path based on Cross-Origin Isolation
+            const isIsolated = window.crossOriginIsolated && typeof SharedArrayBuffer !== 'undefined';
+            const selectedCorePath = isIsolated ? FFMPEG_CORE_MT_URL : FFMPEG_CORE_ST_URL;
+
+            console.log(`[VideoCompressor] Initializing FFmpeg with ${isIsolated ? 'Multi-Threaded (SharedArrayBuffer)' : 'Single-Threaded'} core.`);
+
             ffmpegInstance = window.FFmpeg.createFFmpeg({
-                log: false,
-                corePath: FFMPEG_CORE_ST_URL
+                log: true,
+                corePath: selectedCorePath
             });
 
             await ffmpegInstance.load();
@@ -105,6 +111,9 @@
     /**
      * Compresses a video File or Blob.
      * 
+     * STRICTURE: Throws on any error so caller can ABORT upload completely.
+     * Never returns original raw file on failure.
+     * 
      * @param {File|Blob} file - Original video file
      * @param {Object} options - Configuration options
      * @param {Function} options.onProgress - Callback with percentage number (0-100)
@@ -112,10 +121,11 @@
      * @param {number} options.maxWidth - Max video width (default: 1280 for 720p)
      * @param {string} options.videoBitrate - Target video bitrate (default: '1M')
      * @param {number} options.crf - Constant rate factor quality (default: 28)
-     * @returns {Promise<File>} Compressed File, or original file if compression failed/larger
+     * @returns {Promise<File>} Compressed File
+     * @throws {Error} If compression fails or memory exhausted
      */
     async function compress(file, options = {}) {
-        if (!file) return file;
+        if (!file) throw new Error('No file provided for compression.');
 
         if (!isVideo(file)) {
             return file;
@@ -136,19 +146,13 @@
             return file;
         }
 
-        onStatus('Initializing FFmpeg engine...');
+        onStatus('Initializing compression engine...');
         onProgress(2);
 
-        let ffmpeg;
-        try {
-            ffmpeg = await getFFmpeg(onStatus);
-        } catch (err) {
-            console.warn('[VideoCompressor] Could not initialize FFmpeg.wasm:', err);
-            onStatus('Compression unavailable, using original file.');
-            return file;
-        }
+        // 1. Initialize FFmpeg engine
+        const ffmpeg = await getFFmpeg(onStatus);
 
-        // Attach live progress listener
+        // 2. Attach live progress listener
         ffmpeg.setProgress(({ ratio }) => {
             if (typeof ratio === 'number' && !isNaN(ratio) && ratio >= 0) {
                 // Map internal ratio (0.0 - 1.0) to 10% - 95%
@@ -177,9 +181,13 @@
                 fileData = await new Promise((resolve, reject) => {
                     const reader = new FileReader();
                     reader.onload = () => resolve(new Uint8Array(reader.result));
-                    reader.onerror = reject;
+                    reader.onerror = () => reject(new Error('Failed to read file from disk.'));
                     reader.readAsArrayBuffer(file);
                 });
+            }
+
+            if (!fileData || fileData.length === 0) {
+                throw new Error('Video file buffer is empty.');
             }
 
             ffmpeg.FS('writeFile', inputName, fileData);
@@ -188,6 +196,8 @@
 
             // Primary FFmpeg run with audio
             let runSuccess = false;
+            let lastRunError = null;
+
             try {
                 await ffmpeg.run(
                     '-i', inputName,
@@ -205,25 +215,36 @@
                 );
                 runSuccess = true;
             } catch (firstPassErr) {
+                lastRunError = firstPassErr;
                 console.warn('[VideoCompressor] First pass with audio failed, retrying video-only (-an):', firstPassErr);
             }
 
             // Fallback pass: without audio (for silent clips or incompatible audio streams)
             if (!runSuccess) {
                 try { ffmpeg.FS('unlink', outputName); } catch (e) {}
-                await ffmpeg.run(
-                    '-i', inputName,
-                    '-vf', `scale='min(${maxWidth},iw)':-2`,
-                    '-vcodec', 'libx264',
-                    '-crf', String(crf),
-                    '-preset', 'ultrafast',
-                    '-b:v', videoBitrate,
-                    '-maxrate', '1.5M',
-                    '-bufsize', '2M',
-                    '-an',
-                    '-movflags', '+faststart',
-                    outputName
-                );
+                try {
+                    await ffmpeg.run(
+                        '-i', inputName,
+                        '-vf', `scale='min(${maxWidth},iw)':-2`,
+                        '-vcodec', 'libx264',
+                        '-crf', String(crf),
+                        '-preset', 'ultrafast',
+                        '-b:v', videoBitrate,
+                        '-maxrate', '1.5M',
+                        '-bufsize', '2M',
+                        '-an',
+                        '-movflags', '+faststart',
+                        outputName
+                    );
+                    runSuccess = true;
+                } catch (secondPassErr) {
+                    lastRunError = secondPassErr;
+                    console.error('[VideoCompressor] Fallback pass also failed:', secondPassErr);
+                }
+            }
+
+            if (!runSuccess) {
+                throw new Error(lastRunError ? lastRunError.message || 'FFmpeg transcoding crashed' : 'FFmpeg transcoding failed');
             }
 
             onStatus('Finalizing compressed video...');
@@ -236,14 +257,6 @@
 
             const compressedBlob = new Blob([outData.buffer], { type: 'video/mp4' });
 
-            // If compressed file is unexpectedly larger than original, keep original
-            if (compressedBlob.size >= file.size) {
-                console.log(`[VideoCompressor] Original file is smaller (${file.size} vs ${compressedBlob.size}). Keeping original.`);
-                onProgress(100);
-                onStatus('Original file is already optimal.');
-                return file;
-            }
-
             const rawName = (file.name || 'video').replace(/\.[^/.]+$/, "");
             const compressedFile = new File([compressedBlob], `${rawName}_compressed.mp4`, {
                 type: 'video/mp4',
@@ -255,10 +268,10 @@
             return compressedFile;
 
         } catch (err) {
-            console.error('[VideoCompressor] Compression failed, falling back to original file:', err);
-            onProgress(100);
-            onStatus('Compression failed. Using original file.');
-            return file;
+            // CRITICAL: Log and rethrow so the calling UI halts and never sends the raw file
+            console.error('[VideoCompressor] Compression failed:', err);
+            onStatus('Compression failed.');
+            throw err;
         } finally {
             // Clean virtual filesystem
             try { ffmpeg.FS('unlink', inputName); } catch (e) {}

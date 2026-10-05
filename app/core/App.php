@@ -23,6 +23,11 @@ class App
 
     public function __construct()
     {
+        if (!headers_sent()) {
+            header("Cross-Origin-Opener-Policy: same-origin");
+            header("Cross-Origin-Embedder-Policy: require-corp");
+        }
+
         $url = $this->parseURL();
 
         // 1. Determine Controller & Route Type

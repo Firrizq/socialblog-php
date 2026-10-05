@@ -105,7 +105,12 @@ async function uploadNoteImage(file) {
 
     let fileToUpload = file;
     const isVideo = file.type.startsWith('video/') || /\.(mp4|webm|ogg|mov)$/i.test(file.name);
-    if (isVideo && window.VideoCompressor) {
+    if (isVideo) {
+        if (!window.VideoCompressor) {
+            showToast('Compression failed. Please try a smaller file or different browser.', 'error');
+            return; // ABORT!
+        }
+
         const postBtn = document.querySelector('button[type="submit"]') || document.querySelector('form button');
         const origBtnText = postBtn ? postBtn.textContent : 'Save';
         try {
@@ -113,14 +118,22 @@ async function uploadNoteImage(file) {
                 postBtn.disabled = true;
                 postBtn.classList.add('opacity-75');
             }
-            showToast('Compressing video on device...', 'info');
+            showToast('Compressing video before upload...', 'info');
             fileToUpload = await window.VideoCompressor.compress(file, {
                 onProgress: (pct) => {
                     if (postBtn) postBtn.textContent = `Compressing ${pct}%`;
                 }
             });
         } catch (err) {
-            console.warn('Note video compression failed, using original:', err);
+            console.error('Note video compression failed:', err);
+            if (postBtn) {
+                postBtn.disabled = false;
+                postBtn.classList.remove('opacity-75');
+                postBtn.textContent = origBtnText;
+            }
+            // ABORT upload completely!
+            showToast('Compression failed. Please try a smaller file or different browser.', 'error');
+            return;
         } finally {
             if (postBtn) {
                 postBtn.disabled = false;

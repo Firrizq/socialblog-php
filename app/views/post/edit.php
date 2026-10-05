@@ -159,8 +159,8 @@
     /* Subtitle rendering inside content */
 </style>
 
-<!-- FFmpeg.wasm for Client-Side Video Compression (Single-Threaded to avoid COOP/COEP isolation) -->
-<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+<!-- FFmpeg.wasm for Client-Side Video Compression -->
+<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js" crossorigin="anonymous"></script>
 <script src="<?= BASEURL ?>/js/video-compressor.js"></script>
 
 <script>
@@ -192,16 +192,25 @@
             let fileToUpload = file;
             const isVideo = (file.type && file.type.startsWith('video/')) || /\.(mp4|webm|ogg|mov|mkv)$/i.test(file.name || '');
 
-            if (isVideo && window.VideoCompressor) {
+            if (isVideo) {
+                if (!window.VideoCompressor) {
+                    showToast('Compression failed. Please try a smaller file or different browser.', 'error');
+                    return; // ABORT completely!
+                }
+
                 try {
-                    showToast('Compressing video for story...', 'info');
+                    showToast('Compressing video before upload...', 'info');
                     setCompressingState(true, 0);
                     fileToUpload = await window.VideoCompressor.compress(file, {
                         onProgress: (pct) => setCompressingState(true, pct),
                         onStatus: (status) => console.log('[Editor Video]', status)
                     });
                 } catch (compressErr) {
-                    console.warn('Video compression error, using original file:', compressErr);
+                    console.error('Editor video compression failed:', compressErr);
+                    setCompressingState(false);
+                    // ABORT completely: Do NOT append raw file to FormData or proceed to upload!
+                    showToast('Compression failed. Please try a smaller file or different browser.', 'error');
+                    return;
                 } finally {
                     setCompressingState(false);
                 }
@@ -517,15 +526,30 @@
                 }
             } catch (err) {
                 console.error('Video compression error:', err);
+
+                // 1. Revert UI state immediately
                 setCompressingState(false);
-                if (compCard) {
-                    compIcon.classList.remove('animate-spin', 'text-primary');
-                    compIcon.classList.add('text-amber-500');
-                    compIcon.textContent = 'info';
-                    compTitle.textContent = 'Compression skipped';
-                    compSubtitle.textContent = 'Using original file without compression';
+
+                // 2. CRITICAL: Clear file input & previews to abort upload and prevent sending raw file
+                coverInput.value = '';
+                if (currentObjectUrl) {
+                    URL.revokeObjectURL(currentObjectUrl);
+                    currentObjectUrl = null;
                 }
-                showToast('Compression skipped. Using original video.', 'warning');
+                isCurrentMediaVideo = false;
+                coverPreviewImg.src = '';
+                coverPreviewImg.classList.add('hidden');
+                coverPreviewVideo.src = '';
+                coverPreviewVideo.classList.add('hidden');
+                coverPreviewWrapper.classList.remove('block');
+                coverPreviewWrapper.classList.add('hidden');
+                addCoverBtn.classList.remove('hidden');
+                addCoverBtn.classList.add('flex');
+
+                if (compCard) compCard.classList.add('hidden');
+
+                // 3. Show requested Toast error
+                showToast('Compression failed. Please try a smaller file or different browser.', 'error');
             }
         }
 
