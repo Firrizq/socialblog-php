@@ -48,7 +48,7 @@
         <div class="w-full">
             <textarea name="content" id="noteEditTextarea" rows="6" class="w-full bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-4 font-body-md text-on-surface text-lg focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all resize-y placeholder:text-outline-variant leading-relaxed" placeholder="What's on your mind?" required><?= htmlspecialchars(strip_tags(str_replace(['<br>', '<br/>', '<br />'], "\n", $data['post']['content'] ?? ''))) ?></textarea>
             
-            <input type="file" id="noteImageInput" accept="image/png, image/jpeg, image/gif, video/mp4, video/webm" class="hidden" multiple>
+            <input type="file" id="noteImageInput" accept="image/png, image/jpeg, image/gif, video/mp4, video/webm, video/quicktime, video/ogg" class="hidden" multiple>
             <input type="hidden" name="cover_image" id="noteCoverImageInput" value="<?= htmlspecialchars($data['post']['cover_image'] ?? '') ?>">
             <div id="noteImagePreviewContainer" class="hidden relative mt-3 w-full"></div>
         </div>
@@ -82,21 +82,53 @@ if (hiddenInputEl && hiddenInputEl.value) {
 }
 
 async function uploadNoteImage(file) {
-    if (!file || (!file.type.startsWith('image/') && !file.type.startsWith('video/'))) return;
+    if (!file) return;
+
+    // Check client-side 200MB limit
+    const MAX_FILE_SIZE = 200 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+        const mb = (file.size / (1024 * 1024)).toFixed(1);
+        showToast(`File "${file.name}" is too large (${mb}MB). Maximum allowed is 200MB.`, 'error');
+        return;
+    }
+
+    const isMedia = file.type.startsWith('image/') || file.type.startsWith('video/') || /\.(mp4|webm|ogg|mov)$/i.test(file.name);
+    if (!isMedia) {
+        showToast(`Invalid file type for "${file.name}". Please upload an image or video.`, 'error');
+        return;
+    }
+
     if (uploadedNoteImages.length >= 4) {
         showToast('Maksimal 4 file media diperbolehkan.', 'error');
         return;
     }
+
     const formData = new FormData();
+    formData.append('media', file);
     formData.append('image', file);
+
     try {
         const res = await fetch(`${BASE_URL}/upload/image`, { method: 'POST', body: formData });
-        const data = await res.json();
-        if (data.success && data.url) {
+        const rawText = await res.text();
+        let data;
+        try {
+            data = JSON.parse(rawText);
+        } catch (parseErr) {
+            const snippet = rawText.replace(/<[^>]*>/g, '').trim().substring(0, 120);
+            throw new Error(snippet || `Server error (${res.status} ${res.statusText})`);
+        }
+
+        if (res.ok && data.success && data.url) {
             uploadedNoteImages.push(data.url);
             renderNoteImagePreviews();
-        } else { showToast(data.message || 'Media upload failed', 'error'); }
-    } catch (err) { showToast('Failed to upload media. Please try again.', 'error'); }
+            showToast('Media uploaded successfully!', 'success');
+        } else {
+            showToast(data.message || `Media upload failed (${res.status})`, 'error');
+        }
+    } catch (err) {
+        console.error('Upload error:', err);
+        showToast(err.message || 'Failed to upload media. Please try again.', 'error');
+    }
 }
 
 function renderNoteImagePreviews() {

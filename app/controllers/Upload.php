@@ -19,22 +19,27 @@ class Upload extends Controller
 
     private function handleUpload(): void
     {
+        @set_time_limit(300); // Allow sufficient time for 200MB file uploads
+        @ini_set('memory_limit', '512M');
+
         ob_start(); // Prevent PHP warnings from leaking into JSON output
 
         // Handle potential post_max_size overflow gracefully
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && empty($_POST) && empty($_FILES) && (int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
             ob_end_clean();
+            http_response_code(413);
             header('Content-Type: application/json');
             $postMax = ini_get('post_max_size') ?: 'unknown';
             echo json_encode([
                 'success' => false,
-                'message' => "Uploaded file exceeds the server post limit (post_max_size: {$postMax}). Please choose a smaller file."
+                'message' => "Uploaded file exceeds the server post limit (post_max_size: {$postMax}). Please verify server configuration and restart the PHP process."
             ]);
             exit;
         }
 
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST' || empty($_SESSION['user_id'])) {
             ob_end_clean();
+            http_response_code(401);
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Unauthorized']);
             exit;
@@ -51,8 +56,9 @@ class Upload extends Controller
 
         if (!$fileKey || !isset($_FILES[$fileKey])) {
             ob_end_clean();
+            http_response_code(400);
             header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'message' => 'No file received or upload error.']);
+            echo json_encode(['success' => false, 'message' => 'No file received or upload was dropped by server.']);
             exit;
         }
 
@@ -61,6 +67,7 @@ class Upload extends Controller
 
         if ($errorCode !== UPLOAD_ERR_OK) {
             ob_end_clean();
+            http_response_code(400);
             header('Content-Type: application/json');
             $message = match ($errorCode) {
                 UPLOAD_ERR_INI_SIZE => 'File exceeds upload_max_filesize directive in php.ini (' . (ini_get('upload_max_filesize') ?: 'unknown') . ').',
@@ -84,15 +91,16 @@ class Upload extends Controller
         }
 
         $allowedImageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-        $allowedVideoExts = ['mp4', 'webm', 'ogg'];
+        $allowedVideoExts = ['mp4', 'webm', 'ogg', 'mov'];
         $allowedExts = array_merge($allowedImageExts, $allowedVideoExts);
 
         if (!in_array($ext, $allowedExts, true)) {
             ob_end_clean();
+            http_response_code(415);
             header('Content-Type: application/json');
             echo json_encode([
                 'success' => false,
-                'message' => 'Invalid file extension: .' . $ext . '. Allowed: JPG, PNG, GIF, WEBP, MP4, WEBM, OGG.'
+                'message' => 'Invalid file extension: .' . $ext . '. Allowed: JPG, PNG, GIF, WEBP, MP4, WEBM, OGG, MOV.'
             ]);
             exit;
         }
@@ -105,29 +113,31 @@ class Upload extends Controller
         }
 
         $allowedImageMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        $allowedVideoMimes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
+        $allowedVideoMimes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-m4v'];
         $allowedMimes = array_merge($allowedImageMimes, $allowedVideoMimes);
 
         if (!in_array($mimeType, $allowedMimes, true)) {
             ob_end_clean();
+            http_response_code(415);
             header('Content-Type: application/json');
             echo json_encode([
                 'success' => false,
-                'message' => 'Invalid MIME type: ' . $mimeType . '. Please upload an accepted image or video.'
+                'message' => 'Invalid MIME type: ' . $mimeType . '. Please upload an accepted image or video (e.g. video/mp4, video/webm, video/quicktime).'
             ]);
             exit;
         }
 
         $isVideo = in_array($ext, $allowedVideoExts, true) || in_array($mimeType, $allowedVideoMimes, true);
-        $maxSizeBytes = $isVideo ? (50 * 1024 * 1024) : (10 * 1024 * 1024); // 50MB for video, 10MB for image
+        $maxSizeBytes = 200000000; // 200MB limit constraint
 
         if ($file['size'] > $maxSizeBytes) {
             ob_end_clean();
+            http_response_code(413);
             header('Content-Type: application/json');
-            $maxMb = $isVideo ? '50MB' : '10MB';
+            $uploadedMb = round($file['size'] / (1024 * 1024), 1);
             echo json_encode([
                 'success' => false,
-                'message' => "File size exceeds the allowed limit of {$maxMb}."
+                'message' => "File is too large ({$uploadedMb}MB). Maximum allowed upload size is 200MB."
             ]);
             exit;
         }
@@ -144,8 +154,9 @@ class Upload extends Controller
 
         if (!@move_uploaded_file($file['tmp_name'], $dest)) {
             ob_end_clean();
+            http_response_code(500);
             header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'message' => 'Failed to save media file. Check folder permissions.']);
+            echo json_encode(['success' => false, 'message' => 'Failed to save media file to destination. Check folder permissions.']);
             exit;
         }
 

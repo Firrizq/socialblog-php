@@ -551,17 +551,20 @@ class Post extends Controller
             return null;
         }
 
+        @set_time_limit(300);
+        @ini_set('memory_limit', '512M');
+
         $fileName = $fileInfo['name'];
         $fileTmp = $fileInfo['tmp_name'];
         $fileSize = (int)$fileInfo['size'];
         $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
         $allowedImageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-        $allowedVideoExts = ['mp4', 'webm', 'ogg'];
+        $allowedVideoExts = ['mp4', 'webm', 'ogg', 'mov'];
         $allowedExts = array_merge($allowedImageExts, $allowedVideoExts);
 
         if (!in_array($ext, $allowedExts, true)) {
-            $uploadError = 'Invalid file extension: .' . $ext . '. Allowed: JPG, PNG, GIF, WEBP, MP4, WEBM, OGG.';
+            $uploadError = 'Invalid file extension: .' . $ext . '. Allowed: JPG, PNG, GIF, WEBP, MP4, WEBM, OGG, MOV.';
             return null;
         }
 
@@ -573,20 +576,20 @@ class Post extends Controller
         }
 
         $allowedImageMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        $allowedVideoMimes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
+        $allowedVideoMimes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-m4v'];
         $allowedMimes = array_merge($allowedImageMimes, $allowedVideoMimes);
 
         if (!in_array($mimeType, $allowedMimes, true)) {
-            $uploadError = 'Invalid file type (' . htmlspecialchars((string)$mimeType) . '). Please upload a valid image or video.';
+            $uploadError = 'Invalid file type (' . htmlspecialchars((string)$mimeType) . '). Please upload a valid image or video (e.g. video/mp4, video/webm, video/quicktime).';
             return null;
         }
 
         $isVideo = in_array($ext, $allowedVideoExts, true) || in_array($mimeType, $allowedVideoMimes, true);
-        $maxSizeBytes = $isVideo ? (50 * 1024 * 1024) : (10 * 1024 * 1024); // 50MB for video, 10MB for image
+        $maxSizeBytes = 200000000; // 200MB limit constraint
 
         if ($fileSize > $maxSizeBytes) {
-            $maxMb = $isVideo ? '50MB' : '10MB';
-            $uploadError = "File size exceeds the allowed limit of {$maxMb}.";
+            $uploadedMb = round($fileSize / (1024 * 1024), 1);
+            $uploadError = "File is too large ({$uploadedMb}MB). Maximum allowed upload size is 200MB.";
             return null;
         }
 
@@ -603,7 +606,7 @@ class Post extends Controller
             return '/uploads/' . $subFolder . '/' . $filename;
         }
 
-        $uploadError = 'Failed to save uploaded file. Check folder permissions.';
+        $uploadError = 'Failed to save uploaded file to destination. Check folder permissions.';
         return null;
     }
 }

@@ -53,7 +53,7 @@
             ?>
             <!-- Dedicated Cover Media Uploader -->
             <div id="cover-image-container" class="mb-10 w-full flex flex-col items-start" id="cover-dropzone">
-                <input type="file" name="images[]" id="cover-image-input" accept="image/png, image/jpeg, image/gif, video/mp4, video/webm" class="hidden">
+                <input type="file" name="images[]" id="cover-image-input" accept="image/png, image/jpeg, image/gif, video/mp4, video/webm, video/quicktime, video/ogg" class="hidden">
                 <!-- Flag to tell backend if the existing cover was kept or removed -->
                 <input type="hidden" name="existing_cover" id="existing_cover" value="<?= htmlspecialchars($existingCover) ?>">
                 
@@ -150,28 +150,46 @@
         icons['undo'] = '<svg viewBox="0 0 18 18"><path class="ql-fill" d="M10.5,4A5.5,5.5,0,0,0,5,9.5H3L6,13l3-3.5H7A3.5,3.5,0,0,1,10.5,6a3.5,3.5,0,0,1,3.5,3.5A3.5,3.5,0,0,1,10.5,13V15A5.5,5.5,0,0,0,10.5,4Z"/></svg>';
         icons['redo'] = '<svg viewBox="0 0 18 18"><path class="ql-fill" d="M7.5,4A5.5,5.5,0,0,1,13,9.5h2L12,13,9,9.5h2A3.5,3.5,0,0,0,7.5,6a3.5,3.5,0,0,0-3.5,3.5A3.5,3.5,0,0,0,7.5,13V15A5.5,5.5,0,0,1,7.5,4Z"/></svg>';
 
-        // Image upload handler
+        // Image/Media upload handler for Quill Editor
         async function uploadImageToServer(file) {
-            if (!file || !file.type.startsWith('image/')) return;
+            if (!file) return;
+
+            const MAX_FILE_SIZE = 200 * 1024 * 1024;
+            if (file.size > MAX_FILE_SIZE) {
+                const mb = (file.size / (1024 * 1024)).toFixed(1);
+                showToast(`File is too large (${mb}MB). Maximum allowed is 200MB.`, 'error');
+                return;
+            }
+
             const formData = new FormData();
             formData.append('image', file);
+            formData.append('media', file);
 
             try {
                 const res = await fetch(`${BASE_URL}/upload/image`, {
                     method: 'POST',
                     body: formData
                 });
-                const data = await res.json();
-                if (data.success && data.url) {
+                const rawText = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(rawText);
+                } catch (parseErr) {
+                    const snippet = rawText.replace(/<[^>]*>/g, '').trim().substring(0, 120);
+                    throw new Error(snippet || `Server error (${res.status} ${res.statusText})`);
+                }
+
+                if (res.ok && data.success && data.url) {
                     const range = quill.getSelection(true);
                     quill.insertEmbed(range.index, 'image', BASE_URL + data.url);
                     quill.setSelection(range.index + 1);
+                    showToast('Media inserted into story!', 'success');
                 } else {
-                    showToast(data.message || 'Image upload failed', 'error');
+                    showToast(data.message || `Upload failed (${res.status})`, 'error');
                 }
             } catch (err) {
-                console.error('Image upload error:', err);
-                if (typeof showToast === 'function') showToast('Failed to upload image', 'error');
+                console.error('Media upload error:', err);
+                showToast(err.message || 'Failed to upload media', 'error');
             }
         }
 
@@ -299,19 +317,22 @@
                 currentObjectUrl = null;
             }
 
-            const MAX_FILE_SIZE = 50 * 1024 * 1024;
+            // Check client-side file size constraint (200MB)
+            const MAX_FILE_SIZE = 200 * 1024 * 1024;
             if (file.size > MAX_FILE_SIZE) {
+                const mb = (file.size / (1024 * 1024)).toFixed(1);
+                const msg = `File is too large (${mb}MB). Maximum allowed limit is 200MB.`;
                 if (typeof showToast === 'function') {
-                    showToast('File size exceeds the 50MB limit.', 'error');
+                    showToast(msg, 'error');
                 } else {
-                    alert('File size exceeds the 50MB limit.');
+                    alert(msg);
                 }
                 coverInput.value = '';
                 return;
             }
 
             currentObjectUrl = URL.createObjectURL(file);
-            isCurrentMediaVideo = file.type.startsWith('video/') || /\.(mp4|webm|ogg)$/i.test(file.name);
+            isCurrentMediaVideo = file.type.startsWith('video/') || /\.(mp4|webm|ogg|mov)$/i.test(file.name);
 
             if (isCurrentMediaVideo) {
                 coverPreviewImg.src = '';
