@@ -194,12 +194,27 @@
             onProgress(10);
             onStatus('Running compression (720p H.264)...');
 
+            // Helper to execute commands supporting both ffmpeg.run (v0.11) and ffmpeg.exec (v0.12+)
+            const runCmd = async (args) => {
+                if (typeof ffmpeg.exec === 'function') {
+                    const exitCode = await ffmpeg.exec(args);
+                    if (typeof exitCode === 'number' && exitCode !== 0) {
+                        throw new Error(`ffmpeg.exec failed with exit code ${exitCode}`);
+                    }
+                    return exitCode;
+                } else if (typeof ffmpeg.run === 'function') {
+                    return await ffmpeg.run(...args);
+                } else {
+                    throw new Error('No compatible FFmpeg execution method available');
+                }
+            };
+
             // Primary FFmpeg run with audio
             let runSuccess = false;
             let lastRunError = null;
 
             try {
-                await ffmpeg.run(
+                await runCmd([
                     '-i', inputName,
                     '-vf', `scale='min(${maxWidth},iw)':-2`,
                     '-vcodec', 'libx264',
@@ -212,7 +227,7 @@
                     '-b:a', '128k',
                     '-movflags', '+faststart',
                     outputName
-                );
+                ]);
                 runSuccess = true;
             } catch (firstPassErr) {
                 lastRunError = firstPassErr;
@@ -223,7 +238,7 @@
             if (!runSuccess) {
                 try { ffmpeg.FS('unlink', outputName); } catch (e) {}
                 try {
-                    await ffmpeg.run(
+                    await runCmd([
                         '-i', inputName,
                         '-vf', `scale='min(${maxWidth},iw)':-2`,
                         '-vcodec', 'libx264',
@@ -235,7 +250,7 @@
                         '-an',
                         '-movflags', '+faststart',
                         outputName
-                    );
+                    ]);
                     runSuccess = true;
                 } catch (secondPassErr) {
                     lastRunError = secondPassErr;

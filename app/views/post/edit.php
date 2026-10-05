@@ -194,7 +194,7 @@
 
             if (isVideo) {
                 if (!window.VideoCompressor) {
-                    showToast('Compression failed. Please try a smaller file or different browser.', 'error');
+                    showToast("Compression failed. The video may be too large for browser compression.", "error");
                     return; // ABORT completely!
                 }
 
@@ -209,7 +209,7 @@
                     console.error('Editor video compression failed:', compressErr);
                     setCompressingState(false);
                     // ABORT completely: Do NOT append raw file to FormData or proceed to upload!
-                    showToast('Compression failed. Please try a smaller file or different browser.', 'error');
+                    showToast("Compression failed. The video may be too large for browser compression.", "error");
                     return;
                 } finally {
                     setCompressingState(false);
@@ -549,7 +549,7 @@
                 if (compCard) compCard.classList.add('hidden');
 
                 // 3. Show requested Toast error
-                showToast('Compression failed. Please try a smaller file or different browser.', 'error');
+                showToast("Compression failed. The video may be too large for browser compression.", "error");
             }
         }
 

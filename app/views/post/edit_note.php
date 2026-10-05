@@ -107,12 +107,12 @@ async function uploadNoteImage(file) {
     const isVideo = file.type.startsWith('video/') || /\.(mp4|webm|ogg|mov)$/i.test(file.name);
     if (isVideo) {
         if (!window.VideoCompressor) {
-            showToast('Compression failed. Please try a smaller file or different browser.', 'error');
-            return; // ABORT!
+            showToast("Compression failed. The video may be too large for browser compression.", "error");
+            return; // ABORT upload completely!
         }
 
         const postBtn = document.querySelector('button[type="submit"]') || document.querySelector('form button');
-        const origBtnText = postBtn ? postBtn.textContent : 'Save';
+        const origBtnText = postBtn ? postBtn.textContent : 'Save Changes';
         try {
             if (postBtn) {
                 postBtn.disabled = true;
@@ -131,8 +131,8 @@ async function uploadNoteImage(file) {
                 postBtn.classList.remove('opacity-75');
                 postBtn.textContent = origBtnText;
             }
-            // ABORT upload completely!
-            showToast('Compression failed. Please try a smaller file or different browser.', 'error');
+            // ABORT upload completely! DO NOT append raw video to FormData
+            showToast("Compression failed. The video may be too large for browser compression.", "error");
             return;
         } finally {
             if (postBtn) {
