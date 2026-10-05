@@ -2,4 +2,6 @@
     RewriteEngine On
     RewriteRule ^$ public/ [L]
     RewriteRule (.*) public/$1 [L]
+    php_value upload_max_filesize 200M
+    php_value post_max_size 200M
 </IfModule>
