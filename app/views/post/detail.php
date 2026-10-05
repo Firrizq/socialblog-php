@@ -38,9 +38,9 @@ $comments = $data['comments'] ?? [];
             <!-- Compact Author Metadata -->
             <div class="flex items-center justify-between mb-10">
                 <div class="flex items-center gap-3.5">
-                    <a href="<?= BASEURL ?>/<?= urlencode($post['username'] ?? '') ?>" class="profile-hover-trigger w-12 h-12 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/50 shrink-0 hover:ring-2 hover:ring-primary transition-all" data-username="<?= htmlspecialchars($post['username'] ?? '') ?>">
+                    <a href="<?= BASEURL ?>/<?= urlencode($post['username'] ?? '') ?>" class="profile-hover-trigger avatar-link w-12 h-12 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/50 shrink-0 hover:ring-2 hover:ring-primary transition-all relative z-10" data-username="<?= htmlspecialchars($post['username'] ?? '') ?>" title="View Profile">
                         <?php if (!empty($post['profile_picture'])): ?>
-                            <img src="<?= BASEURL ?><?= htmlspecialchars($post['profile_picture'] ?? '') ?>" class="w-full h-full object-cover">
+                            <img src="<?= BASEURL ?><?= htmlspecialchars($post['profile_picture'] ?? '') ?>" class="w-full h-full object-cover rounded-full avatar-img">
                         <?php else: ?>
                             <div class="w-full h-full flex items-center justify-center font-bold text-primary text-lg">
                                 <?= htmlspecialchars(substr($post['username'] ?? 'U', 0, 1)) ?>
@@ -113,7 +113,7 @@ $comments = $data['comments'] ?? [];
                         </video>
                     <?php else: ?>
                         <div class="w-full aspect-[16/9] sm:aspect-video rounded-2xl overflow-hidden border border-outline-variant/30">
-                            <img src="<?= htmlspecialchars($mediaUrl) ?>" class="w-full h-full object-cover" alt="Story Cover">
+                            <img src="<?= htmlspecialchars($mediaUrl) ?>" class="post-media-image w-full h-full object-cover cursor-pointer" alt="Story Cover">
                         </div>
                     <?php endif; ?>
                 </div>
@@ -156,7 +156,7 @@ $comments = $data['comments'] ?? [];
                                 </video>
                             </div>
                         <?php else: ?>
-                            <img src="<?= htmlspecialchars($noteUrl) ?>" class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity <?= ($imgCount === 3 && $idx === 0) ? 'row-span-2' : '' ?> <?= $imgCount > 1 ? 'aspect-[4/3] sm:aspect-video' : 'max-h-[600px] w-full' ?>" alt="Attachment" onclick="window.openLightboxGallery && openLightboxGallery(<?= $imgJson ?>, <?= $idx ?>)">
+                            <img src="<?= htmlspecialchars($noteUrl) ?>" class="post-media-image w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity <?= ($imgCount === 3 && $idx === 0) ? 'row-span-2' : '' ?> <?= $imgCount > 1 ? 'aspect-[4/3] sm:aspect-video' : 'max-h-[600px] w-full' ?>" alt="Attachment" onclick="window.openLightboxGallery && openLightboxGallery(<?= $imgJson ?>, <?= $idx ?>)">
                         <?php endif; ?>
                     <?php endforeach; ?>
                 </div>
@@ -204,7 +204,7 @@ $comments = $data['comments'] ?? [];
                 <div class="flex gap-4 mb-10">
                     <div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/30 shrink-0">
                         <?php if (!empty($_SESSION['profile_picture'])): ?>
-                            <img src="<?= BASEURL ?><?= htmlspecialchars($_SESSION['profile_picture'] ?? '') ?>" class="w-full h-full object-cover">
+                            <img src="<?= BASEURL ?><?= htmlspecialchars($_SESSION['profile_picture'] ?? '') ?>" class="w-full h-full object-cover rounded-full avatar-img">
                         <?php else: ?>
                             <div class="w-full h-full flex items-center justify-center font-bold text-primary text-sm">
                                 <?= htmlspecialchars(substr($_SESSION['username'] ?? 'U', 0, 1)) ?>
@@ -237,9 +237,9 @@ $comments = $data['comments'] ?? [];
                             $commentDetailUrl = BASEURL . '/' . urlencode($comment['username'] ?? '') . '/comment/' . $commentUid;
                         ?>
                         <div class="flex gap-3 sm:gap-4 group">
-                            <a href="<?= $commentAuthorUrl ?>" class="profile-hover-trigger w-10 h-10 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/30 shrink-0" data-username="<?= htmlspecialchars($comment['username'] ?? '') ?>">
+                            <a href="<?= $commentAuthorUrl ?>" class="profile-hover-trigger avatar-link w-10 h-10 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/30 shrink-0 relative z-10" data-username="<?= htmlspecialchars($comment['username'] ?? '') ?>" title="View Profile">
                                 <?php if (!empty($comment['profile_picture'])): ?>
-                                    <img src="<?= BASEURL ?><?= htmlspecialchars($comment['profile_picture'] ?? '') ?>" class="w-full h-full object-cover">
+                                    <img src="<?= BASEURL ?><?= htmlspecialchars($comment['profile_picture'] ?? '') ?>" class="w-full h-full object-cover rounded-full avatar-img">
                                 <?php else: ?>
                                     <div class="w-full h-full flex items-center justify-center font-bold text-primary text-sm">
                                         <?= htmlspecialchars(substr($comment['username'] ?? 'U', 0, 1)) ?>

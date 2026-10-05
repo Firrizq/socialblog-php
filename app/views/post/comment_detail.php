@@ -100,9 +100,9 @@ $replies = $data['replies'] ?? [];
                     <div class="absolute left-5 top-12 bottom-0 w-0.5 bg-outline-variant/40 -mb-4"></div>
 
                     <!-- Parent Comment Avatar -->
-                    <a href="<?= $parentAuthorUrl ?>" class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary text-sm shrink-0 overflow-hidden relative z-10 ring-2 ring-surface hover:ring-primary transition-all">
+                    <a href="<?= $parentAuthorUrl ?>" class="avatar-link w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary text-sm shrink-0 overflow-hidden relative z-10 ring-2 ring-surface hover:ring-primary transition-all" title="View Profile">
                         <?php if (!empty($parentComment['profile_picture'])): ?>
-                            <img src="<?= BASEURL ?><?= htmlspecialchars($parentComment['profile_picture']) ?>" alt="<?= htmlspecialchars($parentComment['username'] ?? '') ?>" class="w-full h-full object-cover">
+                            <img src="<?= BASEURL ?><?= htmlspecialchars($parentComment['profile_picture']) ?>" alt="<?= htmlspecialchars($parentComment['username'] ?? '') ?>" class="w-full h-full object-cover rounded-full avatar-img">
                         <?php else: ?>
                             <?= strtoupper(substr($parentComment['username'] ?? 'U', 0, 1)) ?>
                         <?php endif; ?>
@@ -138,9 +138,9 @@ $replies = $data['replies'] ?? [];
             <!-- Author Header -->
             <div class="flex items-center justify-between gap-3">
                 <div class="flex items-center gap-3 min-w-0">
-                    <a href="<?= BASEURL ?>/<?= urlencode($comment['username'] ?? '') ?>" class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary text-base shrink-0 overflow-hidden ring-2 ring-primary/20 hover:ring-primary transition-all">
+                    <a href="<?= BASEURL ?>/<?= urlencode($comment['username'] ?? '') ?>" class="avatar-link w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary text-base shrink-0 overflow-hidden ring-2 ring-primary/20 hover:ring-primary transition-all relative z-10" title="View Profile">
                         <?php if (!empty($comment['profile_picture'])): ?>
-                            <img src="<?= BASEURL ?><?= htmlspecialchars($comment['profile_picture']) ?>" alt="<?= htmlspecialchars($comment['username'] ?? '') ?>" class="w-full h-full object-cover">
+                            <img src="<?= BASEURL ?><?= htmlspecialchars($comment['profile_picture']) ?>" alt="<?= htmlspecialchars($comment['username'] ?? '') ?>" class="w-full h-full object-cover rounded-full avatar-img">
                         <?php else: ?>
                             <?= strtoupper(substr($comment['username'] ?? 'U', 0, 1)) ?>
                         <?php endif; ?>
@@ -290,9 +290,9 @@ $replies = $data['replies'] ?? [];
                         <div class="py-4 flex flex-col gap-2" id="reply-<?= $reply['id'] ?>">
                             <div class="flex gap-3.5 items-start">
                                 <!-- Reply Author Avatar -->
-                                <a href="<?= $replyAuthorUrl ?>" class="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary text-xs shrink-0 overflow-hidden hover:ring-2 hover:ring-primary transition-all">
+                                <a href="<?= $replyAuthorUrl ?>" class="avatar-link w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary text-xs shrink-0 overflow-hidden hover:ring-2 hover:ring-primary transition-all relative z-10" title="View Profile">
                                     <?php if (!empty($reply['profile_picture'])): ?>
-                                        <img src="<?= BASEURL ?><?= htmlspecialchars($reply['profile_picture']) ?>" alt="<?= htmlspecialchars($reply['username'] ?? '') ?>" class="w-full h-full object-cover">
+                                        <img src="<?= BASEURL ?><?= htmlspecialchars($reply['profile_picture']) ?>" alt="<?= htmlspecialchars($reply['username'] ?? '') ?>" class="w-full h-full object-cover rounded-full avatar-img">
                                     <?php else: ?>
                                         <?= strtoupper(substr($reply['username'] ?? 'U', 0, 1)) ?>
                                     <?php endif; ?>

@@ -449,8 +449,8 @@
 
     <!-- Image Lightbox Styles -->
     <style>
-        article img:not(.rounded-full), .quill-content img { cursor: pointer; transition: opacity 0.2s; }
-        article img:not(.rounded-full):hover, .quill-content img:hover { opacity: 0.85; }
+        .post-media-image, .quill-content img { cursor: pointer; transition: opacity 0.2s; }
+        .post-media-image:hover, .quill-content img:hover { opacity: 0.85; }
     </style>
 
     <!-- Split-Screen Image Lightbox Modal (Twitter/X Style Gallery) -->
@@ -765,42 +765,56 @@
         }
     });
 
-    // Intercept Clicks on Post Images
+    // Intercept Clicks ONLY on Post Media Images (strictly ignore avatars and profile pictures)
     document.addEventListener('click', function(e) {
-        if (e.target.tagName === 'IMG') {
-            if (e.target.classList.contains('rounded-full') || e.target.closest('#noteImagePreviewContainer')) return;
-            
-            const article = e.target.closest('article');
-            const quillContent = e.target.closest('.quill-content');
-            
-            if (article || quillContent) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                let imagesToLoad = [];
-                let startIdx = 0;
-                
-                // Check if part of a grid
-                const gridContainer = e.target.closest('div.grid');
-                if (gridContainer) {
-                    const gridImgs = Array.from(gridContainer.querySelectorAll('img'));
-                    imagesToLoad = gridImgs.map(im => im.src);
-                    startIdx = gridImgs.indexOf(e.target);
-                } else {
-                    imagesToLoad = [e.target.src];
-                }
-                
-                let detailLink = null;
-                if (article) {
-                    const linkTag = article.querySelector('a[href*="/note/"], a[href*="/story/"], a[href*="/post/detail/"]');
-                    if (linkTag) detailLink = linkTag.href;
-                    else if (window.location.href.includes('/post/detail/') || /\/[^\/]+\/(note|story)\/\d{12}/.test(window.location.pathname)) detailLink = window.location.href;
-                } else if (quillContent) {
-                    if (window.location.href.includes('/post/detail/') || /\/[^\/]+\/(note|story)\/\d{12}/.test(window.location.pathname)) detailLink = window.location.href;
-                }
-                
-                openLightboxGallery(imagesToLoad, startIdx, detailLink);
+        const target = e.target;
+        if (!target || target.tagName !== 'IMG') return;
+
+        // 1. Explicitly ignore avatars and profile elements
+        if (
+            target.classList.contains('avatar-img') ||
+            target.classList.contains('rounded-full') ||
+            target.closest('.rounded-full') ||
+            target.closest('.profile-hover-trigger') ||
+            target.closest('a[title="View Profile"]') ||
+            target.closest('.avatar-container') ||
+            target.closest('#noteImagePreviewContainer')
+        ) {
+            return; // Allow standard link navigation to user profile
+        }
+
+        // 2. Only proceed for actual post media images or embedded quill images
+        const isPostMedia = target.classList.contains('post-media-image');
+        const quillContent = target.closest('.quill-content');
+
+        if (isPostMedia || quillContent) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            let imagesToLoad = [];
+            let startIdx = 0;
+
+            // Check if part of a grid
+            const gridContainer = target.closest('div.grid');
+            if (gridContainer) {
+                const gridImgs = Array.from(gridContainer.querySelectorAll('img.post-media-image, img:not(.avatar-img):not(.rounded-full)'));
+                imagesToLoad = gridImgs.map(im => im.src);
+                startIdx = gridImgs.indexOf(target);
+            } else {
+                imagesToLoad = [target.src];
             }
+
+            let detailLink = null;
+            const article = target.closest('article');
+            if (article) {
+                const linkTag = article.querySelector('a[href*="/note/"], a[href*="/story/"], a[href*="/post/detail/"]');
+                if (linkTag) detailLink = linkTag.href;
+                else if (window.location.href.includes('/post/detail/') || /\/[^\/]+\/(note|story)\/\d{12}/.test(window.location.pathname)) detailLink = window.location.href;
+            } else if (quillContent) {
+                if (window.location.href.includes('/post/detail/') || /\/[^\/]+\/(note|story)\/\d{12}/.test(window.location.pathname)) detailLink = window.location.href;
+            }
+
+            openLightboxGallery(imagesToLoad, Math.max(0, startIdx), detailLink);
         }
     });
 
