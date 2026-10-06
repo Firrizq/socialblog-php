@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../templates/header.php'; 
 $user = $data['profile_user'] ?? $data['user'] ?? null;
 $data['user'] = $user;
+$profileUsername = $user['username'] ?? $data['profile_user']['username'] ?? '';
 ?>
 
 <div class="flex flex-col w-full pb-20">
@@ -670,7 +671,7 @@ $data['user'] = $user;
 
                             <!-- Action Bar (Twitter/X style hit targets) -->
                             <div class="flex items-center justify-between mt-2 max-w-md text-on-surface-variant relative z-10 -ml-2">
-                                <a href="<?= $postUrl ?>" class="group flex items-center gap-1 hover:text-primary transition-colors">
+                                <a href="<?= $postUrl ?>#discussion" class="group flex items-center gap-1 hover:text-primary transition-colors">
                                     <div class="w-8 h-8 rounded-full group-hover:bg-primary/10 flex items-center justify-center transition-colors">
                                         <span class="material-symbols-outlined text-[18px]">chat_bubble</span>
                                     </div>

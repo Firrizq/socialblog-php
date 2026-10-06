@@ -222,12 +222,18 @@ class Profile extends Controller
         $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
+        $submittedName = strip_tags(trim($_POST['name'] ?? ''));
+
         $updateData = [
             'bio' => strip_tags(trim($_POST['bio'] ?? '')),
             'location' => strip_tags(trim($_POST['location'] ?? '')),
             'profile_link' => filter_var(trim($_POST['profile_link'] ?? ''), FILTER_SANITIZE_URL),
             'tipping_link' => filter_var(trim($_POST['tipping_link'] ?? ''), FILTER_SANITIZE_URL),
         ];
+
+        if (!empty($submittedName)) {
+            $updateData['name'] = $submittedName;
+        }
 
         // Process Avatar Upload
         if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
@@ -259,10 +265,17 @@ class Profile extends Controller
             }
         }
 
+        $uid = (int)$_SESSION['user_id'];
+        if (!empty($updateData['name'])) {
+            $_SESSION['name'] = $updateData['name'];
+            if (isset($_SESSION['accounts'][$uid])) {
+                $_SESSION['accounts'][$uid]['name'] = $updateData['name'];
+            }
+        }
+
         if (isset($updateData['profile_picture'])) {
             $_SESSION['profile_picture'] = $updateData['profile_picture'];
             $_SESSION['avatar'] = $updateData['profile_picture'];
-            $uid = (int)$_SESSION['user_id'];
             if (isset($_SESSION['accounts'][$uid])) {
                 $_SESSION['accounts'][$uid]['profile_picture'] = $updateData['profile_picture'];
                 $_SESSION['accounts'][$uid]['avatar'] = $updateData['profile_picture'];
@@ -302,6 +315,30 @@ class Profile extends Controller
             $_SESSION['accounts'][$uid]['avatar'] = null;
         }
 
+        header('Location: ' . BASEURL . '/profile/edit');
+        exit;
+    }
+
+    /**
+     * Remove the current user's banner picture
+     */
+    public function removeBanner(): void
+    {
+        if (empty($_SESSION['user_id']) || empty($_SESSION['username'])) {
+            header('Location: ' . BASEURL . '/auth');
+            exit;
+        }
+
+        $user = $this->userModel->getUserProfile($_SESSION['username']);
+
+        if (!empty($user['banner_picture'])) {
+            $filePath = dirname(__DIR__, 2) . '/public' . $user['banner_picture'];
+            if (file_exists($filePath) && is_file($filePath)) {
+                unlink($filePath);
+            }
+        }
+
+        $this->userModel->removeBanner((int)$_SESSION['user_id']);
         header('Location: ' . BASEURL . '/profile/edit');
         exit;
     }

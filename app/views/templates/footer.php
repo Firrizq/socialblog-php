@@ -665,7 +665,7 @@
         updateLightboxGalleryUI();
     };
 
-    function processSidebarContent(mainContent, sidebar) {
+    function processSidebarContent(mainContent, sidebar, detailLink = null) {
         if (mainContent) {
             // Remove the sticky top header ("<- Story") and back navigation
             const topBar = mainContent.querySelector('.sticky.top-0');
@@ -766,6 +766,60 @@
             
             sidebar.innerHTML = mainContent.innerHTML;
             if (window.updateTimeAgo) window.updateTimeAgo();
+
+            // Intercept comment form submission to prevent full-page reload
+            const commentForm = sidebar.querySelector('form[action*="/post/comment/"]');
+            if (commentForm) {
+                commentForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const submitBtn = commentForm.querySelector('button[type="submit"]');
+                    const originalBtnText = submitBtn ? submitBtn.textContent : '';
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = 'Posting...';
+                    }
+
+                    try {
+                        const formData = new FormData(commentForm);
+                        const res = await fetch(commentForm.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        });
+                        const data = await res.json().catch(() => ({}));
+                        if (res.ok) {
+                            if (window.showToast) {
+                                showToast(data.message || 'Comment posted successfully!', 'success');
+                            }
+                            const input = commentForm.querySelector('#lightbox-comment-input') || commentForm.querySelector('textarea[name="comment"]');
+                            if (input) input.value = '';
+
+                            if (detailLink) {
+                                try {
+                                    const reloadRes = await fetch(detailLink);
+                                    const reloadHtml = await reloadRes.text();
+                                    const reloadDoc = new DOMParser().parseFromString(reloadHtml, 'text/html');
+                                    const newMain = reloadDoc.querySelector('main');
+                                    if (newMain) processSidebarContent(newMain, sidebar, detailLink);
+                                } catch (_) {}
+                            }
+                        } else {
+                            if (window.showToast) {
+                                showToast(data.message || 'Failed to post comment.', 'error');
+                            }
+                        }
+                    } catch (err) {
+                        if (window.showToast) {
+                            showToast('Error submitting comment.', 'error');
+                        }
+                    } finally {
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.textContent = originalBtnText;
+                        }
+                    }
+                });
+            }
         } else {
             sidebar.innerHTML = '<div class="p-8 text-center text-error">Failed to load content.</div>';
         }
@@ -799,7 +853,7 @@
                         const mainDOM = document.querySelector('main');
                         if (mainDOM) {
                             const clonedMain = mainDOM.cloneNode(true);
-                            processSidebarContent(clonedMain, sidebar);
+                            processSidebarContent(clonedMain, sidebar, detailLink);
                             return;
                         }
                     }
@@ -818,7 +872,7 @@
                         const parser = new DOMParser();
                         const doc = parser.parseFromString(html, 'text/html');
                         const mainContent = doc.querySelector('main');
-                        processSidebarContent(mainContent, sidebar);
+                        processSidebarContent(mainContent, sidebar, detailLink);
                     } catch (err) {
                         sidebar.innerHTML = '<div class="p-8 text-center text-error">Network error. Failed to load discussion.</div>';
                     }

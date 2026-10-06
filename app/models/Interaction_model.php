@@ -102,27 +102,17 @@ class Interaction_model
         $existing = $this->db->single();
 
         if ($existing) {
-            // Delete like
+            // Delete like (trigger trg_after_like_delete will decrement like_count)
             $this->db->query("DELETE FROM likes WHERE user_id = :user_id AND comment_id = :comment_id");
             $this->db->bind(':user_id', $userId);
             $this->db->bind(':comment_id', $commentId);
             $this->db->execute();
 
-            // Decrement like count
-            $this->db->query("UPDATE comments SET like_count = GREATEST(like_count - 1, 0) WHERE id = :comment_id");
-            $this->db->bind(':comment_id', $commentId);
-            $this->db->execute();
-
             $status = 'unliked';
         } else {
-            // Insert like
+            // Insert like (trigger trg_after_like_insert will increment like_count)
             $this->db->query("INSERT INTO likes (user_id, comment_id) VALUES (:user_id, :comment_id)");
             $this->db->bind(':user_id', $userId);
-            $this->db->bind(':comment_id', $commentId);
-            $this->db->execute();
-
-            // Increment like count
-            $this->db->query("UPDATE comments SET like_count = like_count + 1 WHERE id = :comment_id");
             $this->db->bind(':comment_id', $commentId);
             $this->db->execute();
 

@@ -38,7 +38,6 @@ class History_model
                   INNER JOIN users ON posts.user_id = users.id
                   WHERE reading_history.user_id = :user_id 
                     AND posts.status = 'published'
-                    AND posts.post_type = 'story'
                   ORDER BY reading_history.last_read_at DESC";
 
         $this->db->query($query);

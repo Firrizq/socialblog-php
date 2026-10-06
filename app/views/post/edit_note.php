@@ -107,38 +107,31 @@ async function uploadNoteImage(file) {
     const isVideo = file.type.startsWith('video/') || /\.(mp4|webm|ogg|mov)$/i.test(file.name);
     if (isVideo) {
         if (!window.VideoCompressor) {
-            showToast("Compression failed. The video may be too large for browser compression.", "error");
-            return; // ABORT upload completely!
-        }
-
-        const postBtn = document.querySelector('button[type="submit"]') || document.querySelector('form button');
-        const origBtnText = postBtn ? postBtn.textContent : 'Save Changes';
-        try {
-            if (postBtn) {
-                postBtn.disabled = true;
-                postBtn.classList.add('opacity-75');
-            }
-            showToast('Compressing video before upload...', 'info');
-            fileToUpload = await window.VideoCompressor.compress(file, {
-                onProgress: (pct) => {
-                    if (postBtn) postBtn.textContent = `Compressing ${pct}%`;
+            console.warn('VideoCompressor not available, proceeding with direct upload.');
+            fileToUpload = file;
+        } else {
+            const postBtn = document.querySelector('button[type="submit"]') || document.querySelector('form button');
+            const origBtnText = postBtn ? postBtn.textContent : 'Save Changes';
+            try {
+                if (postBtn) {
+                    postBtn.disabled = true;
+                    postBtn.classList.add('opacity-75');
                 }
-            });
-        } catch (err) {
-            console.error('Note video compression failed:', err);
-            if (postBtn) {
-                postBtn.disabled = false;
-                postBtn.classList.remove('opacity-75');
-                postBtn.textContent = origBtnText;
-            }
-            // ABORT upload completely! DO NOT append raw video to FormData
-            showToast("Compression failed. The video may be too large for browser compression.", "error");
-            return;
-        } finally {
-            if (postBtn) {
-                postBtn.disabled = false;
-                postBtn.classList.remove('opacity-75');
-                postBtn.textContent = origBtnText;
+                showToast('Optimizing video before upload...', 'info');
+                fileToUpload = await window.VideoCompressor.compress(file, {
+                    onProgress: (pct) => {
+                        if (postBtn) postBtn.textContent = `Optimizing ${pct}%`;
+                    }
+                });
+            } catch (err) {
+                console.warn('Note video compression error, falling back to direct upload:', err);
+                fileToUpload = file;
+            } finally {
+                if (postBtn) {
+                    postBtn.disabled = false;
+                    postBtn.classList.remove('opacity-75');
+                    postBtn.textContent = origBtnText;
+                }
             }
         }
     }

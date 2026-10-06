@@ -109,6 +109,19 @@ class Auth extends Controller
                 return;
             }
 
+            // Check for reserved system route usernames
+            $reservedUsernames = [
+                'home', 'post', 'auth', 'explore', 'history', 'bookmarks', 
+                'notifications', 'action', 'upload', 'profile', 'repost', 
+                'api', 'admin', 'root', 'user', 'users', 'login', 'logout', 
+                'register', 'dashboard', 'settings', 'help', 'search', 'public'
+            ];
+            if (in_array(strtolower($username), $reservedUsernames, true)) {
+                $data['error'] = 'That username is reserved for system routes. Please choose a different one.';
+                $this->view('auth/register', $data);
+                return;
+            }
+
             // Check if email or username already exists
             if ($this->userModel->findUserByEmail($email)) {
                 $data['error'] = 'An account with that email already exists.';

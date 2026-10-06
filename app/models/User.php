@@ -133,6 +133,10 @@ class User
             'tipping_link = :tipping_link'
         ];
 
+        if (array_key_exists('name', $data) && !empty($data['name'])) {
+            $fields[] = 'name = :name';
+        }
+
         if (array_key_exists('profile_picture', $data) && $data['profile_picture'] !== null) {
             $fields[] = 'profile_picture = :profile_picture';
         }
@@ -149,6 +153,10 @@ class User
         $this->db->bind(':profile_link', $data['profile_link'] ?? null);
         $this->db->bind(':tipping_link', $data['tipping_link'] ?? null);
         $this->db->bind(':user_id', $userId);
+
+        if (array_key_exists('name', $data) && !empty($data['name'])) {
+            $this->db->bind(':name', $data['name']);
+        }
 
         if (array_key_exists('profile_picture', $data) && $data['profile_picture'] !== null) {
             $this->db->bind(':profile_picture', $data['profile_picture']);
@@ -170,6 +178,20 @@ class User
     public function removeAvatar(int $userId): bool
     {
         $this->db->query("UPDATE {$this->table} SET profile_picture = NULL WHERE id = :user_id");
+        $this->db->bind(':user_id', $userId);
+
+        return $this->db->execute();
+    }
+
+    /**
+     * Remove user profile banner picture
+     *
+     * @param int $userId
+     * @return bool
+     */
+    public function removeBanner(int $userId): bool
+    {
+        $this->db->query("UPDATE {$this->table} SET banner_picture = NULL WHERE id = :user_id");
         $this->db->bind(':user_id', $userId);
 
         return $this->db->execute();

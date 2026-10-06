@@ -69,18 +69,19 @@ class Explore extends Controller
             exit;
         }
 
-        $tagModel = $this->model('Tag_model');
-        $posts = $tagModel->getPostsByTag($tagName);
-
         $likedPosts = [];
         $bookmarkedPosts = [];
         $repostedPosts = [];
+        $userId = null;
         if (!empty($_SESSION['user_id'])) {
             $userId = (int)$_SESSION['user_id'];
             $likedPosts = $this->interactionModel->getUserLikedPostIds($userId);
             $bookmarkedPosts = $this->interactionModel->getUserBookmarkedPostIds($userId);
             $repostedPosts = $this->interactionModel->getUserRepostedPostIds($userId);
         }
+
+        $tagModel = $this->model('Tag_model');
+        $posts = $tagModel->getPostsByTag($tagName, $userId);
 
         $data = [
             'title' => "#{$tagName} - Blogggle",

@@ -382,7 +382,7 @@ function renderLibraryPostRow(array $post, array $data, bool $showProgressBar = 
 
             <!-- Action Bar (Twitter/X Style with Bookmark Count) -->
             <div class="flex items-center justify-between mt-2 max-w-md text-on-surface-variant relative z-10 -ml-2">
-                <a href="<?= $postUrl ?>" class="group flex items-center gap-1 hover:text-primary transition-colors">
+                <a href="<?= $postUrl ?>#discussion" class="group flex items-center gap-1 hover:text-primary transition-colors">
                     <div class="w-8 h-8 rounded-full group-hover:bg-primary/10 flex items-center justify-center transition-colors">
                         <span class="material-symbols-outlined text-[18px]">chat_bubble</span>
                     </div>

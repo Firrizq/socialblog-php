@@ -42,19 +42,33 @@ $user = $data['user'] ?? [];
                         </div>
                         <img id="bannerPreview" src="" alt="Banner Preview" class="w-full h-full object-cover hidden">
                     <?php endif; ?>
-                    <div class="absolute inset-0 bg-surface/70 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div class="absolute inset-0 bg-surface/70 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2.5">
                         <label for="bannerInput" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-container border border-outline-variant/60 text-on-surface hover:text-primary font-label-md text-xs cursor-pointer transition-all shadow-md">
                             <span class="material-symbols-outlined text-base">add_photo_alternate</span>
-                            <span id="bannerLabelText">Change Banner</span>
+                            <span id="bannerLabelText"><?= !empty($user['banner_picture']) ? 'Change Banner' : 'Upload Banner' ?></span>
                         </label>
+                        <?php if (!empty($user['banner_picture'])): ?>
+                            <a href="<?= BASEURL ?>/profile/removeBanner" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-container border border-error/50 text-error hover:bg-error-container/20 font-label-md text-xs transition-all shadow-md">
+                                <span class="material-symbols-outlined text-base">delete</span>
+                                <span>Remove</span>
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <div class="flex items-center justify-between pt-1">
                     <input type="file" name="banner" id="bannerInput" accept="image/png, image/jpeg, image/jpg, image/webp, image/gif" class="hidden">
-                    <label for="bannerInput" class="sm:hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container border border-outline-variant/50 text-xs text-on-surface cursor-pointer">
-                        <span class="material-symbols-outlined text-sm">add_photo_alternate</span>
-                        <span>Upload Banner</span>
-                    </label>
+                    <div class="flex items-center gap-2">
+                        <label for="bannerInput" class="sm:hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container border border-outline-variant/50 text-xs text-on-surface cursor-pointer">
+                            <span class="material-symbols-outlined text-sm">add_photo_alternate</span>
+                            <span><?= !empty($user['banner_picture']) ? 'Change' : 'Upload' ?></span>
+                        </label>
+                        <?php if (!empty($user['banner_picture'])): ?>
+                            <a href="<?= BASEURL ?>/profile/removeBanner" class="sm:hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-error/50 text-error text-xs">
+                                <span class="material-symbols-outlined text-sm">delete</span>
+                                <span>Remove</span>
+                            </a>
+                        <?php endif; ?>
+                    </div>
                     <p class="font-caption text-[11px] text-on-surface-variant">Recommended: 16:9 or 3:1 landscape header image. Max 10MB.</p>
                 </div>
             </div>

@@ -278,6 +278,10 @@ class Post extends Controller
 
                 if ($newPostId) {
                     (new Tag_model())->processTags((int)$newPostId, $content);
+                    if ($status === 'draft') {
+                        header('Location: ' . BASEURL . '/profile?tab=drafts');
+                        exit;
+                    }
                 }
             }
         }
@@ -368,9 +372,16 @@ class Post extends Controller
     public function comment(string|int $post_id = 0): void
     {
         $post_id = (int)$post_id;
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
         // Ensure user is authenticated
         if (!isset($_SESSION['user_id'])) {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                http_response_code(401);
+                echo json_encode(['status' => 'error', 'message' => 'Please sign in to participate in the discussion.']);
+                exit;
+            }
             header('Location: ' . BASEURL . '/auth');
             exit;
         }
@@ -390,8 +401,20 @@ class Post extends Controller
                     'comment' => $commentText,
                     'parent_id' => $parentId
                 ]);
-                $_SESSION['flash_message'] = $parentId !== null ? 'Reply posted successfully' : 'Comment posted successfully';
+                $msg = $parentId !== null ? 'Reply posted successfully' : 'Comment posted successfully';
+                $_SESSION['flash_message'] = $msg;
                 $_SESSION['flash_type'] = 'success';
+
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['status' => 'success', 'message' => $msg]);
+                    exit;
+                }
+            } else if ($isAjax) {
+                header('Content-Type: application/json');
+                http_response_code(422);
+                echo json_encode(['status' => 'error', 'message' => 'Comment cannot be blank.']);
+                exit;
             }
 
             // Redirect back to specific thread view if requested
@@ -456,7 +479,7 @@ class Post extends Controller
         // If this comment itself is a reply, fetch parent comment for conversation context
         $parentComment = null;
         if (!empty($comment['parent_id'])) {
-            $parentComment = $this->commentModel->getCommentById((int)$comment['parent_id']);
+            $parentComment = $this->commentModel->getCommentById((int)$comment['parent_id'], true);
         }
 
         $isCommentLiked = false;
@@ -512,9 +535,26 @@ class Post extends Controller
         }
 
         $post = $this->postModel->getPostById((int)$id);
-        $this->postModel->deletePost((int)$id, (int)$_SESSION['user_id']);
-        $_SESSION['flash_message'] = 'Post deleted successfully';
-        $_SESSION['flash_type'] = 'info';
+        if ($post && (int)$post['user_id'] === (int)$_SESSION['user_id']) {
+            // Clean up associated media files from disk
+            if (!empty($post['cover_image'])) {
+                $decoded = json_decode((string)$post['cover_image'], true);
+                $mediaList = is_array($decoded) ? $decoded : array_filter(explode(',', (string)$post['cover_image']));
+                $publicDir = dirname(__DIR__, 2) . '/public';
+                foreach ($mediaList as $mediaPath) {
+                    $mediaPath = trim($mediaPath);
+                    if (!empty($mediaPath) && str_starts_with($mediaPath, '/uploads/')) {
+                        $fullPath = $publicDir . $mediaPath;
+                        if (file_exists($fullPath) && is_file($fullPath)) {
+                            @unlink($fullPath);
+                        }
+                    }
+                }
+            }
+            $this->postModel->deletePost((int)$id, (int)$_SESSION['user_id']);
+            $_SESSION['flash_message'] = 'Post deleted successfully';
+            $_SESSION['flash_type'] = 'info';
+        }
 
         $referer = $_SERVER['HTTP_REFERER'] ?? '';
         if (!empty($referer)) {

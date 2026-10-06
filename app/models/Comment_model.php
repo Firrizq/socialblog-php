@@ -77,7 +77,7 @@ class Comment_model
      * @param int $id
      * @return array|false
      */
-    public function getCommentById(int $id): array|false
+    public function getCommentById(int $id, bool $allowDeleted = false): array|false
     {
         $query = "SELECT 
                     comments.id,
@@ -89,7 +89,9 @@ class Comment_model
                     comments.like_count,
                     comments.reply_count,
                     comments.created_at,
+                    comments.deleted_at,
                     users.username,
+                    users.name,
                     users.profile_picture,
                     posts.title AS post_title,
                     posts.uid AS post_uid,
@@ -97,12 +99,17 @@ class Comment_model
                   FROM {$this->table}
                   INNER JOIN users ON comments.user_id = users.id
                   INNER JOIN posts ON comments.post_id = posts.id
-                  WHERE comments.id = :id AND (comments.deleted_at IS NULL)
+                  WHERE comments.id = :id " . ($allowDeleted ? "" : "AND (comments.deleted_at IS NULL)") . "
                   LIMIT 1";
 
         $this->db->query($query);
         $this->db->bind(':id', $id);
         $row = $this->db->single();
+
+        if ($row && !empty($row['deleted_at'])) {
+            $row['is_deleted'] = true;
+            $row['comment'] = '[This comment was deleted by author]';
+        }
 
         return $row ?: false;
     }
@@ -126,6 +133,7 @@ class Comment_model
                     comments.reply_count,
                     comments.created_at,
                     users.username,
+                    users.name,
                     users.profile_picture
                   FROM {$this->table}
                   INNER JOIN users ON comments.user_id = users.id
@@ -156,11 +164,13 @@ class Comment_model
                     comments.like_count,
                     comments.reply_count,
                     comments.created_at,
+                    comments.deleted_at,
                     users.username,
+                    users.name,
                     users.profile_picture
                   FROM {$this->table}
                   INNER JOIN users ON comments.user_id = users.id
-                  WHERE comments.post_id = :post_id AND (comments.deleted_at IS NULL)
+                  WHERE comments.post_id = :post_id
                   ORDER BY comments.created_at ASC";
 
         $this->db->query($query);
@@ -181,9 +191,15 @@ class Comment_model
         $commentMap = [];
         $tree = [];
 
-        // 1. Index all comments by ID and initialize empty replies array
+        // 1. Index all comments by ID and format deleted placeholders
         foreach ($comments as $comment) {
             $comment['replies'] = [];
+            if (!empty($comment['deleted_at'])) {
+                $comment['is_deleted'] = true;
+                $comment['comment'] = '[This comment was deleted by author]';
+            } else {
+                $comment['is_deleted'] = false;
+            }
             $commentMap[$comment['id']] = $comment;
         }
 
@@ -196,6 +212,14 @@ class Comment_model
             }
         }
         unset($comment);
+
+        // 3. Prune deleted comments that have no replies
+        $tree = array_values(array_filter($tree, function ($c) {
+            if (!empty($c['is_deleted'])) {
+                return !empty($c['replies']);
+            }
+            return true;
+        }));
 
         // Sort root discussions newest first
         usort($tree, function ($a, $b) {

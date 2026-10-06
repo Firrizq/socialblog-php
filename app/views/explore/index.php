@@ -174,7 +174,7 @@
                         <!-- Action Bar -->
                         <div class="flex items-center justify-between pt-2 border-t border-outline-variant/20 text-on-surface-variant relative z-10">
                             <div class="flex items-center gap-6">
-                                <a href="<?= $postUrl ?>" class="group/btn flex items-center gap-1.5 hover:text-primary transition-colors">
+                                <a href="<?= $postUrl ?>#discussion" class="group/btn flex items-center gap-1.5 hover:text-primary transition-colors">
                                     <span class="material-symbols-outlined text-[18px]">chat_bubble</span>
                                     <span class="font-body-md text-xs"><?= $post['comment_count'] ?? 0 ?></span>
                                 </a>
@@ -299,7 +299,7 @@
                         <!-- Action Bar -->
                         <div class="flex items-center justify-between pt-2 border-t border-outline-variant/20 text-on-surface-variant relative z-10">
                             <div class="flex items-center gap-6">
-                                <a href="<?= $postUrl ?>" class="group/btn flex items-center gap-1.5 hover:text-primary transition-colors">
+                                <a href="<?= $postUrl ?>#discussion" class="group/btn flex items-center gap-1.5 hover:text-primary transition-colors">
                                     <span class="material-symbols-outlined text-[18px]">chat_bubble</span>
                                     <span class="font-body-md text-xs"><?= $post['comment_count'] ?? 0 ?></span>
                                 </a>

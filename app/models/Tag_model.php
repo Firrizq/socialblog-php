@@ -25,13 +25,10 @@ class Tag_model
     public function processTags(int $postId, string $content): void
     {
         preg_match_all('/(?<!&)#([a-zA-Z_][a-zA-Z0-9_]*)/', $content, $matches);
-        if (empty($matches[1])) {
-            return;
-        }
+        $extractedTags = !empty($matches[1]) ? array_unique($matches[1]) : [];
+        $currentTagIds = [];
 
-        $uniqueTags = array_unique($matches[1]);
-
-        foreach ($uniqueTags as $tag) {
+        foreach ($extractedTags as $tag) {
             $tagName = trim($tag);
             if (empty($tagName)) {
                 continue;
@@ -56,7 +53,21 @@ class Tag_model
                 $this->db->bind(':post_id', $postId);
                 $this->db->bind(':tag_id', $tagId);
                 $this->db->execute();
+                $currentTagIds[] = $tagId;
             }
+        }
+
+        // Delete associations for tags no longer present in this post
+        if (!empty($currentTagIds)) {
+            $inClause = implode(',', array_map('intval', $currentTagIds));
+            $this->db->query("DELETE FROM post_tags WHERE post_id = :post_id AND tag_id NOT IN ({$inClause})");
+            $this->db->bind(':post_id', $postId);
+            $this->db->execute();
+        } else {
+            // No tags present in content, remove all tag associations for this post
+            $this->db->query("DELETE FROM post_tags WHERE post_id = :post_id");
+            $this->db->bind(':post_id', $postId);
+            $this->db->execute();
         }
     }
 
@@ -64,11 +75,17 @@ class Tag_model
      * Retrieve published posts associated with a specific tag
      *
      * @param string $tagName
+     * @param int|null $currentUserId
      * @return array
      */
-    public function getPostsByTag(string $tagName): array
+    public function getPostsByTag(string $tagName, ?int $currentUserId = null): array
     {
+        $isRepostedSubquery = $currentUserId !== null
+            ? "EXISTS(SELECT 1 FROM reposts WHERE reposts.post_id = posts.id AND reposts.user_id = " . (int)$currentUserId . ") AS is_reposted,"
+            : "0 AS is_reposted,";
+
         $query = "SELECT posts.*, users.username, users.name, users.profile_picture,
+                  {$isRepostedSubquery}
                   (SELECT COUNT(*) FROM bookmarks WHERE post_id = posts.id) AS bookmark_count,
                   (SELECT COUNT(*) FROM reposts WHERE post_id = posts.id) AS repost_count
                   FROM posts 
