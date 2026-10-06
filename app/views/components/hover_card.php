@@ -18,7 +18,7 @@ $profileUrl = BASEURL . '/' . urlencode($user['username'] ?? '');
     <!-- 1. Banner Section -->
     <div class="h-20 w-full bg-surface-container-high relative overflow-hidden">
         <?php if ($banner): ?>
-            <img src="<?= BASEURL ?><?= htmlspecialchars($banner) ?>" class="w-full h-full object-cover" alt="Banner">
+            <img src="<?= BASEURL ?><?= htmlspecialchars($banner) ?>" class="w-full h-full object-cover" style="object-position: center <?= htmlspecialchars($user['banner_position'] ?? '50%') ?>;" alt="Banner">
         <?php else: ?>
             <div class="w-full h-full bg-gradient-to-r from-primary/30 via-primary/15 to-surface-container-high"></div>
         <?php endif; ?>

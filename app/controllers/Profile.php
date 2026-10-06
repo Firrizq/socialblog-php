@@ -151,12 +151,13 @@ class Profile extends Controller
      */
     public function edit(): void
     {
-        if (empty($_SESSION['user_id']) || empty($_SESSION['username'])) {
+        $activeUserId = $_SESSION['active_user_id'] ?? $_SESSION['user_id'] ?? null;
+        if (empty($activeUserId)) {
             header('Location: ' . BASEURL . '/auth');
             exit;
         }
 
-        $user = $this->userModel->getUserProfile($_SESSION['username']);
+        $user = $this->userModel->getUserById((int)$activeUserId);
         if (!$user) {
             header('Location: ' . BASEURL . '/home');
             exit;
@@ -165,10 +166,14 @@ class Profile extends Controller
         $error = $_SESSION['flash_error'] ?? '';
         unset($_SESSION['flash_error']);
 
+        $success = $_SESSION['flash_success'] ?? '';
+        unset($_SESSION['flash_success']);
+
         $data = [
             'title' => 'Edit Profile - Blogggle',
             'user' => $user,
-            'error' => $error
+            'error' => $error,
+            'success' => $success
         ];
 
         $this->view('profile/edit', $data);
@@ -179,7 +184,14 @@ class Profile extends Controller
      */
     public function update(): void
     {
-        if (empty($_SESSION['user_id'])) {
+        $activeUserId = $_SESSION['active_user_id'] ?? $_SESSION['user_id'] ?? null;
+        if (empty($activeUserId)) {
+            header('Location: ' . BASEURL . '/auth');
+            exit;
+        }
+
+        $currentUser = $this->userModel->getUserById((int)$activeUserId);
+        if (!$currentUser) {
             header('Location: ' . BASEURL . '/auth');
             exit;
         }
@@ -223,6 +235,9 @@ class Profile extends Controller
         $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
         $submittedName = strip_tags(trim($_POST['name'] ?? ''));
+        $rawUsername = trim($_POST['username'] ?? '');
+        $submittedUsername = strtolower(ltrim($rawUsername, '@'));
+        $currentUsername = strtolower($currentUser['username'] ?? '');
 
         $updateData = [
             'bio' => strip_tags(trim($_POST['bio'] ?? '')),
@@ -231,8 +246,60 @@ class Profile extends Controller
             'tipping_link' => filter_var(trim($_POST['tipping_link'] ?? ''), FILTER_SANITIZE_URL),
         ];
 
+        // 1. Handle Username / Handle Change
+        if (!empty($submittedUsername) && $submittedUsername !== $currentUsername) {
+            // Validate format: 3-30 characters, alphanumeric and underscore only
+            if (!preg_match('/^[a-zA-Z0-9_]{3,30}$/', $submittedUsername)) {
+                $_SESSION['flash_error'] = 'Handle must be between 3 and 30 characters and contain only letters, numbers, and underscores.';
+                header('Location: ' . BASEURL . '/profile/edit');
+                exit;
+            }
+
+            // Check reserved system route keywords
+            $reservedUsernames = [
+                'home', 'post', 'auth', 'explore', 'history', 'bookmarks', 
+                'notifications', 'action', 'upload', 'profile', 'repost', 
+                'api', 'admin', 'root', 'user', 'users', 'login', 'logout', 
+                'register', 'dashboard', 'settings', 'help', 'search', 'public',
+                'assets', 'css', 'js', 'images', 'img', 'static', 'feed'
+            ];
+            $controllerCheck = dirname(__DIR__) . '/controllers/' . ucfirst($submittedUsername) . '.php';
+            if (in_array($submittedUsername, $reservedUsernames, true) || file_exists($controllerCheck)) {
+                $_SESSION['flash_error'] = "The handle '@{$submittedUsername}' is reserved by the system. Please choose another.";
+                header('Location: ' . BASEURL . '/profile/edit');
+                exit;
+            }
+
+            // Check uniqueness against other users
+            if ($this->userModel->isUsernameTakenByOther($submittedUsername, (int)$activeUserId)) {
+                $_SESSION['flash_error'] = "The handle '@{$submittedUsername}' is already taken. Please choose another.";
+                header('Location: ' . BASEURL . '/profile/edit');
+                exit;
+            }
+
+            $updateData['username'] = $submittedUsername;
+        }
+
         if (!empty($submittedName)) {
             $updateData['name'] = $submittedName;
+        }
+
+        // 2. Handle Banner Positioning
+        if (isset($_POST['banner_position'])) {
+            $pos = trim($_POST['banner_position']);
+            if (is_numeric($pos)) {
+                $num = max(0, min(100, (int)$pos));
+                $updateData['banner_position'] = $num . '%';
+            } elseif (preg_match('/^(\d{1,3})%?$/', $pos, $matches)) {
+                $num = max(0, min(100, (int)$matches[1]));
+                $updateData['banner_position'] = $num . '%';
+            } elseif (in_array(strtolower($pos), ['top', 'center', 'bottom'], true)) {
+                $updateData['banner_position'] = match(strtolower($pos)) {
+                    'top' => '0%',
+                    'bottom' => '100%',
+                    default => '50%'
+                };
+            }
         }
 
         // Process Avatar Upload
@@ -243,7 +310,7 @@ class Profile extends Controller
             $ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
 
             if (in_array($mime, $allowedMimes, true) && in_array($ext, $allowedExtensions, true)) {
-                $filename = 'avatar_' . $_SESSION['user_id'] . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
+                $filename = 'avatar_' . $activeUserId . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
                 if (move_uploaded_file($tmpName, $avatarDir . $filename)) {
                     $updateData['profile_picture'] = '/uploads/avatars/' . $filename;
                 }
@@ -258,33 +325,22 @@ class Profile extends Controller
             $ext = strtolower(pathinfo($_FILES['banner']['name'], PATHINFO_EXTENSION));
 
             if (in_array($mime, $allowedMimes, true) && in_array($ext, $allowedExtensions, true)) {
-                $filename = 'banner_' . $_SESSION['user_id'] . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
+                $filename = 'banner_' . $activeUserId . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
                 if (move_uploaded_file($tmpName, $bannerDir . $filename)) {
                     $updateData['banner_picture'] = '/uploads/banners/' . $filename;
                 }
             }
         }
 
-        $uid = (int)$_SESSION['user_id'];
-        if (!empty($updateData['name'])) {
-            $_SESSION['name'] = $updateData['name'];
-            if (isset($_SESSION['accounts'][$uid])) {
-                $_SESSION['accounts'][$uid]['name'] = $updateData['name'];
-            }
-        }
+        $uid = (int)$activeUserId;
+        $this->userModel->updateProfile($uid, $updateData);
 
-        if (isset($updateData['profile_picture'])) {
-            $_SESSION['profile_picture'] = $updateData['profile_picture'];
-            $_SESSION['avatar'] = $updateData['profile_picture'];
-            if (isset($_SESSION['accounts'][$uid])) {
-                $_SESSION['accounts'][$uid]['profile_picture'] = $updateData['profile_picture'];
-                $_SESSION['accounts'][$uid]['avatar'] = $updateData['profile_picture'];
-            }
-        }
+        // Synchronize multi-account session state from updated database record
+        Controller::initSession();
 
-        $this->userModel->updateProfile((int)$_SESSION['user_id'], $updateData);
-
-        header('Location: ' . BASEURL . '/profile');
+        $_SESSION['flash_success'] = 'Profile updated successfully!';
+        $targetUsername = $updateData['username'] ?? $_SESSION['username'] ?? 'profile';
+        header('Location: ' . BASEURL . '/' . urlencode($targetUsername));
         exit;
     }
 
@@ -293,12 +349,13 @@ class Profile extends Controller
      */
     public function removeAvatar(): void
     {
-        if (empty($_SESSION['user_id']) || empty($_SESSION['username'])) {
+        $activeUserId = $_SESSION['active_user_id'] ?? $_SESSION['user_id'] ?? null;
+        if (empty($activeUserId)) {
             header('Location: ' . BASEURL . '/auth');
             exit;
         }
 
-        $user = $this->userModel->getUserProfile($_SESSION['username']);
+        $user = $this->userModel->getUserById((int)$activeUserId);
 
         if (!empty($user['profile_picture'])) {
             $filePath = dirname(__DIR__, 2) . '/public' . $user['profile_picture'];
@@ -307,14 +364,10 @@ class Profile extends Controller
             }
         }
 
-        $this->userModel->removeAvatar((int)$_SESSION['user_id']);
-        unset($_SESSION['profile_picture'], $_SESSION['avatar']);
-        $uid = (int)$_SESSION['user_id'];
-        if (isset($_SESSION['accounts'][$uid])) {
-            $_SESSION['accounts'][$uid]['profile_picture'] = null;
-            $_SESSION['accounts'][$uid]['avatar'] = null;
-        }
+        $this->userModel->removeAvatar((int)$activeUserId);
+        Controller::initSession();
 
+        $_SESSION['flash_success'] = 'Avatar removed successfully.';
         header('Location: ' . BASEURL . '/profile/edit');
         exit;
     }
@@ -324,12 +377,13 @@ class Profile extends Controller
      */
     public function removeBanner(): void
     {
-        if (empty($_SESSION['user_id']) || empty($_SESSION['username'])) {
+        $activeUserId = $_SESSION['active_user_id'] ?? $_SESSION['user_id'] ?? null;
+        if (empty($activeUserId)) {
             header('Location: ' . BASEURL . '/auth');
             exit;
         }
 
-        $user = $this->userModel->getUserProfile($_SESSION['username']);
+        $user = $this->userModel->getUserById((int)$activeUserId);
 
         if (!empty($user['banner_picture'])) {
             $filePath = dirname(__DIR__, 2) . '/public' . $user['banner_picture'];
@@ -338,7 +392,10 @@ class Profile extends Controller
             }
         }
 
-        $this->userModel->removeBanner((int)$_SESSION['user_id']);
+        $this->userModel->removeBanner((int)$activeUserId);
+        Controller::initSession();
+
+        $_SESSION['flash_success'] = 'Banner removed successfully.';
         header('Location: ' . BASEURL . '/profile/edit');
         exit;
     }

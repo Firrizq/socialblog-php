@@ -48,7 +48,7 @@ $profileUsername = $user['username'] ?? $data['profile_user']['username'] ?? '';
             <!-- Banner (Gradient Fallback) -->
             <div class="h-32 sm:h-48 w-full bg-surface-container-high relative">
                 <?php if (!empty($data['user']['banner_picture'])): ?>
-                    <img src="<?= BASEURL ?><?= htmlspecialchars($data['user']['banner_picture']) ?>" class="w-full h-full object-cover">
+                    <img src="<?= BASEURL ?><?= htmlspecialchars($data['user']['banner_picture']) ?>" class="w-full h-full object-cover" style="object-position: center <?= htmlspecialchars($data['user']['banner_position'] ?? '50%') ?>;" alt="Banner">
                 <?php else: ?>
                     <div class="w-full h-full bg-gradient-to-r from-primary/20 to-primary/5"></div>
                 <?php endif; ?>

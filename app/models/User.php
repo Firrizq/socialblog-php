@@ -95,7 +95,7 @@ class User
      */
     public function getUserById(int $userId): array|false
     {
-        $this->db->query("SELECT id, name, username, email, bio, profile_picture, banner_picture, location, profile_link, tipping_link, follower_count, following_count, created_at FROM {$this->table} WHERE id = :id LIMIT 1");
+        $this->db->query("SELECT id, name, username, email, bio, profile_picture, banner_picture, banner_position, location, profile_link, tipping_link, follower_count, following_count, created_at FROM {$this->table} WHERE id = :id LIMIT 1");
         $this->db->bind(':id', $userId);
         $row = $this->db->single();
 
@@ -110,7 +110,7 @@ class User
      */
     public function getUserProfile(string $username): array|false
     {
-        $this->db->query("SELECT id, name, username, email, bio, profile_picture, banner_picture, location, profile_link, tipping_link, follower_count, following_count, created_at FROM {$this->table} WHERE username = :username LIMIT 1");
+        $this->db->query("SELECT id, name, username, email, bio, profile_picture, banner_picture, banner_position, location, profile_link, tipping_link, follower_count, following_count, created_at FROM {$this->table} WHERE username = :username LIMIT 1");
         $this->db->bind(':username', $username);
         $row = $this->db->single();
 
@@ -133,6 +133,10 @@ class User
             'tipping_link = :tipping_link'
         ];
 
+        if (array_key_exists('username', $data) && !empty($data['username'])) {
+            $fields[] = 'username = :username';
+        }
+
         if (array_key_exists('name', $data) && !empty($data['name'])) {
             $fields[] = 'name = :name';
         }
@@ -145,6 +149,10 @@ class User
             $fields[] = 'banner_picture = :banner_picture';
         }
 
+        if (array_key_exists('banner_position', $data)) {
+            $fields[] = 'banner_position = :banner_position';
+        }
+
         $sql = "UPDATE {$this->table} SET " . implode(', ', $fields) . " WHERE id = :user_id";
         $this->db->query($sql);
 
@@ -153,6 +161,10 @@ class User
         $this->db->bind(':profile_link', $data['profile_link'] ?? null);
         $this->db->bind(':tipping_link', $data['tipping_link'] ?? null);
         $this->db->bind(':user_id', $userId);
+
+        if (array_key_exists('username', $data) && !empty($data['username'])) {
+            $this->db->bind(':username', $data['username']);
+        }
 
         if (array_key_exists('name', $data) && !empty($data['name'])) {
             $this->db->bind(':name', $data['name']);
@@ -166,7 +178,26 @@ class User
             $this->db->bind(':banner_picture', $data['banner_picture']);
         }
 
+        if (array_key_exists('banner_position', $data)) {
+            $this->db->bind(':banner_position', $data['banner_position']);
+        }
+
         return $this->db->execute();
+    }
+
+    /**
+     * Check if a username is already taken by a different user
+     *
+     * @param string $username
+     * @param int $excludeUserId
+     * @return bool
+     */
+    public function isUsernameTakenByOther(string $username, int $excludeUserId): bool
+    {
+        $this->db->query("SELECT id FROM {$this->table} WHERE LOWER(username) = LOWER(:username) AND id != :exclude_id LIMIT 1");
+        $this->db->bind(':username', $username);
+        $this->db->bind(':exclude_id', $excludeUserId);
+        return (bool)$this->db->single();
     }
 
     /**
@@ -191,7 +222,7 @@ class User
      */
     public function removeBanner(int $userId): bool
     {
-        $this->db->query("UPDATE {$this->table} SET banner_picture = NULL WHERE id = :user_id");
+        $this->db->query("UPDATE {$this->table} SET banner_picture = NULL, banner_position = '50%' WHERE id = :user_id");
         $this->db->bind(':user_id', $userId);
 
         return $this->db->execute();
@@ -300,7 +331,7 @@ class User
             ? "EXISTS(SELECT 1 FROM followings fl WHERE fl.user_id = " . (int)$currentUserId . " AND fl.target_id = u.id) AS is_following,"
             : "0 AS is_following,";
 
-        $sql = "SELECT u.id, u.name, u.username, u.profile_picture, u.banner_picture, u.bio, u.follower_count, u.following_count,
+        $sql = "SELECT u.id, u.name, u.username, u.profile_picture, u.banner_picture, u.banner_position, u.bio, u.follower_count, u.following_count,
                        {$isFollowingSelect}
                        u.created_at
                 FROM {$this->table} u
