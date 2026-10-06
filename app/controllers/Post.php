@@ -85,7 +85,7 @@ class Post extends Controller
                 return;
             }
 
-            $status = ($_POST['action'] ?? 'publish') === 'draft' ? 'draft' : 'published';
+            $status = (($_POST['action'] ?? $_POST['status'] ?? 'publish') === 'draft') ? 'draft' : 'published';
 
             // Save post
             $newPostId = $this->postModel->createPost([
@@ -99,7 +99,11 @@ class Post extends Controller
 
             if ($newPostId) {
                 (new Tag_model())->processTags((int)$newPostId, $content);
-                header('Location: ' . BASEURL . '/home');
+                if ($status === 'draft') {
+                    header('Location: ' . BASEURL . '/profile?tab=drafts');
+                } else {
+                    header('Location: ' . BASEURL . '/home');
+                }
                 exit;
             } else {
                 $data['error'] = 'Failed to publish post. Please try again.';
@@ -175,7 +179,7 @@ class Post extends Controller
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             $rawContent = trim($_POST['content'] ?? '');
             $coverImage = trim($_POST['cover_image'] ?? '');
-            $status = ($_POST['action'] ?? 'publish') === 'draft' ? 'draft' : 'published';
+            $status = (($_POST['action'] ?? $_POST['status'] ?? 'publish') === 'draft') ? 'draft' : 'published';
 
             if ($isNote) {
                 $title = null;
@@ -226,7 +230,7 @@ class Post extends Controller
                     header('Location: ' . BASEURL . '/post/detail/' . $id);
                 }
             } else {
-                header('Location: ' . BASEURL . '/profile');
+                header('Location: ' . BASEURL . '/profile?tab=drafts');
             }
             exit;
         }
@@ -336,6 +340,9 @@ class Post extends Controller
                 $historyModel->recordProgress((int)$currentUserId, $postId, 10);
                 $readingProgress = 10;
             }
+            $likedCommentIds = $interactionModel->getUserLikedCommentIds((int)$currentUserId);
+        } else {
+            $likedCommentIds = [];
         }
 
         $data = [
@@ -345,7 +352,8 @@ class Post extends Controller
             'is_liked' => $isLiked,
             'is_bookmarked' => $isBookmarked,
             'is_reposted' => $isReposted,
-            'reading_progress' => $readingProgress
+            'reading_progress' => $readingProgress,
+            'liked_comment_ids' => $likedCommentIds
         ];
 
         $this->view('post/detail', $data);
@@ -449,12 +457,23 @@ class Post extends Controller
             $parentComment = $this->commentModel->getCommentById((int)$comment['parent_id']);
         }
 
+        $isCommentLiked = false;
+        $likedCommentIds = [];
+        $currentUserId = $_SESSION['active_user_id'] ?? $_SESSION['user_id'] ?? null;
+        if (!empty($currentUserId)) {
+            $interactionModel = $this->model('Interaction_model');
+            $isCommentLiked = $interactionModel->isCommentLiked((int)$currentUserId, (int)$comment['id']);
+            $likedCommentIds = $interactionModel->getUserLikedCommentIds((int)$currentUserId);
+        }
+
         $data = [
             'title' => 'Thread by @' . htmlspecialchars($comment['username']) . ' - Blogggle',
             'comment' => $comment,
             'post' => $post,
             'parent_comment' => $parentComment,
-            'replies' => $replies
+            'replies' => $replies,
+            'is_comment_liked' => $isCommentLiked,
+            'liked_comment_ids' => $likedCommentIds
         ];
 
         $this->view('post/comment_detail', $data);
@@ -506,6 +525,67 @@ class Post extends Controller
             header('Location: ' . BASEURL . '/profile');
         }
         exit;
+    }
+
+    /**
+     * Delete a comment owned by the authenticated user (or on a story owned by the user)
+     * POST /post/deleteComment/{id}
+     *
+     * @param string|int $id
+     */
+    public function deleteComment(string|int $id = 0): void
+    {
+        // Enforce authentication
+        if (empty($_SESSION['user_id'])) {
+            if ($this->isAjaxRequest()) {
+                http_response_code(401);
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+                exit;
+            }
+            header('Location: ' . BASEURL . '/auth');
+            exit;
+        }
+
+        // Enforce POST method
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            if ($this->isAjaxRequest()) {
+                http_response_code(405);
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Method Not Allowed']);
+                exit;
+            }
+            header('Location: ' . BASEURL . '/home');
+            exit;
+        }
+
+        $commentId = (int)$id;
+        $userId = (int)$_SESSION['user_id'];
+
+        $deleted = $this->commentModel->deleteComment($commentId, $userId);
+
+        if ($this->isAjaxRequest()) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => $deleted,
+                'message' => $deleted ? 'Comment deleted successfully' : 'Failed to delete comment or unauthorized'
+            ]);
+            exit;
+        }
+
+        $referer = $_SERVER['HTTP_REFERER'] ?? '';
+        if (!empty($referer)) {
+            header('Location: ' . $referer);
+        } else {
+            header('Location: ' . BASEURL . '/home');
+        }
+        exit;
+    }
+
+    private function isAjaxRequest(): bool
+    {
+        return (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+            || (str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json'));
     }
 
     /**

@@ -184,6 +184,83 @@
                 return;
             }
 
+            // 1b. Handle Comment Like (.btn-like-comment)
+            const commentLikeBtn = e.target.closest('.btn-like-comment');
+            if (commentLikeBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const commentId = commentLikeBtn.dataset.id;
+                if (!commentId) return;
+
+                commentLikeBtn.disabled = true;
+
+                try {
+                    const response = await fetch(`${BASE_URL}/action/likeComment/${commentId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    if (response.status === 401) {
+                        window.location.href = `${BASE_URL}/auth`;
+                        return;
+                    }
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        const icon = commentLikeBtn.querySelector('.material-symbols-outlined');
+                        const countSpan = commentLikeBtn.querySelector('.comment-like-count');
+
+                        if (data.status === 'liked') {
+                            commentLikeBtn.classList.add('text-error');
+                            commentLikeBtn.classList.remove('text-on-surface-variant');
+                            if (icon) {
+                                icon.style.fontVariationSettings = "'FILL' 1";
+                            }
+                        } else {
+                            commentLikeBtn.classList.remove('text-error');
+                            commentLikeBtn.classList.add('text-on-surface-variant');
+                            if (icon) {
+                                icon.style.fontVariationSettings = "'FILL' 0";
+                            }
+                        }
+
+                        if (countSpan && typeof data.count !== 'undefined') {
+                            countSpan.textContent = data.count;
+                        }
+
+                        // Sync any duplicate comment like buttons for the same comment
+                        document.querySelectorAll(`.btn-like-comment[data-id="${commentId}"]`).forEach(btn => {
+                            if (btn !== commentLikeBtn) {
+                                const otherIcon = btn.querySelector('.material-symbols-outlined');
+                                const otherCount = btn.querySelector('.comment-like-count');
+                                if (data.status === 'liked') {
+                                    btn.classList.add('text-error');
+                                    btn.classList.remove('text-on-surface-variant');
+                                    if (otherIcon) otherIcon.style.fontVariationSettings = "'FILL' 1";
+                                } else {
+                                    btn.classList.remove('text-error');
+                                    btn.classList.add('text-on-surface-variant');
+                                    if (otherIcon) otherIcon.style.fontVariationSettings = "'FILL' 0";
+                                }
+                                if (otherCount && typeof data.count !== 'undefined') {
+                                    otherCount.textContent = data.count;
+                                }
+                            }
+                        });
+                    }
+                } catch (err) {
+                    console.error('Comment like error:', err);
+                } finally {
+                    commentLikeBtn.disabled = false;
+                }
+                return;
+            }
+
             // 2. Handle Bookmark (.btn-bookmark)
             const bookmarkBtn = e.target.closest('.btn-bookmark');
             if (bookmarkBtn) {

@@ -73,6 +73,82 @@ class Interaction_model
     }
 
     /**
+     * Toggle like status for a comment by a user
+     * Updates like count on the comments table accordingly.
+     *
+     * @param int $userId
+     * @param int $commentId
+     * @return array ['status' => 'liked'|'unliked', 'count' => int]
+     */
+    public function toggleCommentLike(int $userId, int $commentId): array
+    {
+        // 1. Fetch comment to verify existence
+        $this->db->query("SELECT id, post_id, user_id, like_count FROM comments WHERE id = :comment_id AND deleted_at IS NULL LIMIT 1");
+        $this->db->bind(':comment_id', $commentId);
+        $comment = $this->db->single();
+
+        if (!$comment) {
+            return [
+                'status' => 'error',
+                'message' => 'Comment not found',
+                'count' => 0
+            ];
+        }
+
+        // 2. Check if like already exists
+        $this->db->query("SELECT id FROM likes WHERE user_id = :user_id AND comment_id = :comment_id LIMIT 1");
+        $this->db->bind(':user_id', $userId);
+        $this->db->bind(':comment_id', $commentId);
+        $existing = $this->db->single();
+
+        if ($existing) {
+            // Delete like
+            $this->db->query("DELETE FROM likes WHERE user_id = :user_id AND comment_id = :comment_id");
+            $this->db->bind(':user_id', $userId);
+            $this->db->bind(':comment_id', $commentId);
+            $this->db->execute();
+
+            // Decrement like count
+            $this->db->query("UPDATE comments SET like_count = GREATEST(like_count - 1, 0) WHERE id = :comment_id");
+            $this->db->bind(':comment_id', $commentId);
+            $this->db->execute();
+
+            $status = 'unliked';
+        } else {
+            // Insert like
+            $this->db->query("INSERT INTO likes (user_id, comment_id) VALUES (:user_id, :comment_id)");
+            $this->db->bind(':user_id', $userId);
+            $this->db->bind(':comment_id', $commentId);
+            $this->db->execute();
+
+            // Increment like count
+            $this->db->query("UPDATE comments SET like_count = like_count + 1 WHERE id = :comment_id");
+            $this->db->bind(':comment_id', $commentId);
+            $this->db->execute();
+
+            $status = 'liked';
+
+            // Send notification if not liking own comment
+            $commentAuthorId = (int)($comment['user_id'] ?? 0);
+            if ($commentAuthorId > 0 && $commentAuthorId !== $userId) {
+                $notificationModel = new Notification_model();
+                $notificationModel->addNotification($commentAuthorId, $userId, 'like_comment', (int)$comment['post_id']);
+            }
+        }
+
+        // 3. Fetch updated like count
+        $this->db->query("SELECT like_count FROM comments WHERE id = :comment_id LIMIT 1");
+        $this->db->bind(':comment_id', $commentId);
+        $updatedComment = $this->db->single();
+        $count = (int)($updatedComment['like_count'] ?? 0);
+
+        return [
+            'status' => $status,
+            'count' => $count
+        ];
+    }
+
+    /**
      * Toggle bookmark status for a post by a user
      *
      * @param int $userId
@@ -249,6 +325,35 @@ class Interaction_model
         $this->db->bind(':user_id', $userId);
         $rows = $this->db->resultSet();
         return array_column($rows, 'post_id');
+    }
+
+    /**
+     * Check if a user has liked a specific comment
+     *
+     * @param int $userId
+     * @param int $commentId
+     * @return bool
+     */
+    public function isCommentLiked(int $userId, int $commentId): bool
+    {
+        $this->db->query("SELECT id FROM likes WHERE user_id = :user_id AND comment_id = :comment_id LIMIT 1");
+        $this->db->bind(':user_id', $userId);
+        $this->db->bind(':comment_id', $commentId);
+        return (bool)$this->db->single();
+    }
+
+    /**
+     * Get all comment IDs liked by a user
+     *
+     * @param int $userId
+     * @return array List of comment IDs
+     */
+    public function getUserLikedCommentIds(int $userId): array
+    {
+        $this->db->query("SELECT comment_id FROM likes WHERE user_id = :user_id AND comment_id IS NOT NULL");
+        $this->db->bind(':user_id', $userId);
+        $rows = $this->db->resultSet();
+        return array_map('intval', array_column($rows, 'comment_id'));
     }
 
     /**

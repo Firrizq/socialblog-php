@@ -205,6 +205,58 @@ class User
 
         return $this->db->resultSet();
     }
+
+    /**
+     * Get users following a specific user
+     *
+     * @param int $userId
+     * @param int|null $currentUserId
+     * @return array
+     */
+    public function getFollowers(int $userId, ?int $currentUserId = null): array
+    {
+        $isFollowingSelect = $currentUserId
+            ? "EXISTS(SELECT 1 FROM followings fl WHERE fl.user_id = " . (int)$currentUserId . " AND fl.target_id = u.id) AS is_following,"
+            : "0 AS is_following,";
+
+        $sql = "SELECT u.id, u.name, u.username, u.profile_picture, u.bio, u.follower_count,
+                       {$isFollowingSelect}
+                       f.created_at AS followed_at
+                FROM {$this->table} u
+                INNER JOIN followers f ON u.id = f.target_id
+                WHERE f.user_id = :user_id
+                ORDER BY f.created_at DESC";
+
+        $this->db->query($sql);
+        $this->db->bind(':user_id', $userId);
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Get users followed by a specific user
+     *
+     * @param int $userId
+     * @param int|null $currentUserId
+     * @return array
+     */
+    public function getFollowing(int $userId, ?int $currentUserId = null): array
+    {
+        $isFollowingSelect = $currentUserId
+            ? "EXISTS(SELECT 1 FROM followings fl WHERE fl.user_id = " . (int)$currentUserId . " AND fl.target_id = u.id) AS is_following,"
+            : "0 AS is_following,";
+
+        $sql = "SELECT u.id, u.name, u.username, u.profile_picture, u.bio, u.follower_count,
+                       {$isFollowingSelect}
+                       f.created_at AS followed_at
+                FROM {$this->table} u
+                INNER JOIN followings f ON u.id = f.target_id
+                WHERE f.user_id = :user_id
+                ORDER BY f.created_at DESC";
+
+        $this->db->query($sql);
+        $this->db->bind(':user_id', $userId);
+        return $this->db->resultSet();
+    }
 }
 
 

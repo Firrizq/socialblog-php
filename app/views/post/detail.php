@@ -263,9 +263,16 @@ $comments = $data['comments'] ?? [];
                                     <button type="button" class="flex items-center gap-1.5 hover:text-primary transition-colors text-xs font-title-md" onclick="window.location.href='<?= $commentDetailUrl ?>'">
                                         <span class="material-symbols-outlined text-[18px]">reply</span> Reply (<?= (int)($comment['reply_count'] ?? 0) ?>)
                                     </button>
-                                    <?php if(isset($_SESSION['user_id']) && !empty($comment['user_id']) && $_SESSION['user_id'] == $comment['user_id']): ?>
-                                        <form action="<?= BASEURL ?>/post/deleteComment/<?= (int)($comment['id'] ?? 0) ?>" method="POST" class="m-0" onsubmit="return confirm('Delete this comment?');">
-                                            <button type="submit" class="flex items-center gap-1.5 hover:text-error transition-colors text-xs font-title-md opacity-0 group-hover:opacity-100 focus:opacity-100">
+                                    <?php 
+                                        $isCommentLiked = in_array((int)$comment['id'], $data['liked_comment_ids'] ?? [], true);
+                                    ?>
+                                    <button type="button" class="btn-like-comment flex items-center gap-1.5 <?= $isCommentLiked ? 'text-error' : 'hover:text-error' ?> transition-colors text-xs font-title-md active:scale-95" data-id="<?= (int)$comment['id'] ?>" title="Like">
+                                        <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' <?= $isCommentLiked ? 1 : 0 ?>;">favorite</span>
+                                        <span class="comment-like-count"><?= (int)($comment['like_count'] ?? 0) ?></span>
+                                    </button>
+                                    <?php if(isset($_SESSION['user_id']) && (!empty($comment['user_id']) && $_SESSION['user_id'] == $comment['user_id'] || !empty($post['user_id']) && $_SESSION['user_id'] == $post['user_id'])): ?>
+                                        <form action="<?= BASEURL ?>/post/deleteComment/<?= (int)($comment['id'] ?? 0) ?>" method="POST" class="m-0 ml-auto" onsubmit="return confirm('Delete this comment?');">
+                                            <button type="submit" class="flex items-center gap-1.5 hover:text-error transition-colors text-xs font-title-md opacity-0 group-hover:opacity-100 focus:opacity-100" title="Delete Comment">
                                                 <span class="material-symbols-outlined text-[16px]">delete</span>
                                             </button>
                                         </form>

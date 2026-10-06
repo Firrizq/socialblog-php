@@ -82,13 +82,18 @@ class Profile extends Controller
         $currentUserId = !empty($activeUserId) ? (int)$activeUserId : null;
 
         $tab = $_GET['tab'] ?? 'posts';
-        if (!in_array($tab, ['posts', 'replies', 'reposts', 'media'], true)) {
+        $allowedTabs = ['posts', 'replies', 'reposts', 'media'];
+        if ($isOwner) {
+            $allowedTabs[] = 'drafts';
+        }
+        if (!in_array($tab, $allowedTabs, true)) {
             $tab = 'posts';
         }
 
         $posts = [];
         $replies = [];
         $mediaPosts = [];
+        $drafts = [];
 
         if ($tab === 'reposts') {
             $posts = $this->postModel->getRepostedPostsByUser((int)$profileUser['id'], $currentUserId);
@@ -96,6 +101,8 @@ class Profile extends Controller
             $replies = $this->commentModel->getRepliesByUser((int)$profileUser['id']);
         } elseif ($tab === 'media') {
             $mediaPosts = $this->postModel->getMediaPostsByUser((int)$profileUser['id'], $isOwner, $currentUserId);
+        } elseif ($tab === 'drafts' && $isOwner) {
+            $drafts = $this->postModel->getDraftsByUser((int)$profileUser['id']);
         } else {
             $posts = $this->postModel->getPostsByUser((int)$profileUser['id'], $isOwner, $currentUserId);
         }
@@ -121,6 +128,7 @@ class Profile extends Controller
             'posts' => $posts,
             'replies' => $replies,
             'media_posts' => $mediaPosts,
+            'drafts' => $drafts,
             'active_tab' => $tab,
             'liked_posts' => $likedPosts,
             'bookmarked_posts' => $bookmarkedPosts,
@@ -360,6 +368,88 @@ class Profile extends Controller
         // Render HTML Partial
         header('Content-Type: text/html; charset=utf-8');
         $this->view('components/hover_card', $data);
+        exit;
+    }
+
+    /**
+     * Get JSON list of followers for a user
+     * GET /profile/followers/{username}
+     *
+     * @param string $username
+     */
+    public function followers(string $username = ''): void
+    {
+        $username = ltrim(trim($username), '@');
+        if (empty($username)) {
+            $username = $_SESSION['username'] ?? '';
+        }
+
+        $profileUser = $this->userModel->getUserProfile($username);
+        if (!$profileUser && is_numeric($username)) {
+            $profileUser = $this->userModel->getUserById((int)$username);
+        }
+
+        if (!$profileUser) {
+            http_response_code(404);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false, 'message' => 'User not found', 'users' => []]);
+            exit;
+        }
+
+        $currentUserId = $_SESSION['active_user_id'] ?? $_SESSION['user_id'] ?? null;
+        $users = $this->userModel->getFollowers((int)$profileUser['id'], $currentUserId ? (int)$currentUserId : null);
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => true,
+            'user' => [
+                'id' => (int)$profileUser['id'],
+                'username' => $profileUser['username'],
+                'name' => $profileUser['name'] ?? $profileUser['username']
+            ],
+            'users' => $users
+        ]);
+        exit;
+    }
+
+    /**
+     * Get JSON list of following for a user
+     * GET /profile/following/{username}
+     *
+     * @param string $username
+     */
+    public function following(string $username = ''): void
+    {
+        $username = ltrim(trim($username), '@');
+        if (empty($username)) {
+            $username = $_SESSION['username'] ?? '';
+        }
+
+        $profileUser = $this->userModel->getUserProfile($username);
+        if (!$profileUser && is_numeric($username)) {
+            $profileUser = $this->userModel->getUserById((int)$username);
+        }
+
+        if (!$profileUser) {
+            http_response_code(404);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false, 'message' => 'User not found', 'users' => []]);
+            exit;
+        }
+
+        $currentUserId = $_SESSION['active_user_id'] ?? $_SESSION['user_id'] ?? null;
+        $users = $this->userModel->getFollowing((int)$profileUser['id'], $currentUserId ? (int)$currentUserId : null);
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => true,
+            'user' => [
+                'id' => (int)$profileUser['id'],
+                'username' => $profileUser['username'],
+                'name' => $profileUser['name'] ?? $profileUser['username']
+            ],
+            'users' => $users
+        ]);
         exit;
     }
 }

@@ -109,7 +109,7 @@ class Post_model
      */
     public function getPostsByUser(int $user_id, bool $isOwner = false, ?int $currentUserId = null): array
     {
-        $statusCondition = $isOwner ? "" : " AND posts.status = 'published'";
+        $statusCondition = " AND posts.status = 'published'";
         $isRepostedSelect = $currentUserId
             ? "EXISTS(SELECT 1 FROM reposts WHERE reposts.post_id = posts.id AND reposts.user_id = " . (int)$currentUserId . ") AS is_reposted,"
             : "0 AS is_reposted,";
@@ -463,6 +463,35 @@ class Post_model
                         OR posts.content LIKE '%<img%'
                     )
                   ORDER BY posts.created_at DESC";
+
+        $this->db->query($query);
+        $this->db->bind(':user_id', $user_id);
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Fetch all unpublished drafts authored by a specific user, ordered by last update newest first
+     *
+     * @param int $user_id
+     * @return array
+     */
+    public function getDraftsByUser(int $user_id): array
+    {
+        $query = "SELECT 
+                    posts.*,
+                    users.username,
+                    users.email,
+                    users.profile_picture,
+                    (SELECT COUNT(*) FROM bookmarks WHERE post_id = posts.id) AS bookmark_count,
+                    (SELECT COUNT(*) FROM reposts WHERE post_id = posts.id) AS repost_count,
+                    0 AS is_reposted,
+                    NULL AS repost_user_id,
+                    NULL AS repost_username,
+                    NULL AS repost_name
+                  FROM {$this->table}
+                  INNER JOIN users ON posts.user_id = users.id
+                  WHERE posts.user_id = :user_id AND posts.status = 'draft'
+                  ORDER BY posts.updated_at DESC, posts.created_at DESC";
 
         $this->db->query($query);
         $this->db->bind(':user_id', $user_id);

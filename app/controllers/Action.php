@@ -45,6 +45,49 @@ class Action extends Controller
     }
 
     /**
+     * Toggle like on a comment
+     * POST /action/likeComment/{comment_id}
+     *
+     * @param string|int $commentId
+     */
+    public function likeComment(string|int $commentId = 0): void
+    {
+        $this->requireAuth();
+        $this->requirePostMethod();
+
+        $commentId = (int)$commentId;
+        if ($commentId <= 0) {
+            $this->jsonResponse([
+                'success' => false,
+                'message' => 'Invalid comment ID'
+            ], 400);
+        }
+
+        $userId = (int)$_SESSION['user_id'];
+        $result = $this->interactionModel->toggleCommentLike($userId, $commentId);
+
+        if (($result['status'] ?? '') === 'error') {
+            $this->jsonResponse([
+                'success' => false,
+                'message' => $result['message'] ?? 'Comment not found'
+            ], 404);
+        }
+
+        $this->jsonResponse(array_merge([
+            'success' => true,
+            'comment_id' => $commentId
+        ], $result));
+    }
+
+    /**
+     * Alias for snake_case routing
+     */
+    public function like_comment(string|int $commentId = 0): void
+    {
+        $this->likeComment($commentId);
+    }
+
+    /**
      * Toggle bookmark on a post
      * POST /action/bookmark/{post_id}
      *

@@ -210,19 +210,31 @@ $replies = $data['replies'] ?? [];
             </div>
 
             <!-- Interaction Buttons Bar -->
+            <?php 
+                $isCommentLiked = !empty($data['is_comment_liked']);
+            ?>
             <div class="flex items-center justify-around py-1 text-on-surface-variant">
                 <button type="button" onclick="document.getElementById('thread-reply-input').focus();" class="flex items-center gap-1.5 hover:text-primary transition-colors text-xs font-caption py-1.5 px-3 rounded-full hover:bg-surface-container">
                     <span class="material-symbols-outlined text-lg">reply</span>
                     <span>Reply</span>
                 </button>
-                <button type="button" class="flex items-center gap-1.5 hover:text-primary transition-colors text-xs font-caption py-1.5 px-3 rounded-full hover:bg-surface-container">
-                    <span class="material-symbols-outlined text-lg">favorite</span>
+                <button type="button" class="btn-like-comment flex items-center gap-1.5 <?= $isCommentLiked ? 'text-error' : 'hover:text-error' ?> transition-colors text-xs font-caption py-1.5 px-3 rounded-full hover:bg-surface-container active:scale-95" data-id="<?= (int)$comment['id'] ?>" title="Like">
+                    <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' <?= $isCommentLiked ? 1 : 0 ?>;">favorite</span>
                     <span>Like</span>
+                    <span class="comment-like-count font-semibold"><?= (int)($comment['like_count'] ?? 0) > 0 ? (int)$comment['like_count'] : '' ?></span>
                 </button>
                 <button type="button" onclick="navigator.clipboard.writeText(window.location.href); showToast('Thread link copied!');" class="flex items-center gap-1.5 hover:text-primary transition-colors text-xs font-caption py-1.5 px-3 rounded-full hover:bg-surface-container">
                     <span class="material-symbols-outlined text-lg">share</span>
                     <span>Share</span>
                 </button>
+                <?php if (isset($_SESSION['user_id']) && (!empty($comment['user_id']) && $_SESSION['user_id'] == $comment['user_id'] || !empty($post['user_id']) && $_SESSION['user_id'] == $post['user_id'])): ?>
+                    <form action="<?= BASEURL ?>/post/deleteComment/<?= (int)$comment['id'] ?>" method="POST" class="m-0" onsubmit="return confirm('Delete this comment?');">
+                        <button type="submit" class="flex items-center gap-1.5 hover:text-error transition-colors text-xs font-caption py-1.5 px-3 rounded-full hover:bg-surface-container" title="Delete Comment">
+                            <span class="material-symbols-outlined text-lg">delete</span>
+                            <span>Delete</span>
+                        </button>
+                    </form>
+                <?php endif; ?>
             </div>
         </article>
 
@@ -330,6 +342,19 @@ $replies = $data['replies'] ?? [];
                                             <span>Reply</span>
                                         </button>
 
+                                        <?php 
+                                            $isReplyLiked = in_array((int)$reply['id'], $data['liked_comment_ids'] ?? [], true);
+                                        ?>
+                                        <button 
+                                            type="button" 
+                                            class="btn-like-comment inline-flex items-center gap-1 text-xs <?= $isReplyLiked ? 'text-error' : 'text-on-surface-variant hover:text-error' ?> transition-colors py-1 active:scale-95" 
+                                            data-id="<?= (int)$reply['id'] ?>" 
+                                            title="Like"
+                                        >
+                                            <span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' <?= $isReplyLiked ? 1 : 0 ?>;">favorite</span>
+                                            <span class="comment-like-count"><?= (int)($reply['like_count'] ?? 0) ?></span>
+                                        </button>
+
                                         <a 
                                             href="<?= $replyDetailUrl ?>" 
                                             class="inline-flex items-center gap-1 text-xs text-on-surface-variant hover:text-primary transition-colors py-1"
@@ -337,6 +362,14 @@ $replies = $data['replies'] ?? [];
                                             <span class="material-symbols-outlined text-base">forum</span>
                                             <span>View thread<?= !empty($reply['reply_count']) ? ' (' . (int)$reply['reply_count'] . ')' : '' ?></span>
                                         </a>
+
+                                        <?php if (isset($_SESSION['user_id']) && (!empty($reply['user_id']) && $_SESSION['user_id'] == $reply['user_id'] || !empty($post['user_id']) && $_SESSION['user_id'] == $post['user_id'])): ?>
+                                            <form action="<?= BASEURL ?>/post/deleteComment/<?= (int)$reply['id'] ?>" method="POST" class="m-0 ml-auto" onsubmit="return confirm('Delete this reply?');">
+                                                <button type="submit" class="inline-flex items-center gap-1 text-xs text-on-surface-variant hover:text-error transition-colors py-1" title="Delete Reply">
+                                                    <span class="material-symbols-outlined text-base">delete</span>
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
                                     </div>
 
                                     <!-- Hidden Nested Reply Form -->

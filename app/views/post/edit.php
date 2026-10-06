@@ -21,9 +21,9 @@
         <!-- Right: Actions -->
         <div class="flex-1 flex items-center justify-end gap-2 sm:gap-3">
             <span id="word-count-badge" class="hidden md:flex items-center text-xs font-title-md text-on-surface-variant mr-3"><span id="draft-status" class="mr-2 text-primary font-bold"></span><span id="word-count-text">0 words</span></span>
-            <button type="button" onclick="showToast('Saved to Drafts!', 'success');" class="hidden sm:block px-4 py-2 rounded-full text-on-surface-variant font-title-md text-sm hover:bg-surface-container-low transition-colors">Save Draft</button>
+            <button type="button" onclick="saveDraft()" class="hidden sm:block px-4 py-2 rounded-full text-on-surface-variant font-title-md text-sm hover:bg-surface-container-low transition-colors">Save Draft</button>
             <button type="button" id="preview-btn" class="hidden sm:block px-4 py-2 rounded-full text-on-surface-variant font-title-md text-sm hover:bg-surface-container-low transition-colors">Preview</button>
-            <button type="submit" form="story-form" id="publish-btn" class="px-5 py-2 rounded-full bg-primary text-on-primary font-title-md text-sm hover:opacity-90 transition-opacity shadow-sm font-bold flex items-center gap-2">
+            <button type="submit" form="story-form" id="publish-btn" onclick="if(document.getElementById('post-status')) document.getElementById('post-status').value = 'published';" class="px-5 py-2 rounded-full bg-primary text-on-primary font-title-md text-sm hover:opacity-90 transition-opacity shadow-sm font-bold flex items-center gap-2">
                 <span id="publish-btn-spinner" class="material-symbols-outlined text-[18px] animate-spin hidden">sync</span>
                 <span id="publish-btn-text">Save Changes</span>
             </button>
@@ -37,6 +37,7 @@
     <div class="flex-1 w-full max-w-3xl mx-auto px-5 sm:px-8 pt-16 pb-32">
         <form id="story-form" action="<?= BASEURL ?>/post/update/<?= (int)($post['id'] ?? 0) ?>" method="POST" enctype="multipart/form-data" class="flex flex-col">
             <input type="hidden" name="post_type" value="story">
+            <input type="hidden" name="status" id="post-status" value="<?= htmlspecialchars($post['status'] ?? 'published') ?>">
             
             <!-- Substack Style Title & Subtitle -->
             <textarea name="title" id="title-input" placeholder="Title" class="w-full bg-transparent border-none p-0 focus:ring-0 text-4xl sm:text-[48px] font-bold text-on-surface mb-4 placeholder:text-on-surface-variant/30 resize-none overflow-hidden editorial-font" rows="1" required><?= htmlspecialchars($post['title'] ?? '') ?></textarea>
@@ -355,6 +356,24 @@
 
         initQuill();
 
+        window.saveDraft = function() {
+            const titleEl = document.getElementById('title-input');
+            const title = titleEl ? titleEl.value.trim() : '';
+            if (!title) {
+                if (typeof showToast === 'function') {
+                    showToast('Please provide at least a title to save draft', 'error');
+                }
+                if (titleEl) titleEl.focus();
+                return;
+            }
+            const statusInput = document.getElementById('post-status');
+            if (statusInput) statusInput.value = 'draft';
+            const storyForm = document.getElementById('story-form');
+            if (storyForm) {
+                storyForm.requestSubmit ? storyForm.requestSubmit() : storyForm.submit();
+            }
+        };
+
         // Form Submit Logic (Injecting subtitle back in)
         document.getElementById('story-form').addEventListener('submit', function(e) {
             if (isCompressing) {
@@ -363,10 +382,12 @@
                 return;
             }
 
-            let html = quill.root.innerHTML;
+            let html = quill ? quill.root.innerHTML : '';
             const subtitle = document.getElementById('subtitle-input').value.trim();
+            const statusInput = document.getElementById('post-status');
+            const isDraft = statusInput && statusInput.value === 'draft';
             
-            if (html === '<p><br></p>' || html.trim() === '') {
+            if (!isDraft && (html === '<p><br></p>' || html.trim() === '')) {
                 e.preventDefault();
                 showToast('Content cannot be empty', 'error');
                 return;

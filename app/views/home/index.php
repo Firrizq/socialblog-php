@@ -14,7 +14,7 @@
             </a>
         </nav>
         <div class="flex items-center gap-space-xs">
-            <button class="w-9 h-9 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-primary flex items-center justify-center transition-all"><span class="material-symbols-outlined text-xl">refresh</span></button>
+            <button type="button" onclick="const icon = this.querySelector('span'); if(icon) icon.classList.add('animate-spin'); location.reload();" class="w-9 h-9 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-primary flex items-center justify-center transition-all" title="Refresh Feed"><span class="material-symbols-outlined text-xl">refresh</span></button>
         </div>
     </div>
 
@@ -305,7 +305,7 @@
                     </span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <a href="<?= BASEURL ?>/profile" class="text-xs font-semibold text-on-surface-variant hover:text-primary transition-colors">Drafts</a>
+                    <a href="<?= BASEURL ?>/profile?tab=drafts" class="text-xs font-semibold text-on-surface-variant hover:text-primary transition-colors">Drafts</a>
                     <button type="button" onclick="closeNoteModal()" class="w-7 h-7 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors ml-1" title="Close">
                         <span class="material-symbols-outlined text-base">close</span>
                     </button>
@@ -336,10 +336,15 @@
                     <button type="button" onclick="document.getElementById('noteImageInput').click()" class="p-1 rounded-full hover:bg-surface-container hover:text-primary transition-colors" title="Add Video">
                         <span class="material-symbols-outlined text-xl">videocam</span>
                     </button>
-                    <button type="button" class="p-1 rounded-full hover:bg-surface-container hover:text-primary transition-colors" title="Add Emoji">
-                        <span class="material-symbols-outlined text-xl">mood</span>
-                    </button>
-                    <button type="button" class="p-1 rounded-full hover:bg-surface-container hover:text-primary transition-colors" title="Schedule">
+                    <div class="relative">
+                        <button type="button" onclick="toggleEmojiPicker(event)" class="p-1 rounded-full hover:bg-surface-container hover:text-primary transition-colors" title="Add Emoji">
+                            <span class="material-symbols-outlined text-xl">mood</span>
+                        </button>
+                        <!-- Native Emoji Popover -->
+                        <div id="emoji-picker-popover" class="hidden absolute bottom-full left-0 mb-2 p-2.5 bg-surface-container-high/95 backdrop-blur-md border border-outline-variant/40 rounded-2xl shadow-xl z-50 w-64 max-h-48 overflow-y-auto grid grid-cols-6 gap-1 select-none">
+                        </div>
+                    </div>
+                    <button type="button" onclick="showToast('Scheduled publishing coming soon!', 'info')" class="p-1 rounded-full opacity-40 hover:opacity-100 hover:bg-surface-container hover:text-primary transition-all cursor-not-allowed" title="Schedule (Coming soon)">
                         <span class="material-symbols-outlined text-xl">calendar_month</span>
                     </button>
                 </div>
@@ -380,6 +385,47 @@ function closeNoteModal() {
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeNoteModal();
+    }
+});
+
+const popularEmojis = ['😀','😂','🤣','😍','🥳','😎','🤔','👍','🙌','🔥','✨','🎉','🚀','❤️','💯','💡','👏','🙏','☕','🍕','🌱','💪','📚','📝'];
+
+function toggleEmojiPicker(e) {
+    e.stopPropagation();
+    const popover = document.getElementById('emoji-picker-popover');
+    if (!popover) return;
+    if (popover.classList.contains('hidden')) {
+        if (!popover.dataset.loaded) {
+            popover.innerHTML = popularEmojis.map(emoji => `
+                <button type="button" onclick="insertEmoji('${emoji}')" class="w-8 h-8 rounded-lg hover:bg-surface-container-highest flex items-center justify-center text-lg hover:scale-110 transition-transform">
+                    ${emoji}
+                </button>
+            `).join('');
+            popover.dataset.loaded = 'true';
+        }
+        popover.classList.remove('hidden');
+    } else {
+        popover.classList.add('hidden');
+    }
+}
+
+function insertEmoji(emoji) {
+    const textarea = document.getElementById('noteModalTextarea');
+    if (!textarea) return;
+    const start = textarea.selectionStart ?? textarea.value.length;
+    const end = textarea.selectionEnd ?? textarea.value.length;
+    textarea.value = textarea.value.substring(0, start) + emoji + textarea.value.substring(end);
+    textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
+    textarea.focus();
+    const popover = document.getElementById('emoji-picker-popover');
+    if (popover) popover.classList.add('hidden');
+}
+
+// Close emoji picker on outside click
+document.addEventListener('click', function(e) {
+    const popover = document.getElementById('emoji-picker-popover');
+    if (popover && !popover.classList.contains('hidden') && !e.target.closest('#emoji-picker-popover') && !e.target.closest('[title="Add Emoji"]')) {
+        popover.classList.add('hidden');
     }
 });
 

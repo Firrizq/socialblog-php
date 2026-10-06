@@ -137,12 +137,12 @@ $data['user'] = $user;
 
                 <!-- Metadata Row 2: Following / Followers -->
                 <div class="flex flex-wrap items-center gap-4 mt-3 text-sm text-on-surface-variant font-body-md">
-                    <a href="#" class="hover:underline flex gap-1">
+                    <button type="button" onclick="openFollowModal('following', '<?= htmlspecialchars($profileUsername) ?>')" class="hover:underline flex gap-1 cursor-pointer">
                         <span class="font-bold text-on-surface"><?= number_format($data['user']['following_count'] ?? 0) ?></span> Following
-                    </a>
-                    <a href="#" class="hover:underline flex gap-1">
+                    </button>
+                    <button type="button" onclick="openFollowModal('followers', '<?= htmlspecialchars($profileUsername) ?>')" class="hover:underline flex gap-1 cursor-pointer">
                         <span class="font-bold text-on-surface" id="profile-follower-count"><?= number_format($data['user']['follower_count'] ?? 0) ?></span> Followers
-                    </a>
+                    </button>
                 </div>
             </div>
 
@@ -172,6 +172,16 @@ $data['user'] = $user;
                         Media
                     </div>
                 </a>
+                <?php if (!empty($data['is_owner'])): ?>
+                    <a href="<?= BASEURL ?>/<?= urlencode($profileUsername) ?>?tab=drafts" class="flex-1 flex justify-center hover:bg-surface-container-low transition-colors cursor-pointer group">
+                        <div class="w-full text-center py-3.5 font-title-md text-[15px] <?= $activeTab === 'drafts' ? 'font-bold text-on-surface border-b-4 border-primary' : 'font-medium text-on-surface-variant border-b-4 border-transparent group-hover:text-on-surface' ?> transition-colors flex items-center justify-center gap-1.5">
+                            <span>Drafts</span>
+                            <?php if(!empty($data['drafts']) && count($data['drafts']) > 0): ?>
+                                <span class="px-1.5 py-0.5 rounded-full bg-surface-container text-xs font-semibold"><?= count($data['drafts']) ?></span>
+                            <?php endif; ?>
+                        </div>
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -411,6 +421,59 @@ $data['user'] = $user;
                         <p class="text-on-surface-variant mt-2 text-sm max-w-sm">
                             Photos and media attached to stories or notes will appear here.
                         </p>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+        <?php elseif ($activeTab === 'drafts' && !empty($data['is_owner'])): ?>
+            <!-- Drafts Stream (Story drafts owned by user) -->
+            <div class="flex flex-col divide-y divide-outline-variant/30 border-b border-outline-variant/30">
+                <?php if (!empty($data['drafts']) && is_array($data['drafts'])): ?>
+                    <?php foreach ($data['drafts'] as $draft): ?>
+                        <?php
+                            $draftId = (int)$draft['id'];
+                            $draftEditUrl = BASEURL . '/post/edit/' . $draftId;
+                        ?>
+                        <article class="p-4 sm:p-6 hover:bg-surface-container-lowest/40 transition-colors flex flex-col justify-between gap-3 group">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-500 font-bold text-[11px] tracking-wider uppercase border border-amber-500/20">Draft</span>
+                                        <span class="text-xs text-on-surface-variant">Last edited <?= !empty($draft['updated_at']) ? date('M j, Y \a\t g:i A', strtotime($draft['updated_at'])) : date('M j, Y', strtotime($draft['created_at'])) ?></span>
+                                    </div>
+                                    <h3 class="font-headline-sm text-lg sm:text-xl font-bold text-on-surface line-clamp-2 mb-1.5">
+                                        <a href="<?= $draftEditUrl ?>" class="hover:text-primary transition-colors">
+                                            <?= htmlspecialchars(!empty($draft['title']) ? $draft['title'] : 'Untitled Draft') ?>
+                                        </a>
+                                    </h3>
+                                    <p class="font-body-md text-sm text-on-surface-variant line-clamp-2">
+                                        <?= htmlspecialchars(mb_substr(strip_tags($draft['content'] ?? ''), 0, 160)) ?>
+                                    </p>
+                                </div>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <a href="<?= $draftEditUrl ?>" class="px-4 py-1.5 rounded-full bg-primary-container text-on-primary-container hover:bg-primary transition-all font-title-md text-xs font-semibold flex items-center gap-1 shadow-sm">
+                                        <span class="material-symbols-outlined text-[16px]">edit</span>
+                                        <span>Edit</span>
+                                    </a>
+                                    <form action="<?= BASEURL ?>/post/delete/<?= $draftId ?>" method="POST" class="m-0" onsubmit="return confirm('Delete this draft permanently?');">
+                                        <button type="submit" class="p-1.5 rounded-full text-on-surface-variant hover:text-error hover:bg-error/10 transition-colors" title="Delete Draft">
+                                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </article>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="text-center p-12 bg-transparent flex flex-col items-center">
+                        <span class="material-symbols-outlined text-4xl text-outline mb-2">edit_note</span>
+                        <h2 class="text-xl font-bold text-on-surface">No drafts saved</h2>
+                        <p class="text-on-surface-variant mt-2 text-sm max-w-sm">
+                            Unpublished stories saved as draft will be kept here privately for editing and publishing.
+                        </p>
+                        <a href="<?= BASEURL ?>/post/create" class="mt-4 px-5 py-2 rounded-full bg-primary text-on-primary font-title-md text-sm font-bold shadow-sm hover:opacity-90 transition-opacity">
+                            Write a New Story
+                        </a>
                     </div>
                 <?php endif; ?>
             </div>
@@ -668,6 +731,110 @@ $data['user'] = $user;
         <?php endif; ?>
     <?php endif; ?>
 </div>
+
+<!-- Followers / Following Modal -->
+<div id="follow-modal" class="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-surface-container-low border border-outline-variant/30 rounded-2xl w-full max-w-md max-h-[80vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <!-- Modal Header -->
+        <div class="px-5 py-4 border-b border-outline-variant/30 flex items-center justify-between">
+            <h3 id="follow-modal-title" class="font-title-md text-base font-bold text-on-surface">Followers</h3>
+            <button type="button" onclick="closeFollowModal()" class="w-8 h-8 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors">
+                <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+        </div>
+        <!-- Modal User List -->
+        <div id="follow-modal-list" class="p-2 overflow-y-auto flex-1 divide-y divide-outline-variant/20 min-h-[160px]">
+            <!-- Injected via JavaScript -->
+        </div>
+    </div>
+</div>
+
+<script>
+async function openFollowModal(type, username) {
+    const modal = document.getElementById('follow-modal');
+    const title = document.getElementById('follow-modal-title');
+    const list = document.getElementById('follow-modal-list');
+    if (!modal || !list) return;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    title.textContent = (type === 'followers') ? 'Followers' : 'Following';
+    list.innerHTML = `
+        <div class="flex items-center justify-center py-12 text-on-surface-variant">
+            <span class="material-symbols-outlined text-2xl animate-spin">progress_activity</span>
+        </div>
+    `;
+
+    try {
+        const res = await fetch(`<?= BASEURL ?>/profile/${type}/${encodeURIComponent(username)}`, {
+            headers: { 'Accept': 'application/json' }
+        });
+        const data = await res.json();
+
+        if (data.success && data.users && data.users.length > 0) {
+            const currentUserId = <?= isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0 ?>;
+            list.innerHTML = data.users.map(u => {
+                const userUrl = `<?= BASEURL ?>/${encodeURIComponent(u.username)}`;
+                const initial = (u.username || 'U').charAt(0).toUpperCase();
+                const avatarHtml = u.profile_picture 
+                    ? `<img src="<?= BASEURL ?>${u.profile_picture}" class="w-full h-full object-cover">`
+                    : `<span>${initial}</span>`;
+                
+                const isCurrent = currentUserId === parseInt(u.id);
+                const isFollowed = Boolean(parseInt(u.is_following));
+                const followBtn = isCurrent ? '' : `
+                    <button type="button" class="btn-follow px-3.5 py-1.5 rounded-full font-label-md text-xs font-semibold transition-all ${isFollowed ? 'bg-surface-container text-on-surface hover:bg-error/10 hover:text-error hover:border-error/30 border border-outline-variant/40' : 'bg-primary text-on-primary hover:opacity-90'}" data-user-id="${u.id}">
+                        ${isFollowed ? 'Following' : 'Follow'}
+                    </button>
+                `;
+
+                return `
+                    <div class="p-3 flex items-center justify-between gap-3 hover:bg-surface-container-high/40 transition-colors rounded-xl">
+                        <a href="${userUrl}" class="flex items-center gap-3 min-w-0 flex-1">
+                            <div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary overflow-hidden shrink-0">
+                                ${avatarHtml}
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="font-title-md font-bold text-on-surface text-sm truncate hover:underline">${u.name || u.username}</p>
+                                <p class="font-body-md text-xs text-on-surface-variant truncate">@${u.username}</p>
+                                ${u.bio ? `<p class="font-body-md text-xs text-on-surface-variant/80 truncate mt-0.5">${u.bio}</p>` : ''}
+                            </div>
+                        </a>
+                        ${followBtn}
+                    </div>
+                `;
+            }).join('');
+        } else {
+            list.innerHTML = `
+                <div class="text-center py-12 text-on-surface-variant font-body-md text-sm">
+                    No ${type === 'followers' ? 'followers' : 'following'} yet.
+                </div>
+            `;
+        }
+    } catch (err) {
+        list.innerHTML = `
+            <div class="text-center py-8 text-error font-body-md text-sm">
+                Failed to load ${type}.
+            </div>
+        `;
+    }
+}
+
+function closeFollowModal() {
+    const modal = document.getElementById('follow-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}
+
+// Close on backdrop click
+document.getElementById('follow-modal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeFollowModal();
+    }
+});
+</script>
 
 <style>
     /* Quill content formatting inside profile */

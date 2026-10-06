@@ -61,7 +61,7 @@ class Comment_model
                   FROM {$this->table}
                   INNER JOIN users ON comments.user_id = users.id
                   INNER JOIN posts ON comments.post_id = posts.id
-                  WHERE comments.uid = :uid
+                  WHERE comments.uid = :uid AND (comments.deleted_at IS NULL)
                   LIMIT 1";
 
         $this->db->query($query);
@@ -97,7 +97,7 @@ class Comment_model
                   FROM {$this->table}
                   INNER JOIN users ON comments.user_id = users.id
                   INNER JOIN posts ON comments.post_id = posts.id
-                  WHERE comments.id = :id
+                  WHERE comments.id = :id AND (comments.deleted_at IS NULL)
                   LIMIT 1";
 
         $this->db->query($query);
@@ -129,7 +129,7 @@ class Comment_model
                     users.profile_picture
                   FROM {$this->table}
                   INNER JOIN users ON comments.user_id = users.id
-                  WHERE comments.parent_id = :parent_id
+                  WHERE comments.parent_id = :parent_id AND (comments.deleted_at IS NULL)
                   ORDER BY comments.created_at ASC";
 
         $this->db->query($query);
@@ -160,7 +160,7 @@ class Comment_model
                     users.profile_picture
                   FROM {$this->table}
                   INNER JOIN users ON comments.user_id = users.id
-                  WHERE comments.post_id = :post_id
+                  WHERE comments.post_id = :post_id AND (comments.deleted_at IS NULL)
                   ORDER BY comments.created_at ASC";
 
         $this->db->query($query);
@@ -311,5 +311,56 @@ class Comment_model
         $this->db->query($query);
         $this->db->bind(':user_id', $user_id);
         return $this->db->resultSet();
+    }
+
+    /**
+     * Soft delete a comment owned by a specific user or authored on a post owned by the user
+     *
+     * @param int $commentId
+     * @param int $userId
+     * @return bool
+     */
+    public function deleteComment(int $commentId, int $userId): bool
+    {
+        // 1. Fetch comment with post author info
+        $query = "SELECT comments.id, comments.post_id, comments.user_id, comments.parent_id, posts.user_id AS post_author_id
+                  FROM {$this->table}
+                  INNER JOIN posts ON comments.post_id = posts.id
+                  WHERE comments.id = :id AND comments.deleted_at IS NULL
+                  LIMIT 1";
+        $this->db->query($query);
+        $this->db->bind(':id', $commentId);
+        $comment = $this->db->single();
+
+        if (!$comment) {
+            return false;
+        }
+
+        // Must be comment author OR the post author
+        if ((int)$comment['user_id'] !== $userId && (int)$comment['post_author_id'] !== $userId) {
+            return false;
+        }
+
+        // 2. Perform soft delete
+        $this->db->query("UPDATE {$this->table} SET deleted_at = CURRENT_TIMESTAMP WHERE id = :id");
+        $this->db->bind(':id', $commentId);
+        $executed = $this->db->execute();
+
+        if ($executed) {
+            $postId = (int)$comment['post_id'];
+            // Decrement post comment count
+            $this->db->query("UPDATE posts SET comment_count = GREATEST(comment_count - 1, 0) WHERE id = :post_id");
+            $this->db->bind(':post_id', $postId);
+            $this->db->execute();
+
+            // If it had a parent comment, decrement parent's reply count
+            if (!empty($comment['parent_id'])) {
+                $this->db->query("UPDATE {$this->table} SET reply_count = GREATEST(reply_count - 1, 0) WHERE id = :parent_id");
+                $this->db->bind(':parent_id', (int)$comment['parent_id']);
+                $this->db->execute();
+            }
+        }
+
+        return $executed;
     }
 }
