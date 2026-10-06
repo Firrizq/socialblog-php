@@ -228,7 +228,7 @@ $replies = $data['replies'] ?? [];
                     <span>Share</span>
                 </button>
                 <?php if (isset($_SESSION['user_id']) && (!empty($comment['user_id']) && $_SESSION['user_id'] == $comment['user_id'] || !empty($post['user_id']) && $_SESSION['user_id'] == $post['user_id'])): ?>
-                    <form action="<?= BASEURL ?>/post/deleteComment/<?= (int)$comment['id'] ?>" method="POST" class="m-0" onsubmit="return confirm('Delete this comment?');">
+                    <form action="<?= BASEURL ?>/post/deleteComment/<?= (int)$comment['id'] ?>" method="POST" class="m-0" data-confirm="Are you sure you want to delete this comment? This action cannot be undone." data-confirm-title="Delete Comment" data-confirm-btn="Delete">
                         <button type="submit" class="flex items-center gap-1.5 hover:text-error transition-colors text-xs font-caption py-1.5 px-3 rounded-full hover:bg-surface-container" title="Delete Comment">
                             <span class="material-symbols-outlined text-lg">delete</span>
                             <span>Delete</span>
@@ -364,7 +364,7 @@ $replies = $data['replies'] ?? [];
                                         </a>
 
                                         <?php if (isset($_SESSION['user_id']) && (!empty($reply['user_id']) && $_SESSION['user_id'] == $reply['user_id'] || !empty($post['user_id']) && $_SESSION['user_id'] == $post['user_id'])): ?>
-                                            <form action="<?= BASEURL ?>/post/deleteComment/<?= (int)$reply['id'] ?>" method="POST" class="m-0 ml-auto" onsubmit="return confirm('Delete this reply?');">
+                                            <form action="<?= BASEURL ?>/post/deleteComment/<?= (int)$reply['id'] ?>" method="POST" class="m-0 ml-auto" data-confirm="Are you sure you want to delete this reply? This action cannot be undone." data-confirm-title="Delete Reply" data-confirm-btn="Delete">
                                                 <button type="submit" class="inline-flex items-center gap-1 text-xs text-on-surface-variant hover:text-error transition-colors py-1" title="Delete Reply">
                                                     <span class="material-symbols-outlined text-base">delete</span>
                                                 </button>

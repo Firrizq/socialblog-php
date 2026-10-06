@@ -278,11 +278,7 @@
             if (file.size > MAX_FILE_SIZE) {
                 const mb = (file.size / (1024 * 1024)).toFixed(1);
                 const msg = `File is too large (${mb}MB). Maximum allowed limit is 200MB.`;
-                if (typeof showToast === 'function') {
-                    showToast(msg, 'error');
-                } else {
-                    alert(msg);
-                }
+                showToast(msg, 'error');
                 if (coverInput) coverInput.value = '';
                 return;
             }
@@ -548,11 +544,7 @@
                     const isVid = file.type.startsWith('video/') || /\.(mp4|webm|ogg|mov)$/i.test(file.name);
 
                     if (!isImg && !isVid) {
-                        if (typeof showToast === 'function') {
-                            showToast('Please upload an image or video file.', 'error');
-                        } else {
-                            alert('Please upload an image or video file.');
-                        }
+                        showToast('Please upload an image or video file.', 'error');
                         return;
                     }
 

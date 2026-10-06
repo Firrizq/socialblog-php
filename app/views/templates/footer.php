@@ -709,7 +709,7 @@
                     }
                     if (btn.querySelector('.material-symbols-outlined')?.textContent.trim() === 'chat_bubble') {
                         btn.onclick = () => {
-                            const commentInput = sidebar.querySelector('#lightbox-comment-input') || sidebar.querySelector('textarea[name="content"]');
+                            const commentInput = sidebar.querySelector('#lightbox-comment-input') || sidebar.querySelector('textarea[name="comment"]') || sidebar.querySelector('textarea[name="content"]');
                             if (commentInput) commentInput.focus();
                         };
                     }
@@ -723,15 +723,14 @@
             }
 
             // Upgrade comment input box to textarea with sleek reply button
-            const commentInput = mainContent.querySelector('#comment-input') || mainContent.querySelector('textarea[name="content"]') || mainContent.querySelector('input[name="content"]');
+            const commentInput = mainContent.querySelector('#comment-input') || mainContent.querySelector('textarea[name="comment"]') || mainContent.querySelector('textarea[name="content"]') || mainContent.querySelector('input[name="content"]');
             if (commentInput) {
                 let textarea = commentInput;
                 if (commentInput.tagName === 'INPUT') {
                     textarea = document.createElement('textarea');
-                    textarea.name = 'content';
-                    textarea.required = true;
                     commentInput.parentNode.replaceChild(textarea, commentInput);
                 }
+                textarea.name = 'comment';
                 textarea.id = 'lightbox-comment-input';
                 textarea.rows = 2;
                 textarea.className = 'w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl p-3 text-on-surface text-sm font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none';
@@ -1249,6 +1248,193 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') hideHoverCard();
         });
+    })();
+    </script>
+
+    <!-- Global Reusable Confirmation Dialog Modal (Replaces browser confirm() with sleek Tailwind UI) -->
+    <div id="global-confirm-modal" class="fixed inset-0 z-[250] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 transition-opacity duration-200 opacity-0 pointer-events-none" aria-modal="true" role="dialog">
+        <div id="global-confirm-card" class="bg-surface-container-low border border-outline-variant/30 rounded-2xl w-full max-w-sm sm:max-w-md p-6 flex flex-col gap-4 shadow-2xl transform scale-95 transition-all duration-200">
+            <div class="flex items-start gap-4">
+                <div id="global-confirm-icon-container" class="w-12 h-12 rounded-full flex items-center justify-center shrink-0 bg-error/10 text-error">
+                    <span id="global-confirm-icon" class="material-symbols-outlined text-2xl">delete</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 id="global-confirm-title" class="font-title-md text-lg font-bold text-on-surface leading-tight">Confirm Action</h3>
+                    <p id="global-confirm-message" class="font-body-md text-sm text-on-surface-variant mt-1.5 leading-relaxed break-words">Are you sure you want to proceed?</p>
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-3 mt-2">
+                <button type="button" id="global-confirm-cancel-btn" class="px-5 py-2 rounded-full border border-outline-variant/40 bg-surface-container text-on-surface hover:bg-surface-container-high font-title-md text-sm font-medium transition-colors">
+                    Cancel
+                </button>
+                <button type="button" id="global-confirm-action-btn" class="px-5 py-2 rounded-full bg-error text-white hover:bg-error/90 font-title-md text-sm font-semibold transition-all shadow-md active:scale-95">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Confirmation Dialog Module & Form Delegation -->
+    <script>
+    (function() {
+        let confirmCleanup = null;
+
+        window.showConfirmDialog = function(options = {}) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('global-confirm-modal');
+                const card = document.getElementById('global-confirm-card');
+                const titleEl = document.getElementById('global-confirm-title');
+                const msgEl = document.getElementById('global-confirm-message');
+                const iconContainer = document.getElementById('global-confirm-icon-container');
+                const iconEl = document.getElementById('global-confirm-icon');
+                const cancelBtn = document.getElementById('global-confirm-cancel-btn');
+                const actionBtn = document.getElementById('global-confirm-action-btn');
+
+                if (!modal) {
+                    const fallback = window.confirm(options.message || 'Are you sure?');
+                    if (fallback && typeof options.onConfirm === 'function') options.onConfirm();
+                    if (!fallback && typeof options.onCancel === 'function') options.onCancel();
+                    resolve(fallback);
+                    return;
+                }
+
+                // Close any open dropdown menus
+                document.querySelectorAll('.dropdown-container > div[id^="menu-"]').forEach(el => el.classList.add('hidden'));
+
+                const title = options.title || 'Are you sure?';
+                const message = options.message || 'This action cannot be undone.';
+                const confirmText = options.confirmText || 'Confirm';
+                const cancelText = options.cancelText || 'Cancel';
+                const isDanger = options.isDanger !== false;
+
+                titleEl.textContent = title;
+                msgEl.textContent = message;
+                cancelBtn.textContent = cancelText;
+                actionBtn.textContent = confirmText;
+
+                if (isDanger) {
+                    iconContainer.className = 'w-12 h-12 rounded-full flex items-center justify-center shrink-0 bg-error/10 text-error';
+                    iconEl.textContent = 'delete';
+                    actionBtn.className = 'px-5 py-2 rounded-full bg-error text-white hover:bg-error/90 font-title-md text-sm font-semibold transition-all shadow-md active:scale-95';
+                } else {
+                    iconContainer.className = 'w-12 h-12 rounded-full flex items-center justify-center shrink-0 bg-primary/10 text-primary';
+                    iconEl.textContent = 'help';
+                    actionBtn.className = 'px-5 py-2 rounded-full bg-primary-container text-on-primary-container hover:bg-primary font-title-md text-sm font-semibold transition-all shadow-md active:scale-95';
+                }
+
+                if (confirmCleanup) {
+                    confirmCleanup();
+                }
+
+                const closeDialog = (confirmed) => {
+                    modal.classList.add('opacity-0', 'pointer-events-none');
+                    card.classList.remove('scale-100');
+                    card.classList.add('scale-95');
+                    setTimeout(() => {
+                        modal.classList.add('hidden');
+                        modal.classList.remove('flex');
+                    }, 200);
+
+                    if (confirmCleanup) {
+                        confirmCleanup();
+                        confirmCleanup = null;
+                    }
+
+                    if (confirmed) {
+                        if (typeof options.onConfirm === 'function') options.onConfirm();
+                        resolve(true);
+                    } else {
+                        if (typeof options.onCancel === 'function') options.onCancel();
+                        resolve(false);
+                    }
+                };
+
+                const onCancelClick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeDialog(false);
+                };
+
+                const onConfirmClick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeDialog(true);
+                };
+
+                const onKeydown = (e) => {
+                    if (e.key === 'Escape') {
+                        closeDialog(false);
+                    }
+                };
+
+                const onBackdropClick = (e) => {
+                    if (e.target === modal) {
+                        closeDialog(false);
+                    }
+                };
+
+                cancelBtn.addEventListener('click', onCancelClick);
+                actionBtn.addEventListener('click', onConfirmClick);
+                document.addEventListener('keydown', onKeydown);
+                modal.addEventListener('click', onBackdropClick);
+
+                confirmCleanup = () => {
+                    cancelBtn.removeEventListener('click', onCancelClick);
+                    actionBtn.removeEventListener('click', onConfirmClick);
+                    document.removeEventListener('keydown', onKeydown);
+                    modal.removeEventListener('click', onBackdropClick);
+                };
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                void modal.offsetWidth;
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                card.classList.remove('scale-95');
+                card.classList.add('scale-100');
+                actionBtn.focus();
+            });
+        };
+
+        // Form Submit Interceptor for declarative data-confirm attributes
+        document.addEventListener('submit', function(e) {
+            const form = e.target;
+            if (!form || !form.hasAttribute('data-confirm')) return;
+
+            if (form._isConfirmedSubmission) {
+                delete form._isConfirmedSubmission;
+                return; // Let native submit event continue
+            }
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            const message = form.getAttribute('data-confirm');
+            const title = form.getAttribute('data-confirm-title') || 'Confirm Action';
+            const confirmText = form.getAttribute('data-confirm-btn') || 'Delete';
+            const cancelText = form.getAttribute('data-confirm-cancel') || 'Cancel';
+            const isDanger = form.getAttribute('data-confirm-danger') !== 'false';
+            const submitter = e.submitter;
+
+            window.showConfirmDialog({
+                title: title,
+                message: message,
+                confirmText: confirmText,
+                cancelText: cancelText,
+                isDanger: isDanger,
+                onConfirm: () => {
+                    form._isConfirmedSubmission = true;
+                    if (typeof form.requestSubmit === 'function') {
+                        if (submitter) {
+                            form.requestSubmit(submitter);
+                        } else {
+                            form.requestSubmit();
+                        }
+                    } else {
+                        form.submit();
+                    }
+                }
+            });
+        }, true);
     })();
     </script>
 </body>

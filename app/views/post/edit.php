@@ -456,11 +456,7 @@
             if (file.size > MAX_FILE_SIZE) {
                 const mb = (file.size / (1024 * 1024)).toFixed(1);
                 const msg = `File is too large (${mb}MB). Maximum allowed limit is 200MB.`;
-                if (typeof showToast === 'function') {
-                    showToast(msg, 'error');
-                } else {
-                    alert(msg);
-                }
+                showToast(msg, 'error');
                 coverInput.value = '';
                 return;
             }
@@ -692,12 +688,29 @@
         
         // Only load draft on create, or if we want to prompt on edit (simplified for auto-save)
         if(window.location.pathname.includes('create') && localStorage.getItem(draftKey)) {
-            const savedData = JSON.parse(localStorage.getItem(draftKey));
-            if(confirm('We found an unsaved draft. Would you like to restore it?')) {
-                document.getElementById('title-input').value = savedData.title || '';
-                document.getElementById('subtitle-input').value = savedData.subtitle || '';
-                quill.clipboard.dangerouslyPasteHTML(savedData.content || '');
-            } else {
+            try {
+                const savedData = JSON.parse(localStorage.getItem(draftKey));
+                if (savedData && (savedData.title || savedData.content)) {
+                    if (typeof window.showConfirmDialog === 'function') {
+                        window.showConfirmDialog({
+                            title: 'Restore Draft',
+                            message: 'We found an unsaved draft. Would you like to restore it?',
+                            confirmText: 'Restore',
+                            cancelText: 'Discard',
+                            isDanger: false,
+                            onConfirm: () => {
+                                if (document.getElementById('title-input')) document.getElementById('title-input').value = savedData.title || '';
+                                if (document.getElementById('subtitle-input')) document.getElementById('subtitle-input').value = savedData.subtitle || '';
+                                if (quill && savedData.content) quill.clipboard.dangerouslyPasteHTML(savedData.content);
+                                if (typeof showToast === 'function') showToast('Draft restored', 'info');
+                            },
+                            onCancel: () => {
+                                localStorage.removeItem(draftKey);
+                            }
+                        });
+                    }
+                }
+            } catch (e) {
                 localStorage.removeItem(draftKey);
             }
         }

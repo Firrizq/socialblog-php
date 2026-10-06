@@ -69,7 +69,7 @@ $comments = $data['comments'] ?? [];
                         </button>
                         <div id="menu-detail-<?= (int)($post['id'] ?? 0) ?>" class="hidden absolute right-0 top-full mt-2 w-40 bg-surface-container-low border border-outline-variant/30 rounded-xl shadow-xl z-50 overflow-hidden flex flex-col py-1.5">
                             <a href="<?= BASEURL ?>/post/edit<?= ($post['post_type']??'') === 'note' ? '_note' : '' ?>/<?= (int)($post['id'] ?? 0) ?>" class="px-4 py-2.5 text-sm text-on-surface font-title-md hover:bg-surface-container flex items-center gap-3 transition-colors"><span class="material-symbols-outlined text-[18px]">edit</span> Edit</a>
-                            <form action="<?= BASEURL ?>/post/delete/<?= (int)($post['id'] ?? 0) ?>" method="POST" class="m-0 p-0" onsubmit="return confirm('Are you sure you want to delete this?');">
+                            <form action="<?= BASEURL ?>/post/delete/<?= (int)($post['id'] ?? 0) ?>" method="POST" class="m-0 p-0" data-confirm="Are you sure you want to delete this post? This action cannot be undone." data-confirm-title="Delete Post" data-confirm-btn="Delete">
                                 <button type="submit" class="w-full text-left px-4 py-2.5 text-sm text-error font-title-md hover:bg-error-container/20 flex items-center gap-3 transition-colors"><span class="material-symbols-outlined text-[18px]">delete</span> Delete</button>
                             </form>
                         </div>
@@ -197,7 +197,7 @@ $comments = $data['comments'] ?? [];
         </article>
 
         <!-- Discussion Section -->
-        <section class="mt-8">
+        <section id="discussion" class="mt-8">
             <h3 class="font-title-md font-bold text-xl text-on-surface mb-6">Discussion (<?= (int)($post['comment_count'] ?? 0) ?>)</h3>
             
             <?php if (isset($_SESSION['user_id'])): ?>
@@ -213,7 +213,7 @@ $comments = $data['comments'] ?? [];
                     </div>
                     <div class="flex-1">
                         <form action="<?= BASEURL ?>/post/comment/<?= (int)($post['id'] ?? 0) ?>" method="POST" class="m-0 flex flex-col gap-3">
-                            <textarea id="comment-input" name="content" rows="3" class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl p-4 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none" placeholder="What are your thoughts?" required></textarea>
+                            <textarea id="comment-input" name="comment" rows="3" class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl p-4 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none" placeholder="What are your thoughts?" required></textarea>
                             <div class="flex justify-end">
                                 <button type="submit" class="px-5 py-2 rounded-full bg-primary text-on-primary font-title-md text-sm hover:opacity-90 transition-opacity">Respond</button>
                             </div>
@@ -271,7 +271,7 @@ $comments = $data['comments'] ?? [];
                                         <span class="comment-like-count"><?= (int)($comment['like_count'] ?? 0) ?></span>
                                     </button>
                                     <?php if(isset($_SESSION['user_id']) && (!empty($comment['user_id']) && $_SESSION['user_id'] == $comment['user_id'] || !empty($post['user_id']) && $_SESSION['user_id'] == $post['user_id'])): ?>
-                                        <form action="<?= BASEURL ?>/post/deleteComment/<?= (int)($comment['id'] ?? 0) ?>" method="POST" class="m-0 ml-auto" onsubmit="return confirm('Delete this comment?');">
+                                        <form action="<?= BASEURL ?>/post/deleteComment/<?= (int)($comment['id'] ?? 0) ?>" method="POST" class="m-0 ml-auto" data-confirm="Are you sure you want to delete this comment? This action cannot be undone." data-confirm-title="Delete Comment" data-confirm-btn="Delete">
                                             <button type="submit" class="flex items-center gap-1.5 hover:text-error transition-colors text-xs font-title-md opacity-0 group-hover:opacity-100 focus:opacity-100" title="Delete Comment">
                                                 <span class="material-symbols-outlined text-[16px]">delete</span>
                                             </button>

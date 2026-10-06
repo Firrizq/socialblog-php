@@ -332,6 +332,34 @@ if (!$activeUser && !empty($_SESSION['user_id'])) {
             function showToast(message, type = 'success') {
                 window.showToast(message, type);
             }
+
+            // Route any native alert() popups to floating toast system
+            window.alert = function(message) {
+                if (!message) return;
+                const msgStr = String(message);
+                const isErr = /error|failed|invalid|too large|required|cannot/i.test(msgStr);
+                window.showToast(msgStr, isErr ? 'error' : 'info');
+            };
+
+            // Trigger PHP Session Flash Messages as floating toasts on page load
+            <?php if (!empty($_SESSION['flash_message'])): ?>
+                window.addEventListener('DOMContentLoaded', () => {
+                    window.showToast(<?= json_encode($_SESSION['flash_message']) ?>, <?= json_encode($_SESSION['flash_type'] ?? 'success') ?>);
+                });
+                <?php unset($_SESSION['flash_message'], $_SESSION['flash_type']); ?>
+            <?php endif; ?>
+            <?php if (!empty($_SESSION['flash_success'])): ?>
+                window.addEventListener('DOMContentLoaded', () => {
+                    window.showToast(<?= json_encode($_SESSION['flash_success']) ?>, 'success');
+                });
+                <?php unset($_SESSION['flash_success']); ?>
+            <?php endif; ?>
+            <?php if (!empty($_SESSION['flash_error'])): ?>
+                window.addEventListener('DOMContentLoaded', () => {
+                    window.showToast(<?= json_encode($_SESSION['flash_error']) ?>, 'error');
+                });
+                <?php unset($_SESSION['flash_error']); ?>
+            <?php endif; ?>
         </script>
     </header>
 

@@ -376,7 +376,7 @@ class Post extends Controller
         }
 
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && $post_id > 0) {
-            $commentText = trim($_POST['comment'] ?? '');
+            $commentText = trim($_POST['comment'] ?? $_POST['content'] ?? '');
             $parentId = !empty($_POST['parent_id']) ? (int)$_POST['parent_id'] : null;
             $redirectTo = trim($_POST['redirect_to'] ?? '');
             
@@ -390,6 +390,8 @@ class Post extends Controller
                     'comment' => $commentText,
                     'parent_id' => $parentId
                 ]);
+                $_SESSION['flash_message'] = $parentId !== null ? 'Reply posted successfully' : 'Comment posted successfully';
+                $_SESSION['flash_type'] = 'success';
             }
 
             // Redirect back to specific thread view if requested
@@ -402,7 +404,7 @@ class Post extends Controller
         $post = $this->postModel->getPostById($post_id);
         if ($post && !empty($post['username']) && !empty($post['uid'])) {
             $postType = strtolower($post['post_type'] ?? 'story');
-            header('Location: ' . BASEURL . '/' . $post['username'] . '/' . $postType . '/' . $post['uid']);
+            header('Location: ' . BASEURL . '/' . $post['username'] . '/' . $postType . '/' . $post['uid'] . '#discussion');
         } else {
             header('Location: ' . BASEURL . '/home');
         }
@@ -511,6 +513,8 @@ class Post extends Controller
 
         $post = $this->postModel->getPostById((int)$id);
         $this->postModel->deletePost((int)$id, (int)$_SESSION['user_id']);
+        $_SESSION['flash_message'] = 'Post deleted successfully';
+        $_SESSION['flash_type'] = 'info';
 
         $referer = $_SERVER['HTTP_REFERER'] ?? '';
         if (!empty($referer)) {
@@ -563,6 +567,11 @@ class Post extends Controller
         $userId = (int)$_SESSION['user_id'];
 
         $deleted = $this->commentModel->deleteComment($commentId, $userId);
+
+        if ($deleted) {
+            $_SESSION['flash_message'] = 'Comment deleted successfully';
+            $_SESSION['flash_type'] = 'info';
+        }
 
         if ($this->isAjaxRequest()) {
             header('Content-Type: application/json');
