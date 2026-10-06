@@ -16,17 +16,88 @@
                 </p>
             </div>
         </div>
-        <?php if (!empty($data['posts']) && is_array($data['posts'])): ?>
-            <div class="flex items-center gap-space-xs">
+        <div class="flex items-center gap-space-xs flex-wrap">
+            <?php if (!empty($data['authors']) && is_array($data['authors'])): ?>
+                <span class="px-space-md py-1 rounded-full bg-primary/10 text-primary border border-primary/20 font-caption text-xs font-semibold">
+                    <?= count($data['authors']) ?> <?= count($data['authors']) === 1 ? 'author' : 'authors' ?>
+                </span>
+            <?php endif; ?>
+            <?php if (!empty($data['posts']) && is_array($data['posts'])): ?>
                 <span class="px-space-md py-1 rounded-full bg-surface-container font-caption text-on-surface-variant text-xs font-semibold">
                     <?= count($data['posts']) ?> <?= count($data['posts']) === 1 ? 'story' : 'stories' ?>
                 </span>
-            </div>
-        <?php endif; ?>
+            <?php endif; ?>
+        </div>
     </div>
 
+    <?php if (!empty($data['keyword']) && !empty($data['authors']) && is_array($data['authors'])): ?>
+        <!-- Unified Search: Matching Authors Section -->
+        <section class="mb-5 p-4 sm:p-5 rounded-2xl bg-surface-container-low border border-outline-variant/30 shadow-sm">
+            <div class="flex items-center justify-between mb-3.5 pb-2.5 border-b border-outline-variant/20">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-xl">group</span>
+                    <h2 class="font-title-md font-bold text-sm sm:text-base text-on-surface">Authors & Creators</h2>
+                </div>
+                <span class="font-caption text-xs text-on-surface-variant font-medium">
+                    <?= count($data['authors']) ?> <?= count($data['authors']) === 1 ? 'author' : 'authors' ?>
+                </span>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <?php foreach ($data['authors'] as $author): ?>
+                    <?php
+                        $authorProfileUrl = BASEURL . '/' . urlencode($author['username']);
+                        $isCurrentAuthUser = isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)$author['id'];
+                    ?>
+                    <div class="flex items-start gap-3 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/30 hover:border-outline-variant/60 hover:shadow-2xs transition-all">
+                        <a href="<?= $authorProfileUrl ?>" class="w-11 h-11 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/40 shrink-0 flex items-center justify-center font-bold text-primary text-sm group">
+                            <?php if (!empty($author['profile_picture'])): ?>
+                                <img src="<?= BASEURL ?><?= htmlspecialchars($author['profile_picture']) ?>" alt="<?= htmlspecialchars($author['username']) ?>" class="w-full h-full object-cover">
+                            <?php else: ?>
+                                <?= strtoupper(substr($author['username'] ?? 'U', 0, 1)) ?>
+                            <?php endif; ?>
+                        </a>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-start justify-between gap-2">
+                                <a href="<?= $authorProfileUrl ?>" class="min-w-0 group">
+                                    <h3 class="font-title-md font-bold text-sm text-on-surface truncate group-hover:text-primary transition-colors leading-tight">
+                                        <?= htmlspecialchars($author['name'] ?? $author['username']) ?>
+                                    </h3>
+                                    <p class="font-caption text-xs text-on-surface-variant truncate">
+                                        @<?= htmlspecialchars($author['username']) ?>
+                                    </p>
+                                </a>
+                                <?php if (!$isCurrentAuthUser): ?>
+                                    <button type="button" 
+                                            class="follow-btn btn-follow btn-pill-follow <?= !empty($author['is_following']) ? 'following' : '' ?> text-xs shrink-0" 
+                                            data-user-id="<?= (int)$author['id'] ?>">
+                                        <?= !empty($author['is_following']) ? 'Following' : 'Follow' ?>
+                                    </button>
+                                <?php endif; ?>
+                            </div>
+                            <?php if (!empty($author['bio'])): ?>
+                                <p class="font-body-md text-xs text-on-surface-variant line-clamp-2 mt-1.5 leading-relaxed">
+                                    <?= htmlspecialchars($author['bio']) ?>
+                                </p>
+                            <?php endif; ?>
+                            <div class="flex items-center gap-3 mt-2 text-[11px] font-caption text-on-surface-variant">
+                                <span><strong class="text-on-surface font-semibold"><?= number_format((int)($author['follower_count'] ?? 0)) ?></strong> followers</span>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </section>
+    <?php endif; ?>
+
     <!-- Feed Post Stream -->
-    <div class="flex flex-col gap-4 sm:gap-5 mt-3">
+    <div class="flex flex-col gap-4 sm:gap-5 mt-1">
+        <?php if (!empty($data['keyword']) && !empty($data['authors']) && !empty($data['posts'])): ?>
+            <div class="flex items-center gap-2 pt-2 pb-1">
+                <span class="material-symbols-outlined text-primary text-xl">auto_stories</span>
+                <h2 class="font-title-md font-bold text-sm sm:text-base text-on-surface">Stories & Notes</h2>
+            </div>
+        <?php endif; ?>
         <?php if (!empty($data['posts']) && is_array($data['posts'])): ?>
             <?php foreach ($data['posts'] as $post): ?>
                 <?php 
@@ -327,13 +398,23 @@
             <?php endforeach; ?>
         <?php else: ?>
             <!-- Empty State Handling -->
-            <div class="text-center p-12 bg-surface-container-lowest/50 border border-outline-variant/40 rounded-2xl flex flex-col items-center">
-                <span class="material-symbols-outlined text-4xl text-outline mb-2">article</span>
-                <h2 class="text-xl font-bold font-serif text-on-surface">No stories found</h2>
-                <p class="text-on-surface-variant mt-2 text-sm max-w-sm">
-                    Check back later or be the first to share a perspective!
-                </p>
-            </div>
+            <?php if (!empty($data['keyword']) && !empty($data['authors'])): ?>
+                <div class="text-center py-10 px-4 bg-surface-container-lowest/40 border border-outline-variant/30 rounded-2xl flex flex-col items-center">
+                    <span class="material-symbols-outlined text-3xl text-outline mb-1.5">article</span>
+                    <h3 class="text-base font-bold font-title-md text-on-surface">No stories found</h3>
+                    <p class="text-on-surface-variant text-xs mt-1 max-w-sm">
+                        No stories or notes matched "<?= htmlspecialchars($data['keyword']) ?>", but matching authors are listed above.
+                    </p>
+                </div>
+            <?php else: ?>
+                <div class="text-center p-12 bg-surface-container-lowest/50 border border-outline-variant/40 rounded-2xl flex flex-col items-center">
+                    <span class="material-symbols-outlined text-4xl text-outline mb-2"><?= !empty($data['keyword']) ? 'search_off' : 'article' ?></span>
+                    <h2 class="text-xl font-bold font-serif text-on-surface"><?= !empty($data['keyword']) ? 'No results found' : 'No stories found' ?></h2>
+                    <p class="text-on-surface-variant mt-2 text-sm max-w-sm">
+                        <?= !empty($data['keyword']) ? 'No stories or authors matched "' . htmlspecialchars($data['keyword']) . '". Try searching for different keywords or topics.' : 'Check back later or be the first to share a perspective!' ?>
+                    </p>
+                </div>
+            <?php endif; ?>
         <?php endif; ?>
     </div>
 </div>

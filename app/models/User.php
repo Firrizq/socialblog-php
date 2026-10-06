@@ -279,6 +279,51 @@ class User
         $this->db->bind(':user_id', $userId);
         return $this->db->resultSet();
     }
+
+    /**
+     * Search authors/creators by keyword matching username, display name, or bio
+     *
+     * @param string $keyword
+     * @param int|null $currentUserId
+     * @param int $limit
+     * @return array
+     */
+    public function searchAuthors(string $keyword, ?int $currentUserId = null, int $limit = 6): array
+    {
+        $keyword = trim($keyword);
+        if (empty($keyword)) {
+            return [];
+        }
+
+        $limitInt = max(1, min(50, (int)$limit));
+        $isFollowingSelect = ($currentUserId !== null && $currentUserId > 0)
+            ? "EXISTS(SELECT 1 FROM followings fl WHERE fl.user_id = " . (int)$currentUserId . " AND fl.target_id = u.id) AS is_following,"
+            : "0 AS is_following,";
+
+        $sql = "SELECT u.id, u.name, u.username, u.profile_picture, u.banner_picture, u.bio, u.follower_count, u.following_count,
+                       {$isFollowingSelect}
+                       u.created_at
+                FROM {$this->table} u
+                WHERE (u.username LIKE :keyword OR u.name LIKE :keyword OR u.bio LIKE :keyword)
+                ORDER BY 
+                    CASE 
+                        WHEN u.username = :exact_keyword THEN 1
+                        WHEN u.name = :exact_keyword THEN 2
+                        WHEN u.username LIKE :starts_keyword THEN 3
+                        WHEN u.name LIKE :starts_keyword THEN 4
+                        ELSE 5 
+                    END,
+                    u.follower_count DESC, 
+                    u.created_at DESC
+                LIMIT {$limitInt}";
+
+        $this->db->query($sql);
+        $this->db->bind(':keyword', "%{$keyword}%");
+        $this->db->bind(':exact_keyword', $keyword);
+        $this->db->bind(':starts_keyword', "{$keyword}%");
+
+        return $this->db->resultSet();
+    }
 }
 
 

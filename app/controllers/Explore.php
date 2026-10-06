@@ -10,11 +10,13 @@ class Explore extends Controller
 {
     private object $postModel;
     private object $interactionModel;
+    private object $userModel;
 
     public function __construct()
     {
         $this->postModel = $this->model('Post_model');
         $this->interactionModel = $this->model('Interaction_model');
+        $this->userModel = $this->model('User');
     }
 
     /**
@@ -25,17 +27,10 @@ class Explore extends Controller
     {
         $keyword = trim($_GET['q'] ?? '');
 
-        if (!empty($keyword)) {
-            $posts = $this->postModel->searchPosts($keyword);
-            $pageTitle = 'Search: ' . $keyword . ' - Blogggle';
-        } else {
-            $posts = $this->postModel->getTrendingPosts();
-            $pageTitle = 'Explore - Blogggle';
-        }
-
         $likedPosts = [];
         $bookmarkedPosts = [];
         $repostedPosts = [];
+        $userId = null;
         if (!empty($_SESSION['user_id'])) {
             $userId = (int)$_SESSION['user_id'];
             $likedPosts = $this->interactionModel->getUserLikedPostIds($userId);
@@ -43,10 +38,21 @@ class Explore extends Controller
             $repostedPosts = $this->interactionModel->getUserRepostedPostIds($userId);
         }
 
+        $authors = [];
+        if (!empty($keyword)) {
+            $posts = $this->postModel->searchPosts($keyword);
+            $authors = $this->userModel->searchAuthors($keyword, $userId);
+            $pageTitle = 'Search: ' . $keyword . ' - Blogggle';
+        } else {
+            $posts = $this->postModel->getTrendingPosts();
+            $pageTitle = 'Explore - Blogggle';
+        }
+
         $data = [
             'title' => $pageTitle,
             'keyword' => $keyword,
             'posts' => $posts,
+            'authors' => $authors,
             'liked_posts' => $likedPosts,
             'bookmarked_posts' => $bookmarkedPosts,
             'reposted_posts' => $repostedPosts
