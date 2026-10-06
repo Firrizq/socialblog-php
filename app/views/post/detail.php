@@ -126,7 +126,7 @@ $comments = $data['comments'] ?? [];
             <?php endif; ?>
 
             <!-- Content Body (Immersive Typography) -->
-            <div class="font-body-md text-on-surface text-[17px] sm:text-[20px] leading-[1.7] sm:leading-[1.8] whitespace-pre-line mb-10 overflow-hidden break-words quill-content">
+            <div class="font-body-md text-on-surface text-[17px] sm:text-[20px] leading-[1.7] sm:leading-[1.8] whitespace-pre-line mb-10 overflow-hidden break-words editorial-content quill-content">
                 <?php if(($post['post_type'] ?? 'story') === 'note'): ?>
                     <?= preg_replace('/(^|>|\s)#([a-zA-Z_][a-zA-Z0-9_]*)/', '$1<a href="' . BASEURL . '/explore/tag/$2" class="text-primary font-semibold hover:underline">#$2</a>', strip_tags((string)($post['content'] ?? ''))) ?>
                 <?php else: ?>
@@ -303,15 +303,17 @@ $comments = $data['comments'] ?? [];
 </div>
 
 <style>
-    /* Quill editorial content formatting inside post detail */
-    .quill-content {
+    /* Editorial and legacy content formatting inside post detail */
+    .editorial-content, .quill-content {
         font-family: 'Newsreader', Georgia, serif;
         font-size: 1.18rem;
         line-height: 1.88;
         color: rgb(var(--color-on-surface));
     }
-    .quill-content p { margin-bottom: 1.5rem; text-wrap: pretty; }
-    .quill-content h1, .quill-content h2, .quill-content h3 {
+    .editorial-content p, .quill-content p { margin-bottom: 1.5rem; text-wrap: pretty; }
+    .editorial-content h1, .quill-content h1,
+    .editorial-content h2, .quill-content h2,
+    .editorial-content h3, .quill-content h3 {
         font-family: 'Newsreader', Georgia, serif;
         font-weight: 700;
         letter-spacing: -0.02em;
@@ -320,10 +322,10 @@ $comments = $data['comments'] ?? [];
         margin-bottom: 1rem;
         color: rgb(var(--color-on-surface));
     }
-    .quill-content h1 { font-size: 2.1rem; }
-    .quill-content h2 { font-size: 1.7rem; }
-    .quill-content h3 { font-size: 1.35rem; }
-    .quill-content .story-subtitle {
+    .editorial-content h1, .quill-content h1 { font-size: 2.1rem; }
+    .editorial-content h2, .quill-content h2 { font-size: 1.7rem; }
+    .editorial-content h3, .quill-content h3 { font-size: 1.35rem; }
+    .editorial-content .story-subtitle, .quill-content .story-subtitle {
         font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
         font-size: 1.25rem;
         line-height: 1.6;
@@ -332,14 +334,14 @@ $comments = $data['comments'] ?? [];
         margin-top: -0.5rem;
         margin-bottom: 1.75rem;
     }
-    .quill-content a {
+    .editorial-content a, .quill-content a {
         color: rgb(var(--color-primary));
         text-decoration: underline;
         text-underline-offset: 3px;
         transition: opacity 0.15s ease;
     }
-    .quill-content a:hover { opacity: 0.8; }
-    .quill-content blockquote {
+    .editorial-content a:hover, .quill-content a:hover { opacity: 0.8; }
+    .editorial-content blockquote, .quill-content blockquote {
         border-left: 3.5px solid rgb(var(--color-primary));
         padding: 0.85rem 1.35rem;
         margin: 2.25rem 0;
@@ -350,7 +352,7 @@ $comments = $data['comments'] ?? [];
         border-radius: 0 0.75rem 0.75rem 0;
         color: rgb(var(--color-on-surface));
     }
-    .quill-content pre {
+    .editorial-content pre, .quill-content pre {
         background: rgb(var(--color-surface-container-low));
         border: 1px solid rgba(var(--color-outline-variant), 0.5);
         border-radius: 0.75rem;
@@ -361,23 +363,30 @@ $comments = $data['comments'] ?? [];
         line-height: 1.6;
         margin: 1.75rem 0;
     }
-    .quill-content code {
+    .editorial-content code, .quill-content code {
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         background: rgb(var(--color-surface-container-high));
         padding: 0.2rem 0.4rem;
         border-radius: 0.35rem;
         font-size: 0.88em;
     }
-    .quill-content pre code { background: transparent; padding: 0; border-radius: 0; }
-    .quill-content ul, .quill-content ol { margin-left: 2rem; margin-bottom: 1.5rem; }
-    .quill-content li { margin-bottom: 0.4rem; }
-    .quill-content img {
+    .editorial-content pre code, .quill-content pre code { background: transparent; padding: 0; border-radius: 0; }
+    .editorial-content ul, .quill-content ul,
+    .editorial-content ol, .quill-content ol { margin-left: 2rem; margin-bottom: 1.5rem; }
+    .editorial-content li, .quill-content li { margin-bottom: 0.4rem; }
+    .editorial-content img, .quill-content img {
         border-radius: 1rem;
-        margin: 2rem 0;
         max-width: 100%;
         height: auto;
-        border: 1px solid rgba(var(--color-outline-variant), 0.4);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .editorial-content figure, .quill-content figure {
+        margin: 2rem 0;
+        max-width: 100%;
+    }
+    .editorial-content hr, .quill-content hr {
+        border: none;
+        border-top: 1px solid rgb(var(--color-outline-variant) / 0.6);
+        margin: 2.5rem 0;
     }
 </style>
 

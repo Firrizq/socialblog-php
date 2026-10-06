@@ -15,7 +15,7 @@
 
         <!-- Center: Desktop Toolbar Container -->
         <div id="toolbar-container" class="hidden lg:flex justify-center items-center w-full max-w-5xl px-2">
-            <!-- Quill tools injected here -->
+            <!-- Editorial tools injected here -->
         </div>
 
         <!-- Right: Actions -->
@@ -97,7 +97,7 @@
                 </div>
             </div>
 
-            <!-- Quill Editor Area -->
+            <!-- Editorial Editor Area -->
             <div id="editor-container" class="w-full"></div>
             <input type="hidden" name="content" id="content">
         </form>
@@ -125,52 +125,19 @@
     .editorial-font { font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif !important; }
     textarea:focus { outline: none; box-shadow: none; }
 
-    /* Complete WYSIWYG Toolbar Styling */
-    .ql-toolbar.ql-snow {
-        border: none !important;
-        background: transparent !important;
-        padding: 8px 0 !important;
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        width: 100%;
-        justify-content: center;
-    }
-    .ql-toolbar.ql-snow .ql-formats { margin-right: 12px !important; display: flex; align-items: center;}
-    .ql-snow .ql-stroke { stroke: rgb(var(--color-on-surface-variant)) !important; stroke-width: 1.5 !important; }
-    .ql-snow .ql-fill { fill: rgb(var(--color-on-surface-variant)) !important; }
-    .ql-snow .ql-picker { color: rgb(var(--color-on-surface-variant)) !important; font-family: 'Inter', sans-serif !important; font-weight: 500;}
-    .ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow.ql-toolbar button.ql-active .ql-stroke, .ql-snow .ql-picker-label:hover .ql-stroke { stroke: rgb(var(--color-on-surface)) !important; }
-    .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow.ql-toolbar button.ql-active .ql-fill, .ql-snow .ql-picker-label:hover .ql-fill { fill: rgb(var(--color-on-surface)) !important; }
-    .ql-snow .ql-picker-options { background-color: rgb(var(--color-surface-container-high)) !important; border: 1px solid rgb(var(--color-outline-variant)) !important; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
-    
-    .ql-container.ql-snow {
-        border: none !important;
-        background: transparent !important;
-        font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif !important;
-        font-size: 20px !important; 
-        line-height: 1.8 !important;
-        color: rgb(var(--color-on-surface)) !important;
-        padding: 0 !important;
-    }
-    .ql-editor { padding: 0 !important; min-height: 50vh; overflow-y: visible !important; }
-    .ql-editor.ql-blank::before { left: 0 !important; font-style: normal !important; color: rgb(var(--color-on-surface-variant) / 0.3) !important; font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif !important; }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    
-    /* Subtitle rendering inside content */
 </style>
 
-<!-- Quill.js WYSIWYG Editor (loaded with crossorigin="anonymous" to comply with COEP/COOP) -->
-<link href="https://cdn.jsdelivr.net/npm/quill@1.3.6/dist/quill.snow.css" rel="stylesheet" crossorigin="anonymous">
-<script src="https://cdn.jsdelivr.net/npm/quill@1.3.6/dist/quill.min.js" crossorigin="anonymous"></script>
+<!-- Editorial WYSIWYG Editor Script -->
+<script src="<?= BASEURL ?>/js/editorial-editor.js"></script>
 
 <!-- FFmpeg.wasm for Client-Side Video Compression -->
 <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js" crossorigin="anonymous"></script>
 <script src="<?= BASEURL ?>/js/video-compressor.js"></script>
 
 <script>
-    let quill;
+    let editor;
 
     document.addEventListener("DOMContentLoaded", function() {
         const BASE_URL = '<?= BASEURL ?>';
@@ -181,180 +148,42 @@
             if(el) { el.addEventListener('input', () => autoResize(el)); autoResize(el); }
         });
 
-        // Image/Media upload handler for Quill Editor
-        async function uploadImageToServer(file) {
-            if (!file) return;
-
-            const MAX_FILE_SIZE = 200 * 1024 * 1024;
-            if (file.size > MAX_FILE_SIZE) {
-                const mb = (file.size / (1024 * 1024)).toFixed(1);
-                showToast(`File is too large (${mb}MB). Maximum allowed is 200MB.`, 'error');
+        // Initialize Custom Editorial Editor
+        function initEditorialEditor() {
+            if (typeof EditorialEditor === 'undefined') {
+                console.warn('[EditorialEditor] Script still loading, retrying in 50ms...');
+                setTimeout(initEditorialEditor, 50);
                 return;
             }
 
-            let fileToUpload = file;
-            const isVideo = (file.type && file.type.startsWith('video/')) || /\.(mp4|webm|ogg|mov|mkv)$/i.test(file.name || '');
-
-            if (isVideo) {
-                if (!window.VideoCompressor) {
-                    showToast("Compression failed. The video may be too large for browser compression.", "error");
-                    return; // ABORT completely!
-                }
-
-                try {
-                    showToast('Compressing video before upload...', 'info');
-                    setCompressingState(true, 0);
-                    fileToUpload = await window.VideoCompressor.compress(file, {
-                        onProgress: (pct) => setCompressingState(true, pct),
-                        onStatus: (status) => console.log('[Editor Video]', status)
-                    });
-                } catch (compressErr) {
-                    console.error('Editor video compression failed:', compressErr);
-                    setCompressingState(false);
-                    // ABORT completely: Do NOT append raw file to FormData or proceed to upload!
-                    showToast("Compression failed. The video may be too large for browser compression.", "error");
-                    return;
-                } finally {
-                    setCompressingState(false);
-                }
+            // Extract Subtitle from existing HTML content
+            const rawContent = <?= json_encode($post['content'] ?? '') ?>;
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = rawContent;
+            const subtitleEl = tempDiv.querySelector('.story-subtitle');
+            if (subtitleEl && tempDiv.firstElementChild === subtitleEl) {
+                document.getElementById('subtitle-input').value = subtitleEl.innerText;
+                autoResize(document.getElementById('subtitle-input'));
+                subtitleEl.remove();
             }
 
-            const formData = new FormData();
-            formData.append('image', fileToUpload);
-            formData.append('media', fileToUpload);
-
-            try {
-                const res = await fetch(`${BASE_URL}/upload/image`, {
-                    method: 'POST',
-                    body: formData
-                });
-                const rawText = await res.text();
-                let data;
-                try {
-                    data = JSON.parse(rawText);
-                } catch (parseErr) {
-                    const snippet = rawText.replace(/<[^>]*>/g, '').trim().substring(0, 120);
-                    throw new Error(snippet || `Server error (${res.status} ${res.statusText})`);
+            editor = new EditorialEditor({
+                container: '#editor-container',
+                toolbarContainer: '#toolbar-container',
+                mobileToolbarContainer: '#mobile-toolbar-container',
+                placeholder: 'Tell your story...',
+                initialContent: tempDiv.innerHTML,
+                uploadUrl: `${BASE_URL}/upload/image`,
+                onTextChange: (html, text, stats) => {
+                    const contentInput = document.getElementById('content');
+                    if (contentInput) contentInput.value = html;
+                    const wc = document.getElementById('word-count-text');
+                    if (wc) wc.textContent = `${stats.words} words · ${stats.readingTime} min read`;
                 }
-
-                if (res.ok && data.success && data.url) {
-                    const range = quill.getSelection(true);
-                    quill.insertEmbed(range.index, isVideo ? 'video' : 'image', BASE_URL + data.url);
-                    quill.setSelection(range.index + 1);
-                    showToast('Media inserted into story!', 'success');
-                } else {
-                    showToast(data.message || `Upload failed (${res.status})`, 'error');
-                }
-            } catch (err) {
-                console.error('Media upload error:', err);
-                showToast(err.message || 'Failed to upload media', 'error');
-            } finally {
-                setCompressingState(false);
-            }
+            });
         }
 
-        function mediaHandler() {
-            const input = document.createElement('input');
-            input.setAttribute('type', 'file');
-            input.setAttribute('accept', 'image/png, image/jpeg, image/gif, video/mp4, video/webm, video/quicktime, video/ogg');
-            input.click();
-
-            input.onchange = async () => {
-                const file = input.files[0];
-                if (file) await uploadImageToServer(file);
-            };
-        }
-
-        // Full WYSIWYG Options
-        function initQuill() {
-            if (typeof Quill === 'undefined') {
-                console.warn('Quill library is still loading, retrying in 100ms...');
-                setTimeout(initQuill, 100);
-                return;
-            }
-            if (quill) return;
-
-            try {
-                const icons = Quill.import('ui/icons');
-                if (icons) {
-                    icons['undo'] = '<svg viewBox="0 0 18 18"><path class="ql-fill" d="M10.5,4A5.5,5.5,0,0,0,5,9.5H3L6,13l3-3.5H7A3.5,3.5,0,0,1,10.5,6a3.5,3.5,0,0,1,3.5,3.5A3.5,3.5,0,0,1,10.5,13V15A5.5,5.5,0,0,0,10.5,4Z"/></svg>';
-                    icons['redo'] = '<svg viewBox="0 0 18 18"><path class="ql-fill" d="M7.5,4A5.5,5.5,0,0,1,13,9.5h2L12,13,9,9.5h2A3.5,3.5,0,0,0,7.5,6a3.5,3.5,0,0,0-3.5,3.5A3.5,3.5,0,0,0,7.5,13V15A5.5,5.5,0,0,1,7.5,4Z"/></svg>';
-                }
-
-                const toolbarOptions = {
-                    container: [
-                        ['undo', 'redo'],
-                        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-                        ['bold', 'italic', 'strike', 'code'],
-                        [{ 'color': [] }, { 'background': [] }],
-                        [{ 'script': 'sub'}, { 'script': 'super' }],
-                        ['link', 'image', 'video', 'blockquote'],
-                        [{ 'list': 'bullet' }, { 'list': 'ordered' }],
-                        [{ 'align': [] }]
-                    ],
-                    handlers: {
-                        'undo': function() { this.quill.history.undo(); },
-                        'redo': function() { this.quill.history.redo(); },
-                        'image': mediaHandler,
-                        'video': mediaHandler
-                    }
-                };
-
-                quill = new Quill('#editor-container', {
-                    theme: 'snow',
-                    placeholder: 'Tell your story...',
-                    modules: { toolbar: toolbarOptions, history: { delay: 1000, maxStack: 100, userOnly: true } }
-                });
-
-                // Relocate Toolbar
-                const isMobile = window.innerWidth < 1024;
-                const toolbarTarget = isMobile ? '#mobile-toolbar-container' : '#toolbar-container';
-                const generatedToolbar = document.querySelector('.ql-toolbar');
-                const targetContainer = document.querySelector(toolbarTarget);
-                if(generatedToolbar && targetContainer) { targetContainer.appendChild(generatedToolbar); }
-
-                window.addEventListener('resize', function() {
-                    const currentTarget = window.innerWidth < 1024 
-                        ? document.querySelector('#mobile-toolbar-container') 
-                        : document.querySelector('#toolbar-container');
-                    const tb = document.querySelector('.ql-toolbar');
-                    if (tb && currentTarget && tb.parentElement !== currentTarget) {
-                        currentTarget.appendChild(tb);
-                    }
-                });
-
-                // Paste event listener for images
-                quill.root.addEventListener('paste', function(e) {
-                    const clipboardData = e.clipboardData || window.clipboardData;
-                    if (clipboardData && clipboardData.items) {
-                        for (let i = 0; i < clipboardData.items.length; i++) {
-                            if (clipboardData.items[i].type.indexOf('image') !== -1) {
-                                e.preventDefault();
-                                const file = clipboardData.items[i].getAsFile();
-                                uploadImageToServer(file);
-                                break;
-                            }
-                        }
-                    }
-                });
-
-                // Extract Subtitle from existing HTML content
-                const rawContent = <?= json_encode($post['content'] ?? '') ?>;
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = rawContent;
-                const subtitleEl = tempDiv.querySelector('.story-subtitle');
-                if (subtitleEl && tempDiv.firstElementChild === subtitleEl) {
-                    document.getElementById('subtitle-input').value = subtitleEl.innerText;
-                    autoResize(document.getElementById('subtitle-input'));
-                    subtitleEl.remove();
-                }
-                quill.clipboard.dangerouslyPasteHTML(tempDiv.innerHTML);
-            } catch (err) {
-                console.error('Failed to initialize Quill in edit view:', err);
-            }
-        }
-
-        initQuill();
+        initEditorialEditor();
 
         window.saveDraft = function() {
             const titleEl = document.getElementById('title-input');
@@ -382,12 +211,12 @@
                 return;
             }
 
-            let html = quill ? quill.root.innerHTML : '';
+            let html = editor ? editor.getHTML() : '';
             const subtitle = document.getElementById('subtitle-input').value.trim();
             const statusInput = document.getElementById('post-status');
             const isDraft = statusInput && statusInput.value === 'draft';
             
-            if (!isDraft && (html === '<p><br></p>' || html.trim() === '')) {
+            if (!isDraft && (!editor || html === '<p><br></p>' || html.trim() === '')) {
                 e.preventDefault();
                 showToast('Content cannot be empty', 'error');
                 return;
@@ -654,7 +483,7 @@
                 previewCoverVid.classList.add('hidden');
             }
 
-            document.getElementById('preview-content').innerHTML = quill.root.innerHTML;
+            document.getElementById('preview-content').innerHTML = editor ? editor.getHTML() : '';
             previewModal.classList.remove('hidden');
             previewModal.classList.add('flex');
         });
@@ -674,15 +503,7 @@
             document.body.style.overflow = 'auto';
         });
 
-        // 1. Live Word Count
-        quill.on('text-change', () => {
-            const text = quill.getText().trim();
-            const words = text.length > 0 ? text.split(/\s+/).length : 0;
-            const readTime = Math.max(1, Math.ceil(words / 200));
-            document.getElementById('word-count-text').textContent = `${words} words · ${readTime} min read`;
-        });
-
-        // 2. LocalStorage Auto-Save
+        // LocalStorage Auto-Save
         const draftKey = 'blogggle_draft_' + (window.location.pathname.includes('edit') ? <?= $post['id'] ?? '0' ?> : 'new');
         const draftStatus = document.getElementById('draft-status');
         
@@ -701,7 +522,7 @@
                             onConfirm: () => {
                                 if (document.getElementById('title-input')) document.getElementById('title-input').value = savedData.title || '';
                                 if (document.getElementById('subtitle-input')) document.getElementById('subtitle-input').value = savedData.subtitle || '';
-                                if (quill && savedData.content) quill.clipboard.dangerouslyPasteHTML(savedData.content);
+                                if (editor && savedData.content) editor.setHTML(savedData.content);
                                 if (typeof showToast === 'function') showToast('Draft restored', 'info');
                             },
                             onCancel: () => {
@@ -718,11 +539,13 @@
         setInterval(() => {
             const title = document.getElementById('title-input').value;
             const subtitle = document.getElementById('subtitle-input').value;
-            const content = quill.root.innerHTML;
-            if(title.trim() !== '' || quill.getText().trim().length > 0) {
+            const content = editor ? editor.getHTML() : '';
+            if(title.trim() !== '' || (editor && editor.getText().trim().length > 0)) {
                 localStorage.setItem(draftKey, JSON.stringify({title, subtitle, content}));
-                draftStatus.textContent = 'Saved locally';
-                setTimeout(() => { draftStatus.textContent = ''; }, 3000);
+                if (draftStatus) {
+                    draftStatus.textContent = 'Saved locally';
+                    setTimeout(() => { draftStatus.textContent = ''; }, 3000);
+                }
             }
         }, 10000); // Auto-save every 10 seconds
 

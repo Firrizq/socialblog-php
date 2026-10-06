@@ -52,9 +52,6 @@ if (!$activeUser && !empty($_SESSION['user_id'])) {
     <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/> 
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-    
-    <!-- Quill.js CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/quill@1.3.6/dist/quill.snow.css" rel="stylesheet" crossorigin="anonymous">
 
     <style>
         @layer base {
@@ -111,16 +108,129 @@ if (!$activeUser && !empty($_SESSION['user_id'])) {
         .text-wrap-pretty { text-wrap: pretty; }
         .font-serif, .font-display, .font-editorial { font-family: 'Newsreader', Georgia, serif; }
         
-        /* Quill Dark/Light Mode Adjustments */
-        .ql-toolbar.ql-snow { background: rgb(var(--color-surface-container-low)); border-color: rgb(var(--color-outline-variant)) !important; border-top-left-radius: 1rem; border-top-right-radius: 1rem; padding: 0.75rem !important; }
-        .ql-container.ql-snow { background: rgb(var(--color-surface-container-lowest)); border-color: rgb(var(--color-outline-variant)) !important; border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem; color: rgb(var(--color-on-surface)); font-family: 'Newsreader', Georgia, serif; font-size: 1.2rem; line-height: 1.8; min-height: 320px; }
-        .ql-snow .ql-stroke { stroke: rgb(var(--color-on-surface-variant)) !important; }
-        .ql-snow .ql-fill { fill: rgb(var(--color-on-surface-variant)) !important; }
-        .ql-snow .ql-picker { color: rgb(var(--color-on-surface-variant)) !important; }
-        .ql-snow .ql-picker-options { background-color: rgb(var(--color-surface-container-high)) !important; border-color: rgb(var(--color-outline-variant)) !important; }
-        .ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow.ql-toolbar button:focus .ql-stroke, .ql-snow.ql-toolbar button.ql-active .ql-stroke { stroke: rgb(var(--color-primary)) !important; }
-        .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow.ql-toolbar button:focus .ql-fill, .ql-snow.ql-toolbar button.ql-active .ql-fill { fill: rgb(var(--color-primary)) !important; }
-        .ql-editor.ql-blank::before { color: rgb(var(--color-on-surface-variant) / 0.5) !important; font-style: normal !important; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.1rem; }
+        /* ================= Editorial WYSIWYG Editor Styles ================= */
+        .editorial-editor-canvas {
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 1.25rem;
+            line-height: 1.85;
+            color: rgb(var(--color-on-surface));
+            word-break: break-word;
+        }
+        .editorial-editor-canvas:focus {
+            outline: none;
+        }
+        .editorial-editor-canvas p {
+            margin-bottom: 1.5rem;
+            text-wrap: pretty;
+        }
+        .editorial-editor-canvas h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            line-height: 1.25;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: rgb(var(--color-on-surface));
+        }
+        .editorial-editor-canvas h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-top: 1.75rem;
+            margin-bottom: 0.75rem;
+            color: rgb(var(--color-on-surface));
+        }
+        .editorial-editor-canvas h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            line-height: 1.35;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: rgb(var(--color-on-surface));
+        }
+        .editorial-editor-canvas blockquote {
+            border-left: 3px solid rgb(var(--color-primary));
+            padding-left: 1.25rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+            color: rgb(var(--color-on-surface-variant));
+        }
+        .editorial-editor-canvas pre, .editorial-code-block {
+            background-color: rgb(var(--color-surface-container-high));
+            border: 1px solid rgb(var(--color-outline-variant) / 0.5);
+            border-radius: 0.75rem;
+            padding: 1rem 1.25rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        .editorial-editor-canvas code:not(pre code) {
+            background-color: rgb(var(--color-surface-container-high));
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.375rem;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.9em;
+        }
+        .editorial-editor-canvas ul {
+            list-style-type: disc;
+            margin-left: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .editorial-editor-canvas ol {
+            list-style-type: decimal;
+            margin-left: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .editorial-editor-canvas li {
+            margin-bottom: 0.35rem;
+        }
+        .editorial-editor-canvas a {
+            color: rgb(var(--color-primary));
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+        .editorial-editor-canvas hr {
+            border: none;
+            border-top: 1px solid rgb(var(--color-outline-variant) / 0.6);
+            margin: 2.5rem 0;
+        }
+        /* Empty placeholder */
+        .editorial-editor-canvas[data-placeholder]:empty::before,
+        .editorial-editor-canvas[data-placeholder] > p:only-child:empty::before {
+            content: attr(data-placeholder);
+            color: rgb(var(--color-on-surface-variant) / 0.35);
+            pointer-events: none;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 1.15rem;
+            font-style: normal;
+        }
+        /* Drag-over state */
+        .editorial-dragover {
+            outline: 2px dashed rgb(var(--color-primary)) !important;
+            outline-offset: 8px;
+            border-radius: 0.75rem;
+        }
+
+        /* Unified Editorial Article Content formatting (Detail & Feed views) */
+        .editorial-content, .quill-content {
+            font-family: 'Newsreader', Georgia, serif;
+        }
+        .editorial-content p, .quill-content p { margin-bottom: 1.5rem; text-wrap: pretty; }
+        .editorial-content h1, .quill-content h1 { font-size: 2.25rem; font-weight: 800; line-height: 1.25; margin-top: 2.25rem; margin-bottom: 1rem; }
+        .editorial-content h2, .quill-content h2 { font-size: 1.75rem; font-weight: 700; line-height: 1.3; margin-top: 1.75rem; margin-bottom: 0.75rem; }
+        .editorial-content h3, .quill-content h3 { font-size: 1.4rem; font-weight: 600; line-height: 1.35; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+        .editorial-content blockquote, .quill-content blockquote { border-left: 3px solid rgb(var(--color-primary)); padding-left: 1.25rem; margin: 1.5rem 0; font-style: italic; color: rgb(var(--color-on-surface-variant)); }
+        .editorial-content pre, .quill-content pre { background-color: rgb(var(--color-surface-container-high)); border: 1px solid rgb(var(--color-outline-variant) / 0.5); border-radius: 0.75rem; padding: 1rem 1.25rem; margin: 1.5rem 0; overflow-x: auto; font-family: ui-monospace, monospace; font-size: 0.95rem; }
+        .editorial-content code:not(pre code), .quill-content code:not(pre code) { background-color: rgb(var(--color-surface-container-high)); padding: 0.2rem 0.4rem; border-radius: 0.375rem; font-family: ui-monospace, monospace; font-size: 0.9em; }
+        .editorial-content ul, .quill-content ul { list-style-type: disc; margin-left: 1.75rem; margin-bottom: 1.5rem; }
+        .editorial-content ol, .quill-content ol { list-style-type: decimal; margin-left: 1.75rem; margin-bottom: 1.5rem; }
+        .editorial-content li, .quill-content li { margin-bottom: 0.35rem; }
+        .editorial-content a, .quill-content a { color: rgb(var(--color-primary)); text-decoration: underline; text-underline-offset: 3px; }
+        .editorial-content figure, .quill-content figure { margin: 2rem 0; }
+        .editorial-content img, .quill-content img { border-radius: 1rem; max-width: 100%; height: auto; }
+        .editorial-content video, .quill-content video { border-radius: 1rem; max-width: 100%; height: auto; }
+        .editorial-content hr, .quill-content hr { border: none; border-top: 1px solid rgb(var(--color-outline-variant) / 0.6); margin: 2.5rem 0; }
 
         /* ================= Editorial Button Design System ================= */
         .btn-primary {

@@ -115,9 +115,6 @@
     <!-- Akhir dari md:pl-60 -->
     </div>
 
-    <!-- Quill.js JS Script diletakkan di footer agar editor bisa jalan -->
-    <script src="https://cdn.jsdelivr.net/npm/quill@1.3.6/dist/quill.min.js" crossorigin="anonymous"></script>
-
     <!-- FFmpeg.wasm & Client-Side Video Compressor -->
     <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js" crossorigin="anonymous"></script>
     <script src="<?= BASEURL ?>/js/video-compressor.js"></script>
@@ -547,8 +544,8 @@
 
     <!-- Image Lightbox Styles -->
     <style>
-        .post-media-image, .quill-content img { cursor: pointer; transition: opacity 0.2s; }
-        .post-media-image:hover, .quill-content img:hover { opacity: 0.85; }
+        .post-media-image, .quill-content img, .editorial-content img { cursor: pointer; transition: opacity 0.2s; }
+        .post-media-image:hover, .quill-content img:hover, .editorial-content img:hover { opacity: 0.85; }
     </style>
 
     <!-- Split-Screen Image Lightbox Modal (Twitter/X Style Gallery) -->
@@ -710,10 +707,10 @@
             });
 
             // 1. Update the Post Content Container:
-            const contentContainer = mainContent.querySelector('.quill-content') || mainContent.querySelector('article > div.font-body-md');
+            const contentContainer = mainContent.querySelector('.editorial-content, .quill-content') || mainContent.querySelector('article > div.font-body-md');
             if (contentContainer) {
                 contentContainer.id = 'lightbox-post-content';
-                contentContainer.className = 'font-body-md text-on-surface text-[15px] sm:text-[16px] leading-[1.7] whitespace-pre-line mb-6 break-words quill-content';
+                contentContainer.className = 'font-body-md text-on-surface text-[15px] sm:text-[16px] leading-[1.7] whitespace-pre-line mb-6 break-words editorial-content quill-content';
             }
 
             // 2. Update the Action Bar (Like, Comment, Repost, Bookmark, Share):
@@ -934,11 +931,11 @@
             return; // Allow standard link navigation to user profile
         }
 
-        // 2. Only proceed for actual post media images or embedded quill images
+        // 2. Only proceed for actual post media images or embedded editorial/quill images
         const isPostMedia = target.classList.contains('post-media-image');
-        const quillContent = target.closest('.quill-content');
+        const editorialContent = target.closest('.editorial-content, .quill-content');
 
-        if (isPostMedia || quillContent) {
+        if (isPostMedia || editorialContent) {
             e.preventDefault();
             e.stopPropagation();
 
@@ -961,7 +958,7 @@
                 const linkTag = article.querySelector('a[href*="/note/"], a[href*="/story/"], a[href*="/post/detail/"]');
                 if (linkTag) detailLink = linkTag.href;
                 else if (window.location.href.includes('/post/detail/') || /\/[^\/]+\/(note|story)\/\d{12}/.test(window.location.pathname)) detailLink = window.location.href;
-            } else if (quillContent) {
+            } else if (editorialContent) {
                 if (window.location.href.includes('/post/detail/') || /\/[^\/]+\/(note|story)\/\d{12}/.test(window.location.pathname)) detailLink = window.location.href;
             }
 

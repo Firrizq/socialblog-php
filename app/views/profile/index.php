@@ -838,12 +838,10 @@ document.getElementById('follow-modal')?.addEventListener('click', function(e) {
 </script>
 
 <style>
-    /* Quill content formatting inside profile */
-    .quill-content p { margin-bottom: 0.75rem; }
-    .quill-content a { color: #10b981; text-decoration: underline; }
-    .dark .quill-content a { color: #4edea3; }
-    .quill-content strong { color: #dae2fd; }
-    .quill-content blockquote { border-left: 3px solid #10b981; padding-left: 1rem; margin: 1rem 0; font-style: italic; }
+    /* Editorial & Legacy content formatting inside profile */
+    .editorial-content p, .quill-content p { margin-bottom: 0.75rem; }
+    .editorial-content a, .quill-content a { color: rgb(var(--color-primary)); text-decoration: underline; }
+    .editorial-content blockquote, .quill-content blockquote { border-left: 3px solid rgb(var(--color-primary)); padding-left: 1rem; margin: 1rem 0; font-style: italic; }
 </style>
 
 <?php require_once __DIR__ . '/../templates/footer.php'; ?>
