@@ -39,15 +39,15 @@ $currentUrl = $currentUrl ?: 'home';
 $urlParts = explode('/', $currentUrl);
 $activePage = strtolower($urlParts[0] ?? 'home');
 
-$activeNav = "flex items-center gap-space-md px-space-md py-space-sm transition-colors bg-surface-container text-primary font-title-md rounded-xl border border-outline-variant/40";
-$inactiveNav = "flex items-center gap-space-md px-space-md py-space-sm rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-title-md border border-transparent";
+$activeNav = "flex items-center gap-space-md px-3.5 py-2.5 transition-all bg-surface-container text-primary font-bold font-sans rounded-xl border border-primary/20 shadow-xs";
+$inactiveNav = "flex items-center gap-space-md px-3.5 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all font-medium font-sans border border-transparent";
 $unreadCount = $unreadNotifCount ?? ((isset($_SESSION['user_id'])) ? (new Notification_model())->getUnreadCount((int)$_SESSION['user_id']) : 0);
 ?>
 
 <!-- Left Sidebar (Desktop / Tablet) -->
-<aside class="fixed left-0 top-16 bottom-0 w-60 bg-surface-container-low border-r border-outline-variant/30 z-40 hidden md:flex flex-col justify-between p-gutter">
+<aside class="fixed left-0 top-16 bottom-0 w-60 bg-surface-container-low/70 backdrop-blur-md border-r border-outline-variant/40 z-40 hidden md:flex flex-col justify-between p-gutter">
     <div class="flex flex-col gap-space-lg">
-        <nav class="flex flex-col gap-space-xs">
+        <nav class="flex flex-col gap-1.5">
             <a class="<?= ($activePage === 'home' || $activePage === '') ? $activeNav : $inactiveNav ?>" href="<?= BASEURL ?>/home">
                 <span class="material-symbols-outlined text-xl">home</span><span>Home</span>
             </a>
@@ -61,7 +61,7 @@ $unreadCount = $unreadNotifCount ?? ((isset($_SESSION['user_id'])) ? (new Notifi
                 <span class="material-symbols-outlined text-xl">notifications</span>
                 <span>Notifications</span>
                 <?php if($unreadCount > 0): ?>
-                    <span class="ml-auto flex items-center justify-center min-w-[22px] h-[22px] px-1.5 bg-error text-on-error font-bold text-[11px] rounded-full shadow-sm">
+                    <span class="ml-auto flex items-center justify-center min-w-[20px] h-[20px] px-1 bg-error text-white font-bold text-[10px] rounded-full shadow-xs">
                         <?= $unreadCount > 99 ? '99+' : $unreadCount ?>
                     </span>
                 <?php endif; ?>
@@ -74,8 +74,8 @@ $unreadCount = $unreadNotifCount ?? ((isset($_SESSION['user_id'])) ? (new Notifi
             </a>
         </nav>
         <?php if (!empty($activeUserId)): ?>
-            <a class="flex items-center justify-center gap-space-sm w-full py-space-sm px-space-md rounded-xl bg-primary-container text-on-primary-container font-title-md hover:bg-primary transition-all shadow-[0_0_0_1px_rgba(16,185,129,0.3)]" href="<?= BASEURL ?>/post/create">
-                <span class="material-symbols-outlined text-xl">edit_note</span><span>New Story</span>
+            <a class="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-primary text-white font-bold text-sm hover:opacity-90 transition-all shadow-sm hover:shadow-md active:scale-95" href="<?= BASEURL ?>/post/create">
+                <span class="material-symbols-outlined text-xl">edit_square</span><span>New Story</span>
             </a>
         <?php endif; ?>
     </div>

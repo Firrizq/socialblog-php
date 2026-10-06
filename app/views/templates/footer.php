@@ -11,46 +11,57 @@
                 $popularPosts = array_slice((new Post_model())->getPopularPosts(), 0, 4);
                 $interactionModel = new Interaction_model();
                 ?>
-                <div class="flex flex-col gap-space-lg">
+                <div class="flex flex-col gap-6">
+                    <!-- Search Input -->
                     <form action="<?= BASEURL ?>/explore" method="GET" class="relative flex items-center w-full">
-                        <span class="material-symbols-outlined absolute left-space-md text-outline text-lg pointer-events-none">search</span>
-                        <input name="q" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>" class="w-full pl-10 pr-space-md py-space-xs bg-surface-container-lowest border border-outline-variant/40 rounded-full font-body-md text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container" placeholder="Search Blogggle..." type="search"/>
+                        <span class="material-symbols-outlined absolute left-3.5 text-on-surface-variant text-lg pointer-events-none">search</span>
+                        <input name="q" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>" class="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant/60 rounded-full font-sans text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary shadow-2xs transition-all" placeholder="Search dispatches & topics..." type="search"/>
                     </form>
                     
-                    <div class="flex flex-col gap-space-md">
-                        <span class="font-title-md text-on-surface">Popular Stories</span>
-                        <div class="flex flex-col gap-2">
+                    <!-- Popular Stories / Curated Dispatch -->
+                    <div class="flex flex-col gap-3">
+                        <div class="flex items-center justify-between">
+                            <span class="font-serif font-bold text-base text-on-surface tracking-tight">Top Stories</span>
+                            <a href="<?= BASEURL ?>/explore" class="text-xs font-sans text-primary hover:underline">Explore all</a>
+                        </div>
+                        <div class="flex flex-col gap-2.5">
                             <?php foreach($popularPosts as $popPost): ?>
                                 <?php
                                     $popType = strtolower($popPost['post_type'] ?? $popPost['type'] ?? 'story');
                                     $popUid = !empty($popPost['uid']) ? $popPost['uid'] : $popPost['id'];
                                     $popUrl = BASEURL . '/' . urlencode($popPost['username']) . '/' . $popType . '/' . $popUid;
                                 ?>
-                                <a href="<?= $popUrl ?>" class="flex flex-col gap-1 p-3 rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors group">
-                                    <span class="font-title-md text-sm text-on-surface group-hover:text-primary transition-colors line-clamp-2"><?= htmlspecialchars($popPost['title']) ?></span>
-                                    <span class="font-caption text-xs text-on-surface-variant">by @<?= htmlspecialchars($popPost['username']) ?> · <?= $popPost['read_time_minutes'] ?> min read</span>
+                                <a href="<?= $popUrl ?>" class="flex flex-col gap-1 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/40 hover:border-primary/40 hover:bg-surface-container-low/60 transition-all group shadow-2xs">
+                                    <span class="font-serif text-[15px] font-bold text-on-surface group-hover:text-primary transition-colors line-clamp-2 leading-snug"><?= htmlspecialchars($popPost['title']) ?></span>
+                                    <div class="flex items-center gap-1.5 font-sans text-xs text-on-surface-variant mt-0.5">
+                                        <span>@<?= htmlspecialchars($popPost['username']) ?></span>
+                                        <span class="text-on-surface-variant/40">·</span>
+                                        <span><?= $popPost['read_time_minutes'] ?? 1 ?> min read</span>
+                                    </div>
                                 </a>
                             <?php endforeach; ?>
                         </div>
                     </div>
                     
-                    <div class="flex flex-col gap-space-md">
-                        <span class="font-title-md text-on-surface">Popular Tags</span>
+                    <!-- Popular Tags -->
+                    <div class="flex flex-col gap-3">
+                        <span class="font-serif font-bold text-base text-on-surface tracking-tight">Curated Topics</span>
                         <div class="flex flex-wrap gap-2">
                             <?php 
-                            $popularTags = ['Technology', 'Life', 'Design', 'Programming', 'Writing'];
+                            $popularTags = ['Technology', 'Culture', 'Design', 'Programming', 'Essays'];
                             foreach($popularTags as $popTag): 
                             ?>
-                                <a href="<?= BASEURL ?>/explore/tag/<?= urlencode($popTag) ?>" class="px-3 py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 text-on-surface-variant hover:text-primary hover:border-primary/50 text-xs font-semibold transition-all">
+                                <a href="<?= BASEURL ?>/explore/tag/<?= urlencode($popTag) ?>" class="px-3 py-1.5 rounded-full bg-surface-container-lowest border border-outline-variant/40 text-on-surface-variant hover:border-primary/60 hover:text-primary hover:bg-primary/5 text-xs font-medium transition-all shadow-2xs">
                                     #<?= htmlspecialchars($popTag) ?>
                                 </a>
                             <?php endforeach; ?>
                         </div>
                     </div>
                     
-                    <div class="flex flex-col gap-space-md">
-                        <span class="font-title-md text-on-surface">Suggested Writers</span>
-                        <div class="flex flex-col gap-space-md">
+                    <!-- Suggested Writers -->
+                    <div class="flex flex-col gap-3">
+                        <span class="font-serif font-bold text-base text-on-surface tracking-tight">Contributing Writers</span>
+                        <div class="flex flex-col gap-2">
                             <?php if (!empty($suggestedWriters)): ?>
                                 <?php foreach($suggestedWriters as $writer): ?>
                                     <?php 
@@ -59,9 +70,9 @@
                                             $isWriterFollowing = $interactionModel->isFollowing((int)$currentUserId, (int)$writer['id']);
                                         }
                                     ?>
-                                    <div class="flex items-center justify-between">
-                                        <a href="<?= BASEURL ?>/<?= urlencode($writer['username']) ?>" class="flex items-center gap-space-sm min-w-0 group hover:opacity-80 transition-opacity">
-                                            <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary shrink-0 overflow-hidden">
+                                    <div class="flex items-center justify-between gap-2 p-2 rounded-xl hover:bg-surface-container-lowest/80 transition-colors">
+                                        <a href="<?= BASEURL ?>/<?= urlencode($writer['username']) ?>" class="flex items-center gap-2.5 min-w-0 group">
+                                            <div class="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant/40 flex items-center justify-center font-bold text-primary shrink-0 overflow-hidden text-xs">
                                                 <?php if (!empty($writer['profile_picture'])): ?>
                                                     <img src="<?= BASEURL ?><?= htmlspecialchars($writer['profile_picture']) ?>" alt="avatar" class="w-full h-full object-cover">
                                                 <?php else: ?>
@@ -69,12 +80,12 @@
                                                 <?php endif; ?>
                                             </div>
                                             <div class="flex flex-col min-w-0">
-                                                <p class="font-title-md text-sm text-on-surface leading-tight truncate group-hover:text-primary transition-colors"><?= htmlspecialchars($writer['username']) ?></p>
-                                                <p class="font-caption text-xs text-on-surface-variant truncate max-w-[120px]"><?= htmlspecialchars($writer['bio'] ?: 'Community Writer') ?></p>
+                                                <p class="font-sans font-bold text-xs text-on-surface leading-tight truncate group-hover:text-primary transition-colors"><?= htmlspecialchars($writer['name'] ?? $writer['username']) ?></p>
+                                                <p class="font-sans text-[11px] text-on-surface-variant truncate max-w-[120px]">@<?= htmlspecialchars($writer['username']) ?></p>
                                             </div>
                                         </a>
                                         <button type="button" 
-                                                class="follow-btn btn-follow px-space-sm py-space-xs rounded-full border font-caption text-xs transition-colors shrink-0 <?= $isWriterFollowing ? 'border-outline-variant bg-surface text-on-surface hover:border-error hover:text-error hover:bg-error-container/20' : 'bg-surface-container border-outline-variant text-on-surface hover:border-primary hover:text-primary' ?>" 
+                                                class="follow-btn btn-follow px-3 py-1 rounded-full border font-sans text-xs font-semibold transition-all shrink-0 <?= $isWriterFollowing ? 'border-outline-variant bg-surface text-on-surface hover:border-error hover:text-error hover:bg-error-container/20' : 'bg-primary text-on-primary hover:opacity-90 border-transparent' ?>" 
                                                 data-user-id="<?= (int)$writer['id'] ?>" 
                                                 data-id="<?= (int)$writer['id'] ?>" 
                                                 data-scope="sidebar">
@@ -83,9 +94,19 @@
                                     </div>
                                 <?php endforeach; ?>
                             <?php else: ?>
-                                <p class="font-caption text-xs text-on-surface-variant">No suggestions available.</p>
+                                <p class="font-sans text-xs text-on-surface-variant">No suggestions available.</p>
                             <?php endif; ?>
                         </div>
+                    </div>
+
+                    <!-- Independent Press Colophon -->
+                    <div class="pt-4 border-t border-outline-variant/30 flex flex-col gap-1.5 text-xs text-on-surface-variant/70 font-sans">
+                        <div class="flex flex-wrap gap-x-3 gap-y-1">
+                            <a href="<?= BASEURL ?>/explore" class="hover:underline">Explore</a>
+                            <a href="<?= BASEURL ?>/home" class="hover:underline">Feed</a>
+                            <a href="<?= BASEURL ?>/bookmarks" class="hover:underline">Reading List</a>
+                        </div>
+                        <p class="text-[11px] text-on-surface-variant/50 mt-1">Blogggle Press · An independent publishing collective</p>
                     </div>
                 </div>
             </aside>

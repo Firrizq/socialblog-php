@@ -604,7 +604,7 @@ $data['user'] = $user;
                                     <?php endif; ?>
                                     <div class="p-3.5 sm:p-4 flex flex-col gap-1.5 bg-surface-container-lowest group-hover:bg-surface-container-low/30 transition-colors">
                                         <?php if(!empty($post['title'])): ?>
-                                            <h2 class="font-title-md text-base sm:text-[17px] font-bold text-on-surface tracking-tight line-clamp-2">
+                                            <h2 class="font-serif text-lg sm:text-xl font-bold text-on-surface tracking-tight line-clamp-2">
                                                 <?= htmlspecialchars($post['title']) ?>
                                             </h2>
                                         <?php endif; ?>

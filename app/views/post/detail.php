@@ -30,13 +30,13 @@ $comments = $data['comments'] ?? [];
         <article>
             <!-- Title (If Story) -->
             <?php if(!empty($post['title'])): ?>
-                <h1 class="text-3xl sm:text-[40px] font-black text-on-surface tracking-tight mb-8 leading-[1.2]">
+                <h1 class="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-on-surface tracking-tight leading-[1.18] text-wrap-balance mb-6">
                     <?= htmlspecialchars($post['title'] ?? '') ?>
                 </h1>
             <?php endif; ?>
 
-            <!-- Compact Author Metadata -->
-            <div class="flex items-center justify-between mb-10">
+            <!-- Editorial Author Metadata -->
+            <div class="flex items-center justify-between mb-8 pb-6 border-b border-outline-variant/30">
                 <div class="flex items-center gap-3.5">
                     <a href="<?= BASEURL ?>/<?= urlencode($post['username'] ?? '') ?>" class="profile-hover-trigger avatar-link w-12 h-12 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/50 shrink-0 hover:ring-2 hover:ring-primary transition-all relative z-10" data-username="<?= htmlspecialchars($post['username'] ?? '') ?>" title="View Profile">
                         <?php if (!empty($post['profile_picture'])): ?>
@@ -48,13 +48,19 @@ $comments = $data['comments'] ?? [];
                         <?php endif; ?>
                     </a>
                     <div class="flex flex-col justify-center">
-                        <a href="<?= BASEURL ?>/<?= urlencode($post['username'] ?? '') ?>" class="profile-hover-trigger font-title-md font-bold text-on-surface hover:underline text-base" data-username="<?= htmlspecialchars($post['username'] ?? '') ?>">
-                            <?= htmlspecialchars($post['name'] ?? $post['username'] ?? 'Anonymous') ?>
-                        </a>
-                        <div class="flex items-center gap-1.5 font-body-md text-on-surface-variant text-[13px] sm:text-sm mt-0.5 flex-wrap">
+                        <div class="flex items-center gap-2">
+                            <a href="<?= BASEURL ?>/<?= urlencode($post['username'] ?? '') ?>" class="profile-hover-trigger font-title-md font-bold text-on-surface hover:underline text-base" data-username="<?= htmlspecialchars($post['username'] ?? '') ?>">
+                                <?= htmlspecialchars($post['name'] ?? $post['username'] ?? 'Anonymous') ?>
+                            </a>
+                            <span class="text-on-surface-variant font-body-md text-sm">@<?= htmlspecialchars($post['username'] ?? 'anon') ?></span>
+                        </div>
+                        <div class="flex items-center gap-2 font-sans text-on-surface-variant text-xs sm:text-sm mt-0.5 flex-wrap">
                             <?php if(($post['post_type'] ?? 'story') === 'story'): ?>
-                                <span><?= $post['read_time_minutes'] ?? 1 ?> min read</span>
-                                <span class="font-black text-[10px]">·</span>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container border border-outline-variant/30 text-xs font-medium text-primary">
+                                    <span class="material-symbols-outlined text-xs">auto_stories</span>
+                                    <?= $post['read_time_minutes'] ?? 1 ?> min read
+                                </span>
+                                <span class="text-on-surface-variant/40">·</span>
                             <?php endif; ?>
                             <span><?= !empty($post['created_at']) ? date('M j, Y', strtotime($post['created_at'])) : '' ?></span>
                         </div>
@@ -197,11 +203,14 @@ $comments = $data['comments'] ?? [];
         </article>
 
         <!-- Discussion Section -->
-        <section id="discussion" class="mt-8">
-            <h3 class="font-title-md font-bold text-xl text-on-surface mb-6">Discussion (<?= (int)($post['comment_count'] ?? 0) ?>)</h3>
+        <section id="discussion" class="mt-12 pt-8 border-t border-outline-variant/30">
+            <h3 class="font-serif font-bold text-2xl text-on-surface mb-6 flex items-center gap-2.5">
+                <span>Discussion</span>
+                <span class="text-xs font-sans font-semibold px-2.5 py-0.5 rounded-full bg-surface-container border border-outline-variant/40 text-on-surface-variant"><?= (int)($post['comment_count'] ?? 0) ?></span>
+            </h3>
             
             <?php if (isset($_SESSION['user_id'])): ?>
-                <div class="flex gap-4 mb-10">
+                <div class="flex gap-3.5 mb-10 p-4 sm:p-5 bg-surface-container-lowest border border-outline-variant/50 rounded-2xl shadow-xs">
                     <div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/30 shrink-0">
                         <?php if (!empty($_SESSION['profile_picture'])): ?>
                             <img src="<?= BASEURL ?><?= htmlspecialchars($_SESSION['profile_picture'] ?? '') ?>" class="w-full h-full object-cover rounded-full avatar-img">
@@ -213,22 +222,22 @@ $comments = $data['comments'] ?? [];
                     </div>
                     <div class="flex-1">
                         <form action="<?= BASEURL ?>/post/comment/<?= (int)($post['id'] ?? 0) ?>" method="POST" class="m-0 flex flex-col gap-3">
-                            <textarea id="comment-input" name="comment" rows="3" class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl p-4 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none" placeholder="What are your thoughts?" required></textarea>
+                            <textarea id="comment-input" name="comment" rows="3" class="w-full bg-surface-container-low/40 border border-outline-variant/40 rounded-xl p-3.5 text-on-surface font-sans text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none placeholder:text-outline" placeholder="Add to the discussion..." required></textarea>
                             <div class="flex justify-end">
-                                <button type="submit" class="px-5 py-2 rounded-full bg-primary text-on-primary font-title-md text-sm hover:opacity-90 transition-opacity">Respond</button>
+                                <button type="submit" class="px-5 py-2 rounded-full bg-primary text-on-primary font-sans font-bold text-xs hover:opacity-90 transition-opacity shadow-xs active:scale-95">Respond</button>
                             </div>
                         </form>
                     </div>
                 </div>
             <?php else: ?>
-                <div class="mb-10 p-6 rounded-xl border border-outline-variant/30 bg-surface-container-lowest text-center">
-                    <p class="text-on-surface-variant font-body-md mb-3">Sign in to join the conversation.</p>
-                    <a href="<?= BASEURL ?>/auth" class="inline-block px-5 py-2 rounded-full bg-on-surface text-surface font-title-md text-sm hover:opacity-80 transition-opacity">Sign In</a>
+                <div class="mb-10 p-6 rounded-2xl border border-outline-variant/40 bg-surface-container-lowest text-center">
+                    <p class="text-on-surface-variant font-sans text-sm mb-3">Sign in to join the conversation.</p>
+                    <a href="<?= BASEURL ?>/auth" class="inline-block px-5 py-2 rounded-full bg-primary text-on-primary font-sans font-bold text-xs hover:opacity-90 transition-opacity">Sign In</a>
                 </div>
             <?php endif; ?>
 
             <!-- Comments Loop -->
-            <div class="flex flex-col gap-6">
+            <div class="flex flex-col gap-4">
                 <?php if (!empty($data['comments'])): ?>
                     <?php foreach ($data['comments'] as $comment): ?>
                         <?php
@@ -236,7 +245,7 @@ $comments = $data['comments'] ?? [];
                             $commentUid = !empty($comment['uid']) ? $comment['uid'] : $comment['id'];
                             $commentDetailUrl = BASEURL . '/' . urlencode($comment['username'] ?? '') . '/comment/' . $commentUid;
                         ?>
-                        <div class="flex gap-3 sm:gap-4 group">
+                        <div class="flex gap-3 sm:gap-4 p-4 rounded-xl bg-surface-container-lowest/60 border border-outline-variant/30 hover:border-outline-variant/60 transition-colors group">
                             <a href="<?= $commentAuthorUrl ?>" class="profile-hover-trigger avatar-link w-10 h-10 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant/30 shrink-0 relative z-10" data-username="<?= htmlspecialchars($comment['username'] ?? '') ?>" title="View Profile">
                                 <?php if (!empty($comment['profile_picture'])): ?>
                                     <img src="<?= BASEURL ?><?= htmlspecialchars($comment['profile_picture'] ?? '') ?>" class="w-full h-full object-cover rounded-full avatar-img">
@@ -292,16 +301,82 @@ $comments = $data['comments'] ?? [];
 </div>
 
 <style>
-    /* Quill content formatting inside post detail */
-    .quill-content p { margin-bottom: 1.25rem; }
-    .quill-content h1, .quill-content h2, .quill-content h3 { font-weight: 700; margin-top: 1.75rem; margin-bottom: 0.75rem; }
-    .quill-content a { color: #10b981; text-decoration: underline; }
-    .dark .quill-content a { color: #4edea3; }
-    .quill-content blockquote { border-left: 3px solid #10b981; padding-left: 1rem; margin: 1.25rem 0; font-style: italic; opacity: 0.85; }
-    .quill-content pre { background: rgba(0,0,0,0.1); border: 1px solid rgba(128,128,128,0.2); border-radius: 0.5rem; padding: 1rem; overflow-x: auto; font-family: monospace; margin: 1.25rem 0; }
-    .quill-content ul, .quill-content ol { margin-left: 1.75rem; margin-bottom: 1.25rem; }
-    .quill-content li { margin-bottom: 0.35rem; }
-    .quill-content img { border-radius: 1rem; margin: 1.5rem 0; max-width: 100%; height: auto; }
+    /* Quill editorial content formatting inside post detail */
+    .quill-content {
+        font-family: 'Newsreader', Georgia, serif;
+        font-size: 1.18rem;
+        line-height: 1.88;
+        color: rgb(var(--color-on-surface));
+    }
+    .quill-content p { margin-bottom: 1.5rem; text-wrap: pretty; }
+    .quill-content h1, .quill-content h2, .quill-content h3 {
+        font-family: 'Newsreader', Georgia, serif;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.25;
+        margin-top: 2.25rem;
+        margin-bottom: 1rem;
+        color: rgb(var(--color-on-surface));
+    }
+    .quill-content h1 { font-size: 2.1rem; }
+    .quill-content h2 { font-size: 1.7rem; }
+    .quill-content h3 { font-size: 1.35rem; }
+    .quill-content .story-subtitle {
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        font-size: 1.25rem;
+        line-height: 1.6;
+        color: rgb(var(--color-on-surface-variant));
+        font-weight: 400;
+        margin-top: -0.5rem;
+        margin-bottom: 1.75rem;
+    }
+    .quill-content a {
+        color: rgb(var(--color-primary));
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        transition: opacity 0.15s ease;
+    }
+    .quill-content a:hover { opacity: 0.8; }
+    .quill-content blockquote {
+        border-left: 3.5px solid rgb(var(--color-primary));
+        padding: 0.85rem 1.35rem;
+        margin: 2.25rem 0;
+        font-style: italic;
+        font-size: 1.25rem;
+        line-height: 1.7;
+        background: rgba(var(--color-primary), 0.05);
+        border-radius: 0 0.75rem 0.75rem 0;
+        color: rgb(var(--color-on-surface));
+    }
+    .quill-content pre {
+        background: rgb(var(--color-surface-container-low));
+        border: 1px solid rgba(var(--color-outline-variant), 0.5);
+        border-radius: 0.75rem;
+        padding: 1.25rem;
+        overflow-x: auto;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.92rem;
+        line-height: 1.6;
+        margin: 1.75rem 0;
+    }
+    .quill-content code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        background: rgb(var(--color-surface-container-high));
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.35rem;
+        font-size: 0.88em;
+    }
+    .quill-content pre code { background: transparent; padding: 0; border-radius: 0; }
+    .quill-content ul, .quill-content ol { margin-left: 2rem; margin-bottom: 1.5rem; }
+    .quill-content li { margin-bottom: 0.4rem; }
+    .quill-content img {
+        border-radius: 1rem;
+        margin: 2rem 0;
+        max-width: 100%;
+        height: auto;
+        border: 1px solid rgba(var(--color-outline-variant), 0.4);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
 </style>
 
 <script>

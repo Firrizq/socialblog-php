@@ -46,10 +46,10 @@ if (!$activeUser && !empty($_SESSION['user_id'])) {
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title><?= htmlspecialchars($data['title'] ?? 'Blogggle') ?></title>
     
-    <!-- Fonts & Icons -->
+    <!-- Fonts & Icons: Editorial Serif (Newsreader) & Modern Clean UI (Plus Jakarta Sans, Inter) -->
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/> 
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     
@@ -59,58 +59,68 @@ if (!$activeUser && !empty($_SESSION['user_id'])) {
     <style>
         @layer base {
             html, body { margin: 0; padding: 0; }
-            body { overscroll-behavior: none; }
+            body { 
+                overscroll-behavior: none;
+                font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+            }
             main > :first-child { margin-top: 0 !important; }
             main > :last-child { margin-bottom: 0 !important; }
             
-            /* Light Theme (Editorial & Clean) */
+            /* Warm Independent Press Theme (Paper & Ink) */
             :root {
-                --color-primary: 16 185 129; /* #10b981 */
-                --color-primary-container: 209 250 229; /* #d1fae5 */
-                --color-on-primary-container: 6 95 70; /* #065f46 */
-                --color-surface: 255 255 255; /* #ffffff */
-                --color-surface-container-lowest: 255 255 255; /* #ffffff */
-                --color-surface-container-low: 248 250 252; /* #f8fafc */
-                --color-surface-container: 241 245 249; /* #f1f5f9 */
-                --color-surface-container-high: 226 232 240; /* #e2e8f0 */
-                --color-on-surface: 15 23 42; /* #0f172a */
-                --color-on-surface-variant: 71 85 105; /* #475569 */
-                --color-outline-variant: 226 232 240; /* #e2e8f0 */
-                --color-error: 239 68 68; /* #ef4444 */
-                --color-error-container: 254 226 226; /* #fee2e2 */
+                --color-primary: 15 118 110; /* #0f766e warm spruce emerald */
+                --color-primary-container: 204 251 241; /* #ccfbf1 warm mint */
+                --color-on-primary-container: 17 94 89; /* #115e59 */
+                --color-surface: 251 249 245; /* #fbf9f5 warm alabaster/paper */
+                --color-surface-container-lowest: 255 255 255; /* #ffffff clean floating card */
+                --color-surface-container-low: 245 242 235; /* #f5f2eb warm ivory surface */
+                --color-surface-container: 238 233 223; /* #eee9df warm stone container */
+                --color-surface-container-high: 228 221 209; /* #e4ddd1 tactile hover */
+                --color-on-surface: 28 25 23; /* #1c1918 rich book ink */
+                --color-on-surface-variant: 87 83 78; /* #57534e warm charcoal stone */
+                --color-outline-variant: 230 224 213; /* #e6e0d5 warm deckle border */
+                --color-error: 225 29 72; /* #e11d48 warm crimson */
+                --color-error-container: 255 228 230; /* #ffe4e6 */
             }
 
-            /* Dark Theme (Obsidian Emerald) */
+            /* Nocturne Paper / Obsidian Ink Theme */
             .dark {
-                --color-primary: 78 222 163; /* #4edea3 */
-                --color-primary-container: 16 185 129; /* #10b981 */
-                --color-on-primary-container: 0 66 43; /* #00422b */
-                --color-surface: 11 19 38; /* #0b1326 */
-                --color-surface-container-lowest: 6 14 32; /* #060e20 */
-                --color-surface-container-low: 19 27 46; /* #131b2e */
-                --color-surface-container: 23 31 51; /* #171f33 */
-                --color-surface-container-high: 34 42 61; /* #222a3d */
-                --color-on-surface: 218 226 253; /* #dae2fd */
-                --color-on-surface-variant: 187 202 191; /* #bbcabf */
-                --color-outline-variant: 60 74 66; /* #3c4a42 */
-                --color-error: 255 180 171; /* #ffb4ab */
-                --color-error-container: 147 0 10; /* #93000a */
+                --color-primary: 52 211 153; /* #34d399 radiant jade */
+                --color-primary-container: 6 78 59; /* #064e3b deep forest */
+                --color-on-primary-container: 167 243 208; /* #a7f3d0 */
+                --color-surface: 19 20 23; /* #131417 warm nocturne obsidian */
+                --color-surface-container-lowest: 13 14 16; /* #0d0e10 deep card */
+                --color-surface-container-low: 26 27 31; /* #1a1b1f elevated card */
+                --color-surface-container: 34 35 41; /* #222329 warm charcoal */
+                --color-surface-container-high: 46 48 56; /* #2e3038 */
+                --color-on-surface: 244 242 237; /* #f4f2ed warm candlelight text */
+                --color-on-surface-variant: 168 162 153; /* #a8a299 warm mineral stone */
+                --color-outline-variant: 48 50 58; /* #30323a subtle graphite border */
+                --color-error: 251 113 133; /* #fb7185 */
+                --color-error-container: 136 19 55; /* #881337 */
             }
         }
         ::-webkit-scrollbar { display: none; }
         
+        /* Modern Typography Helpers */
+        .text-wrap-balance { text-wrap: balance; }
+        .text-wrap-pretty { text-wrap: pretty; }
+        .font-serif, .font-display, .font-editorial { font-family: 'Newsreader', Georgia, serif; }
+        
         /* Quill Dark/Light Mode Adjustments */
         .ql-toolbar.ql-snow { background: rgb(var(--color-surface-container-low)); border-color: rgb(var(--color-outline-variant)) !important; border-top-left-radius: 1rem; border-top-right-radius: 1rem; padding: 0.75rem !important; }
-        .ql-container.ql-snow { background: rgb(var(--color-surface-container-lowest)); border-color: rgb(var(--color-outline-variant)) !important; border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem; color: rgb(var(--color-on-surface)); font-family: 'Inter', sans-serif; font-size: 1.125rem; min-height: 300px; }
+        .ql-container.ql-snow { background: rgb(var(--color-surface-container-lowest)); border-color: rgb(var(--color-outline-variant)) !important; border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem; color: rgb(var(--color-on-surface)); font-family: 'Newsreader', Georgia, serif; font-size: 1.2rem; line-height: 1.8; min-height: 320px; }
         .ql-snow .ql-stroke { stroke: rgb(var(--color-on-surface-variant)) !important; }
         .ql-snow .ql-fill { fill: rgb(var(--color-on-surface-variant)) !important; }
         .ql-snow .ql-picker { color: rgb(var(--color-on-surface-variant)) !important; }
         .ql-snow .ql-picker-options { background-color: rgb(var(--color-surface-container-high)) !important; border-color: rgb(var(--color-outline-variant)) !important; }
         .ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow.ql-toolbar button:focus .ql-stroke, .ql-snow.ql-toolbar button.ql-active .ql-stroke { stroke: rgb(var(--color-primary)) !important; }
         .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow.ql-toolbar button:focus .ql-fill, .ql-snow.ql-toolbar button.ql-active .ql-fill { fill: rgb(var(--color-primary)) !important; }
-        .ql-editor.ql-blank::before { color: rgb(var(--color-on-surface-variant) / 0.5) !important; font-style: normal !important; }
+        .ql-editor.ql-blank::before { color: rgb(var(--color-on-surface-variant) / 0.5) !important; font-style: normal !important; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.1rem; }
     </style>
-    <meta name="theme-color" content="#ffffff" id="meta-theme-color">
+    <meta name="theme-color" content="#fbf9f5" id="meta-theme-color">
 
     <script>
         const savedTheme = localStorage.getItem('blogggle-theme') || 'system';
@@ -118,7 +128,7 @@ if (!$activeUser && !empty($_SESSION['user_id'])) {
         if (savedTheme === 'dark' || (savedTheme === 'system' && prefersDark)) {
             document.documentElement.classList.add('dark');
             const metaTheme = document.getElementById('meta-theme-color');
-            if(metaTheme) metaTheme.setAttribute('content', '#0b1326');
+            if(metaTheme) metaTheme.setAttribute('content', '#131417');
         } else {
             document.documentElement.classList.remove('dark');
         }
@@ -147,21 +157,36 @@ if (!$activeUser && !empty($_SESSION['user_id'])) {
                     },
                     "spacing": { "space-sm": "0.5rem", "space-xs": "0.25rem", "gutter": "1.5rem", "space-md": "1rem", "space-lg": "1.5rem" },
                     "fontFamily": {
-                        "body-lg": ["Inter", "sans-serif"], "title-md": ["Inter", "sans-serif"], "headline-sm": ["Inter", "sans-serif"], "body-md": ["Inter", "sans-serif"], "headline-lg": ["Inter", "sans-serif"], "caption": ["Inter", "sans-serif"], "label-md": ["Inter", "sans-serif"]
+                        "serif": ["Newsreader", "Georgia", "Cambria", "serif"],
+                        "display": ["Newsreader", "Georgia", "serif"],
+                        "editorial": ["Newsreader", "Georgia", "serif"],
+                        "sans": ["Plus Jakarta Sans", "Inter", "sans-serif"],
+                        "body-lg": ["Inter", "sans-serif"],
+                        "title-md": ["Plus Jakarta Sans", "Inter", "sans-serif"],
+                        "headline-sm": ["Newsreader", "Georgia", "serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "headline-lg": ["Newsreader", "Georgia", "serif"],
+                        "caption": ["Plus Jakarta Sans", "Inter", "sans-serif"],
+                        "label-md": ["Plus Jakarta Sans", "Inter", "sans-serif"]
                     }
                 }
             }
         }
     </script>
 </head>
-<body class="bg-surface text-on-surface min-h-screen">
+<body class="bg-surface text-on-surface min-h-screen selection:bg-primary/20 selection:text-primary">
 
-    <!-- Top Header -->
-    <header class="fixed top-0 left-0 right-0 h-16 bg-surface-container-low/95 backdrop-blur-xl border-b border-outline-variant/30 z-50 flex items-center justify-between px-gutter">
-        <div class="flex items-center gap-space-sm">
-            <span class="material-symbols-outlined text-primary text-3xl">edit_square</span>
-            <span class="font-title-md text-title-md text-on-surface tracking-tight">Blogggle</span>
-        </div>
+    <!-- Top Header (Frosted Glass & Literary Brand Mark) -->
+    <header class="fixed top-0 left-0 right-0 h-16 bg-surface/90 backdrop-blur-xl border-b border-outline-variant/40 z-50 flex items-center justify-between px-gutter transition-colors duration-200">
+        <a href="<?= BASEURL ?>/home" class="flex items-center gap-2.5 group select-none">
+            <div class="w-9 h-9 rounded-xl bg-primary/10 border border-primary/25 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-surface transition-all duration-200 shadow-sm">
+                <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">auto_stories</span>
+            </div>
+            <div class="flex items-baseline gap-1.5">
+                <span class="font-serif text-[26px] font-bold text-on-surface tracking-tight group-hover:text-primary transition-colors leading-none">Blogggle</span>
+                <span class="hidden sm:inline-block px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 rounded-md font-sans">Press</span>
+            </div>
+        </a>
         <div class="flex items-center gap-2 sm:gap-3">
             <!-- Theme Switcher -->
             <div class="relative dropdown-container">
