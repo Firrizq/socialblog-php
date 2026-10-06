@@ -72,6 +72,7 @@ if (!$activeUser && !empty($_SESSION['user_id'])) {
             :root {
                 --color-primary: 15 118 110; /* #0f766e warm spruce emerald */
                 --color-primary-container: 204 251 241; /* #ccfbf1 warm mint */
+                --color-on-primary: 255 255 255; /* #ffffff crisp clean white on spruce emerald */
                 --color-on-primary-container: 17 94 89; /* #115e59 */
                 --color-surface: 251 249 245; /* #fbf9f5 warm alabaster/paper */
                 --color-surface-container-lowest: 255 255 255; /* #ffffff clean floating card */
@@ -89,6 +90,7 @@ if (!$activeUser && !empty($_SESSION['user_id'])) {
             .dark {
                 --color-primary: 52 211 153; /* #34d399 radiant jade */
                 --color-primary-container: 6 78 59; /* #064e3b deep forest */
+                --color-on-primary: 13 14 16; /* #0d0e10 deep obsidian ink on radiant jade */
                 --color-on-primary-container: 167 243 208; /* #a7f3d0 */
                 --color-surface: 19 20 23; /* #131417 warm nocturne obsidian */
                 --color-surface-container-lowest: 13 14 16; /* #0d0e10 deep card */
@@ -119,6 +121,174 @@ if (!$activeUser && !empty($_SESSION['user_id'])) {
         .ql-snow.ql-toolbar button:hover .ql-stroke, .ql-snow.ql-toolbar button:focus .ql-stroke, .ql-snow.ql-toolbar button.ql-active .ql-stroke { stroke: rgb(var(--color-primary)) !important; }
         .ql-snow.ql-toolbar button:hover .ql-fill, .ql-snow.ql-toolbar button:focus .ql-fill, .ql-snow.ql-toolbar button.ql-active .ql-fill { fill: rgb(var(--color-primary)) !important; }
         .ql-editor.ql-blank::before { color: rgb(var(--color-on-surface-variant) / 0.5) !important; font-style: normal !important; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.1rem; }
+
+        /* ================= Editorial Button Design System ================= */
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            font-weight: 600;
+            border-radius: 0.75rem; /* rounded-xl (12px squircle) */
+            background-color: rgb(var(--color-primary));
+            color: rgb(var(--color-on-primary));
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+            transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            user-select: none;
+            text-decoration: none;
+            border: 1px solid transparent;
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px -2px rgba(var(--color-primary), 0.38);
+            filter: brightness(1.06);
+        }
+        .btn-primary:active {
+            transform: translateY(0) scale(0.98);
+        }
+        .btn-primary:disabled, .btn-primary.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            font-weight: 600;
+            border-radius: 0.75rem;
+            background-color: rgb(var(--color-surface-container-lowest));
+            color: rgb(var(--color-on-surface));
+            border: 1px solid rgb(var(--color-outline-variant) / 0.8);
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+            transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            user-select: none;
+            text-decoration: none;
+        }
+        .btn-secondary:hover {
+            background-color: rgb(var(--color-surface-container-low));
+            border-color: rgb(var(--color-primary) / 0.4);
+            color: rgb(var(--color-primary));
+            transform: translateY(-0.5px);
+        }
+        .btn-secondary:active {
+            transform: translateY(0) scale(0.98);
+            background-color: rgb(var(--color-surface-container));
+        }
+        .btn-secondary:disabled, .btn-secondary.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            font-weight: 500;
+            border-radius: 0.75rem;
+            background-color: transparent;
+            color: rgb(var(--color-on-surface-variant));
+            transition: all 150ms ease;
+            cursor: pointer;
+            user-select: none;
+            text-decoration: none;
+        }
+        .btn-ghost:hover {
+            background-color: rgb(var(--color-surface-container-high) / 0.6);
+            color: rgb(var(--color-on-surface));
+        }
+        .btn-ghost:active {
+            transform: scale(0.97);
+        }
+
+        .btn-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.375rem;
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            font-weight: 600;
+            border-radius: 9999px; /* rounded-full */
+            transition: all 150ms cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            user-select: none;
+            text-decoration: none;
+        }
+
+        .btn-pill-follow {
+            padding: 0.375rem 0.95rem;
+            font-size: 0.8125rem;
+            line-height: 1.15;
+            border-radius: 9999px;
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            font-weight: 600;
+            transition: all 150ms cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+        }
+        .btn-pill-follow:not(.following) {
+            background-color: rgb(var(--color-on-surface));
+            color: rgb(var(--color-surface));
+            border: 1px solid transparent;
+        }
+        .btn-pill-follow:not(.following):hover {
+            opacity: 0.88;
+            transform: translateY(-0.5px);
+        }
+        .btn-pill-follow.following {
+            background-color: transparent;
+            color: rgb(var(--color-on-surface));
+            border: 1px solid rgb(var(--color-outline-variant));
+        }
+        .btn-pill-follow.following:hover {
+            background-color: rgb(var(--color-error-container) / 0.18);
+            border-color: rgb(var(--color-error) / 0.5);
+            color: rgb(var(--color-error));
+        }
+        .btn-pill-follow:active {
+            transform: scale(0.97);
+        }
+
+        .btn-destructive {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            font-weight: 600;
+            border-radius: 0.75rem;
+            background-color: rgb(var(--color-error-container) / 0.2);
+            color: rgb(var(--color-error));
+            border: 1px solid rgb(var(--color-error) / 0.25);
+            transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            user-select: none;
+            text-decoration: none;
+        }
+        .btn-destructive:hover {
+            background-color: rgb(var(--color-error));
+            color: #ffffff;
+            border-color: rgb(var(--color-error));
+            box-shadow: 0 4px 12px -2px rgba(var(--color-error), 0.35);
+            transform: translateY(-0.5px);
+        }
+        .btn-destructive:active {
+            transform: translateY(0) scale(0.98);
+        }
     </style>
     <meta name="theme-color" content="#fbf9f5" id="meta-theme-color">
 
@@ -143,6 +313,7 @@ if (!$activeUser && !empty($_SESSION['user_id'])) {
                     "colors": {
                         "primary": "rgb(var(--color-primary) / <alpha-value>)",
                         "primary-container": "rgb(var(--color-primary-container) / <alpha-value>)",
+                        "on-primary": "rgb(var(--color-on-primary) / <alpha-value>)",
                         "on-primary-container": "rgb(var(--color-on-primary-container) / <alpha-value>)",
                         "surface": "rgb(var(--color-surface) / <alpha-value>)",
                         "surface-container-lowest": "rgb(var(--color-surface-container-lowest) / <alpha-value>)",
@@ -207,9 +378,9 @@ if (!$activeUser && !empty($_SESSION['user_id'])) {
             </div>
 
             <?php if (!empty($activeUser['id'])): ?>
-                <!-- Write Button: Editorial Style (Inverted Contrast) -->
-                <a class="hidden sm:inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-on-surface text-surface font-title-md text-sm hover:opacity-80 transition-opacity shadow-sm ml-1" href="<?= BASEURL ?>/post/create">
-                    <span class="material-symbols-outlined text-[18px]">edit_square</span><span>Write</span>
+                <!-- Write Button: Editorial Spruce Primary -->
+                <a class="hidden sm:inline-flex btn-primary px-3.5 py-1.5 text-xs font-semibold ml-1" href="<?= BASEURL ?>/post/create">
+                    <span class="material-symbols-outlined text-[17px]">edit_square</span><span>Write</span>
                 </a>
                 
                 <div class="h-5 w-px bg-outline-variant/60 mx-1 hidden sm:block"></div>
@@ -234,7 +405,7 @@ if (!$activeUser && !empty($_SESSION['user_id'])) {
                     <span class="material-symbols-outlined text-[20px]">logout</span>
                 </a>
             <?php else: ?>
-                <a href="<?= BASEURL ?>/auth" class="px-4 py-1.5 rounded-full bg-on-surface text-surface font-title-md text-sm hover:opacity-80 transition-opacity shadow-sm ml-2">Sign In</a>
+                <a href="<?= BASEURL ?>/auth" class="btn-primary px-4 py-1.5 text-xs font-semibold ml-2">Sign In</a>
             <?php endif; ?>
         </div>
 

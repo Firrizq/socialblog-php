@@ -15,6 +15,45 @@
     <style>
         @layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}}
         ::-webkit-scrollbar{display:none;}
+        :root {
+            --color-primary: 15 118 110;
+            --color-on-primary: 255 255 255;
+            --color-surface-container-lowest: 255 255 255;
+            --color-outline-variant: 230 224 213;
+            --color-error: 225 29 72;
+        }
+        .dark {
+            --color-primary: 52 211 153;
+            --color-on-primary: 13 14 16;
+            --color-surface-container-lowest: 13 14 16;
+            --color-outline-variant: 48 50 58;
+            --color-error: 251 113 133;
+        }
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            border-radius: 0.75rem;
+            background-color: rgb(var(--color-primary));
+            color: rgb(var(--color-on-primary));
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+            transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            user-select: none;
+            text-decoration: none;
+            border: 1px solid transparent;
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px -2px rgba(var(--color-primary), 0.38);
+            filter: brightness(1.06);
+        }
+        .btn-primary:active {
+            transform: translateY(0) scale(0.98);
+        }
     </style>
     <script src="https://cdn.tailwindcss.com"></script>
     <script id="tailwind-config">
@@ -177,7 +216,7 @@ tailwind.config = {
                 <!-- Submit Button -->
                 <button 
                     type="submit" 
-                    class="w-full mt-2 py-3 px-4 rounded-xl bg-primary-container text-on-primary-container font-title-md font-semibold text-sm hover:bg-primary transition-all shadow-[0_0_0_1px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2 active:scale-[0.99]"
+                    class="btn-primary w-full mt-2 py-3 px-4 text-sm font-semibold flex items-center justify-center gap-2"
                 >
                     <span>Sign Up</span>
                     <span class="material-symbols-outlined text-lg">check</span>

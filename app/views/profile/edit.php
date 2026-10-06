@@ -187,13 +187,13 @@ $user = $data['user'] ?? [];
             <div class="pt-6 border-t border-outline-variant/30 flex items-center justify-end gap-3">
                 <a 
                     href="<?= BASEURL ?>/profile" 
-                    class="px-5 py-2.5 rounded-xl border border-outline-variant font-title-md text-sm font-semibold text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all"
+                    class="btn-secondary px-5 py-2.5 text-sm"
                 >
                     Cancel
                 </a>
                 <button 
                     type="submit" 
-                    class="px-6 py-2.5 rounded-xl bg-primary-container text-on-primary-container font-title-md text-sm font-semibold hover:bg-primary transition-all shadow-[0_0_0_1px_rgba(16,185,129,0.3)] active:scale-95 flex items-center gap-2"
+                    class="btn-primary px-6 py-2.5 text-sm flex items-center gap-2"
                 >
                     <span class="material-symbols-outlined text-lg">check</span>
                     <span>Save Changes</span>

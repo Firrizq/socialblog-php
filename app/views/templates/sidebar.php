@@ -74,7 +74,7 @@ $unreadCount = $unreadNotifCount ?? ((isset($_SESSION['user_id'])) ? (new Notifi
             </a>
         </nav>
         <?php if (!empty($activeUserId)): ?>
-            <a class="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-primary text-white font-bold text-sm hover:opacity-90 transition-all shadow-sm hover:shadow-md active:scale-95" href="<?= BASEURL ?>/post/create">
+            <a class="btn-primary w-full py-2.5 px-4 text-sm font-bold" href="<?= BASEURL ?>/post/create">
                 <span class="material-symbols-outlined text-xl">edit_square</span><span>New Story</span>
             </a>
         <?php endif; ?>
@@ -161,7 +161,7 @@ $unreadCount = $unreadNotifCount ?? ((isset($_SESSION['user_id'])) ? (new Notifi
                 type="button" 
                 aria-haspopup="true"
                 aria-expanded="false"
-                class="w-full flex items-center gap-space-sm p-2 rounded-2xl bg-surface-container border border-outline-variant/20 hover:border-primary/40 hover:bg-surface-container-high transition-all text-left group cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary/40">
+                class="w-full flex items-center gap-space-sm p-2 rounded-xl bg-surface-container-lowest/60 border border-outline-variant/40 hover:border-primary/40 hover:bg-surface-container transition-all text-left group cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary/40">
             <div class="w-9 h-9 rounded-full overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
                 <?php if (!empty($activeAvatar)): ?>
                     <img src="<?= BASEURL ?><?= htmlspecialchars($activeAvatar) ?>" alt="<?= htmlspecialchars($activeUsername) ?>" class="w-full h-full object-cover">

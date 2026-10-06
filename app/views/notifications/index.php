@@ -115,7 +115,7 @@
                 <p class="font-body-md text-on-surface-variant text-sm max-w-sm">
                     When someone likes your stories, leaves a comment, or follows you, you'll see it here.
                 </p>
-                <a href="<?= BASEURL ?>/home" class="mt-4 inline-flex items-center gap-2 px-space-lg py-2.5 rounded-full bg-primary-container text-on-primary-container font-title-md text-sm hover:bg-primary transition-all font-semibold shadow-[0_0_0_1px_rgba(16,185,129,0.3)] active:scale-95">
+                <a href="<?= BASEURL ?>/home" class="mt-4 btn-primary px-6 py-2.5 text-sm">
                     <span class="material-symbols-outlined text-base">explore</span>
                     <span>Explore Blogggle</span>
                 </a>

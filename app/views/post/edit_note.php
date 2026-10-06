@@ -60,9 +60,9 @@
                 <span>Attach Media</span>
             </button>
             <div class="flex items-center gap-3">
-                <a href="<?= ($data['post']['status'] ?? '') === 'draft' ? BASEURL . '/profile' : BASEURL . '/home' ?>" class="text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors px-3 py-2 rounded-lg hover:bg-surface-container">Cancel</a>
-                <button type="submit" name="action" value="draft" class="text-sm font-medium text-primary hover:text-primary-fixed transition-colors px-4 py-2 rounded-lg hover:bg-surface-container border border-primary/30 active:scale-95">Save Draft</button>
-                <button type="submit" name="action" value="publish" class="bg-primary-container text-on-primary-container hover:bg-primary rounded-full px-6 py-2 font-bold shadow-md transition-all active:scale-95 text-sm">Update</button>
+                <a href="<?= ($data['post']['status'] ?? '') === 'draft' ? BASEURL . '/profile' : BASEURL . '/home' ?>" class="btn-ghost px-3.5 py-2 text-sm">Cancel</a>
+                <button type="submit" name="action" value="draft" class="btn-secondary px-4 py-2 text-sm">Save Draft</button>
+                <button type="submit" name="action" value="publish" class="btn-primary px-6 py-2 text-sm">Update</button>
             </div>
         </div>
     </form>

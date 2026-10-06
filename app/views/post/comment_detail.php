@@ -57,7 +57,7 @@ $replies = $data['replies'] ?? [];
             <p class="font-body-md text-on-surface-variant text-sm mt-1 mb-6">
                 This comment may have been removed or the link is invalid.
             </p>
-            <a href="<?= BASEURL ?>/home" class="inline-flex items-center gap-2 px-space-md py-space-xs rounded-full bg-primary-container text-on-primary-container font-label-md hover:bg-primary transition-colors font-semibold shadow-sm">
+            <a href="<?= BASEURL ?>/home" class="btn-primary px-5 py-2 text-sm">
                 <span class="material-symbols-outlined text-base">west</span>
                 <span>Return to Feed</span>
             </a>
@@ -263,7 +263,7 @@ $replies = $data['replies'] ?? [];
                             </span>
                             <button 
                                 type="submit" 
-                                class="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-primary-container text-on-primary-container font-label-md text-sm font-semibold hover:bg-primary transition-all shadow-[0_0_0_1px_rgba(16,185,129,0.3)] active:scale-95"
+                                class="btn-primary px-5 py-2 text-xs flex items-center gap-1.5"
                             >
                                 <span class="material-symbols-outlined text-base">send</span>
                                 <span>Reply</span>
@@ -275,7 +275,7 @@ $replies = $data['replies'] ?? [];
                 <!-- Prompt for Guests -->
                 <div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 text-center text-sm text-on-surface-variant flex flex-col sm:flex-row items-center justify-between gap-3">
                     <span>Sign in to reply to @<?= htmlspecialchars($comment['username'] ?? '') ?></span>
-                    <a href="<?= BASEURL ?>/auth" class="px-4 py-1.5 rounded-full bg-primary-container text-on-primary-container font-semibold hover:bg-primary transition-colors text-xs shrink-0">
+                    <a href="<?= BASEURL ?>/auth" class="btn-primary px-4 py-1.5 text-xs shrink-0">
                         Sign in to reply
                     </a>
                 </div>
@@ -389,13 +389,13 @@ $replies = $data['replies'] ?? [];
                                                     <button 
                                                         type="button" 
                                                         onclick="toggleNestedReply(<?= $reply['id'] ?>)" 
-                                                        class="px-3 py-1 rounded-full text-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors"
+                                                        class="btn-ghost px-3 py-1 text-xs"
                                                     >
                                                         Cancel
                                                     </button>
                                                     <button 
                                                         type="submit" 
-                                                        class="inline-flex items-center gap-1 px-4 py-1.5 rounded-full bg-primary-container text-on-primary-container font-label-md text-xs font-semibold hover:bg-primary transition-all shadow-sm active:scale-95"
+                                                        class="btn-primary px-4 py-1.5 text-xs flex items-center gap-1"
                                                     >
                                                         <span class="material-symbols-outlined text-sm">reply</span>
                                                         <span>Reply</span>

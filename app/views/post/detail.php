@@ -21,7 +21,7 @@ $comments = $data['comments'] ?? [];
             <p class="font-body-md text-on-surface-variant text-sm mt-1 mb-6">
                 This post might have been removed or is no longer available.
             </p>
-            <a href="<?= BASEURL ?>/home" class="inline-flex items-center gap-2 px-space-md py-space-xs rounded-full bg-primary-container text-on-primary-container font-label-md hover:bg-primary transition-colors font-semibold shadow-sm">
+            <a href="<?= BASEURL ?>/home" class="btn-primary px-5 py-2 text-sm">
                 <span class="material-symbols-outlined text-base">west</span>
                 <span>Return to Feed</span>
             </a>
@@ -224,7 +224,7 @@ $comments = $data['comments'] ?? [];
                         <form action="<?= BASEURL ?>/post/comment/<?= (int)($post['id'] ?? 0) ?>" method="POST" class="m-0 flex flex-col gap-3">
                             <textarea id="comment-input" name="comment" rows="3" class="w-full bg-surface-container-low/40 border border-outline-variant/40 rounded-xl p-3.5 text-on-surface font-sans text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none placeholder:text-outline" placeholder="Add to the discussion..." required></textarea>
                             <div class="flex justify-end">
-                                <button type="submit" class="px-5 py-2 rounded-full bg-primary text-on-primary font-sans font-bold text-xs hover:opacity-90 transition-opacity shadow-xs active:scale-95">Respond</button>
+                                <button type="submit" class="btn-primary px-5 py-2 text-xs">Respond</button>
                             </div>
                         </form>
                     </div>
@@ -232,7 +232,7 @@ $comments = $data['comments'] ?? [];
             <?php else: ?>
                 <div class="mb-10 p-6 rounded-2xl border border-outline-variant/40 bg-surface-container-lowest text-center">
                     <p class="text-on-surface-variant font-sans text-sm mb-3">Sign in to join the conversation.</p>
-                    <a href="<?= BASEURL ?>/auth" class="inline-block px-5 py-2 rounded-full bg-primary text-on-primary font-sans font-bold text-xs hover:opacity-90 transition-opacity">Sign In</a>
+                    <a href="<?= BASEURL ?>/auth" class="btn-primary px-5 py-2 text-xs">Sign In</a>
                 </div>
             <?php endif; ?>
 

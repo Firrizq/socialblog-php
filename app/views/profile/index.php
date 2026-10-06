@@ -13,7 +13,7 @@ $data['user'] = $user;
             <p class="font-body-md text-on-surface-variant text-sm mt-1 mb-6">
                 The author profile you are looking for does not exist or may have been removed.
             </p>
-            <a href="<?= BASEURL ?>/home" class="inline-flex items-center gap-2 px-space-md py-space-xs rounded-full bg-primary-container text-on-primary-container font-label-md hover:bg-primary transition-colors font-semibold shadow-sm">
+            <a href="<?= BASEURL ?>/home" class="btn-primary px-5 py-2 text-sm">
                 <span class="material-symbols-outlined text-base">west</span>
                 <span>Back to Community Feed</span>
             </a>
@@ -68,14 +68,14 @@ $data['user'] = $user;
 
                 <!-- Edit Profile Button / Follow Button -->
                 <?php if (!empty($data['is_owner']) || (isset($_SESSION['active_user_id']) && (int)$_SESSION['active_user_id'] === (int)($data['user']['id'] ?? 0)) || (isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)($data['user']['id'] ?? 0))): ?>
-                    <a href="<?= BASEURL ?>/profile/edit" class="px-5 py-1.5 rounded-full bg-surface border border-outline-variant/50 text-on-surface font-title-md text-sm hover:bg-surface-container-low transition-colors shadow-sm font-bold relative z-10">
+                    <a href="<?= BASEURL ?>/profile/edit" class="btn-secondary px-5 py-1.5 text-xs rounded-full font-bold relative z-10">
                         Edit profile
                     </a>
                 <?php elseif (!empty($data['user']['id'])): ?>
                     <?php $isFollowing = !empty($data['is_following']); ?>
                     <button id="profile-follow-btn" 
-                            type="button"
-                            class="follow-btn btn-follow <?= $isFollowing ? 'px-5 py-1.5 rounded-full border border-outline-variant/50 font-title-md text-sm font-bold text-on-surface hover:border-error hover:text-error hover:bg-error-container/20 transition-all shadow-sm relative z-10' : 'px-6 py-1.5 rounded-full bg-on-surface text-surface hover:opacity-80 font-title-md text-sm font-bold transition-all shadow-sm relative z-10' ?>" 
+                            type="button" 
+                            class="follow-btn btn-follow btn-pill-follow <?= $isFollowing ? 'following' : '' ?> text-sm px-6 py-1.5 relative z-10" 
                             data-user-id="<?= (int)$data['user']['id'] ?>" 
                             data-id="<?= (int)$data['user']['id'] ?>" 
                             data-scope="profile">
@@ -451,7 +451,7 @@ $data['user'] = $user;
                                     </p>
                                 </div>
                                 <div class="flex items-center gap-2 shrink-0">
-                                    <a href="<?= $draftEditUrl ?>" class="px-4 py-1.5 rounded-full bg-primary-container text-on-primary-container hover:bg-primary transition-all font-title-md text-xs font-semibold flex items-center gap-1 shadow-sm">
+                                    <a href="<?= $draftEditUrl ?>" class="btn-primary px-4 py-1.5 text-xs font-semibold flex items-center gap-1">
                                         <span class="material-symbols-outlined text-[16px]">edit</span>
                                         <span>Edit</span>
                                     </a>
@@ -783,7 +783,7 @@ async function openFollowModal(type, username) {
                 const isCurrent = currentUserId === parseInt(u.id);
                 const isFollowed = Boolean(parseInt(u.is_following));
                 const followBtn = isCurrent ? '' : `
-                    <button type="button" class="btn-follow px-3.5 py-1.5 rounded-full font-label-md text-xs font-semibold transition-all ${isFollowed ? 'bg-surface-container text-on-surface hover:bg-error/10 hover:text-error hover:border-error/30 border border-outline-variant/40' : 'bg-primary text-on-primary hover:opacity-90'}" data-user-id="${u.id}">
+                    <button type="button" class="btn-follow btn-pill-follow ${isFollowed ? 'following' : ''} text-xs shrink-0" data-user-id="${u.id}">
                         ${isFollowed ? 'Following' : 'Follow'}
                     </button>
                 `;

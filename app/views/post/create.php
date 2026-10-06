@@ -21,9 +21,9 @@
         <!-- Right: Actions (Draft, Preview, Publish) -->
         <div class="flex-1 flex items-center justify-end gap-2 sm:gap-3">
             <span id="word-count-badge" class="hidden md:flex items-center text-xs font-title-md text-on-surface-variant mr-3"><span id="draft-status" class="mr-2 text-primary font-bold"></span><span id="word-count-text">0 words</span></span>
-            <button type="button" onclick="saveDraft()" class="hidden sm:block px-4 py-2 rounded-full text-on-surface-variant font-title-md text-sm hover:bg-surface-container-low transition-colors">Draft</button>
-            <button type="button" id="preview-btn" class="hidden sm:block px-4 py-2 rounded-full text-on-surface-variant font-title-md text-sm hover:bg-surface-container-low transition-colors">Preview</button>
-            <button type="submit" form="story-form" id="publish-btn" onclick="if(document.getElementById('post-status')) document.getElementById('post-status').value = 'published';" class="px-5 py-2 rounded-full bg-primary text-on-primary font-title-md text-sm hover:opacity-90 transition-opacity shadow-sm font-bold flex items-center gap-2">
+            <button type="button" onclick="saveDraft()" class="hidden sm:inline-flex btn-secondary px-4 py-2 text-sm">Draft</button>
+            <button type="button" id="preview-btn" class="hidden sm:inline-flex btn-secondary px-4 py-2 text-sm">Preview</button>
+            <button type="submit" form="story-form" id="publish-btn" onclick="if(document.getElementById('post-status')) document.getElementById('post-status').value = 'published';" class="btn-primary px-5 py-2 text-sm">
                 <span id="publish-btn-spinner" class="material-symbols-outlined text-[18px] animate-spin hidden">sync</span>
                 <span id="publish-btn-text">Publish</span>
             </button>
@@ -49,7 +49,7 @@
                 <!-- File input allowing exactly one image or video -->
                 <input type="file" name="images[]" id="cover-image-input" accept="image/*, video/mp4, video/webm, video/ogg" class="hidden">
                 
-                <button type="button" id="add-cover-btn" class="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-all font-title-md text-sm py-2 px-5 rounded-full border border-outline-variant/60 hover:bg-surface-container-low border-dashed mb-2 group">
+                <button type="button" id="add-cover-btn" class="btn-secondary py-2 px-5 text-sm border-dashed mb-2 group">
                     <span class="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">perm_media</span>
                     <span>Add cover media</span>
                 </button>
@@ -58,10 +58,10 @@
                     <img id="cover-preview-img" src="" class="hidden w-full h-auto max-h-[500px] object-cover" alt="Cover Preview">
                     <video id="cover-preview-video" controls class="hidden w-full rounded-xl max-h-96 object-contain bg-black"></video>
                     <div class="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity z-10">
-                        <button type="button" id="change-cover-btn" class="px-3.5 py-1.5 rounded-full bg-surface/85 backdrop-blur text-on-surface font-title-md text-xs flex items-center gap-1.5 hover:bg-surface border border-outline-variant/30 shadow-md transition-all">
+                        <button type="button" id="change-cover-btn" class="px-3.5 py-1.5 rounded-xl bg-surface/90 backdrop-blur text-on-surface font-title-md text-xs flex items-center gap-1.5 hover:bg-surface border border-outline-variant/40 shadow-sm transition-all">
                             <span class="material-symbols-outlined text-[16px]">swap_horiz</span> Change
                         </button>
-                        <button type="button" id="remove-cover-btn" class="w-8 h-8 rounded-full bg-surface/85 backdrop-blur text-error flex items-center justify-center hover:bg-surface border border-outline-variant/30 shadow-md transition-all" title="Remove Media">
+                        <button type="button" id="remove-cover-btn" class="w-8 h-8 rounded-xl bg-surface/90 backdrop-blur text-error flex items-center justify-center hover:bg-surface border border-outline-variant/40 shadow-sm transition-all" title="Remove Media">
                             <span class="material-symbols-outlined text-[18px]">delete</span>
                         </button>
                     </div>
@@ -102,7 +102,7 @@
 <div id="preview-modal" class="fixed inset-0 z-[200] bg-surface overflow-y-auto hidden flex-col transition-opacity">
     <div class="sticky top-0 bg-surface/90 backdrop-blur border-b border-outline-variant/30 px-4 h-[68px] flex items-center justify-between z-10">
         <div class="font-title-md font-bold text-on-surface">Preview Mode</div>
-        <button type="button" id="close-preview-btn" class="px-5 py-2 rounded-full bg-on-surface text-surface font-title-md text-sm hover:opacity-80 transition-opacity">Close Preview</button>
+        <button type="button" id="close-preview-btn" class="btn-secondary px-5 py-2 text-sm">Close Preview</button>
     </div>
     <div class="max-w-2xl mx-auto w-full px-5 py-16">
         <h1 id="preview-title" class="text-4xl sm:text-[44px] font-black text-on-surface tracking-tight mb-4 leading-[1.2] editorial-font"></h1>

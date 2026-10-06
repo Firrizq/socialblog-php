@@ -21,9 +21,9 @@
         <!-- Right: Actions -->
         <div class="flex-1 flex items-center justify-end gap-2 sm:gap-3">
             <span id="word-count-badge" class="hidden md:flex items-center text-xs font-title-md text-on-surface-variant mr-3"><span id="draft-status" class="mr-2 text-primary font-bold"></span><span id="word-count-text">0 words</span></span>
-            <button type="button" onclick="saveDraft()" class="hidden sm:block px-4 py-2 rounded-full text-on-surface-variant font-title-md text-sm hover:bg-surface-container-low transition-colors">Save Draft</button>
-            <button type="button" id="preview-btn" class="hidden sm:block px-4 py-2 rounded-full text-on-surface-variant font-title-md text-sm hover:bg-surface-container-low transition-colors">Preview</button>
-            <button type="submit" form="story-form" id="publish-btn" onclick="if(document.getElementById('post-status')) document.getElementById('post-status').value = 'published';" class="px-5 py-2 rounded-full bg-primary text-on-primary font-title-md text-sm hover:opacity-90 transition-opacity shadow-sm font-bold flex items-center gap-2">
+            <button type="button" onclick="saveDraft()" class="hidden sm:inline-flex btn-secondary px-4 py-2 text-sm">Save Draft</button>
+            <button type="button" id="preview-btn" class="hidden sm:inline-flex btn-secondary px-4 py-2 text-sm">Preview</button>
+            <button type="submit" form="story-form" id="publish-btn" onclick="if(document.getElementById('post-status')) document.getElementById('post-status').value = 'published';" class="btn-primary px-5 py-2 text-sm">
                 <span id="publish-btn-spinner" class="material-symbols-outlined text-[18px] animate-spin hidden">sync</span>
                 <span id="publish-btn-text">Save Changes</span>
             </button>
@@ -61,15 +61,15 @@
                 <!-- Flag to tell backend if the existing cover was kept or removed -->
                 <input type="hidden" name="existing_cover" id="existing_cover" value="<?= htmlspecialchars($existingCover) ?>">
                 
-                <button type="button" id="add-cover-btn" class="<?= $existingCover ? 'hidden' : 'flex' ?> items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors font-title-md text-sm py-2 px-5 rounded-full border border-outline-variant/60 hover:bg-surface-container-low border-dashed mb-2 group">
+                <button type="button" id="add-cover-btn" class="<?= $existingCover ? 'hidden' : 'flex' ?> btn-secondary py-2 px-5 text-sm border-dashed mb-2 group">
                     <span class="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">perm_media</span> Add cover media
                 </button>
 
                 <div id="cover-preview-wrapper" class="<?= $existingCover ? 'block' : 'hidden' ?> relative w-full group mt-2">
                     <img id="cover-preview-img" src="<?= (!$isExistingVideo && $existingUrl) ? $existingUrl : '' ?>" class="<?= (!$isExistingVideo && $existingUrl) ? '' : 'hidden' ?> w-full h-auto max-h-[500px] object-cover rounded-xl border border-outline-variant/30">
                     <video id="cover-preview-video" controls src="<?= ($isExistingVideo && $existingUrl) ? $existingUrl : '' ?>" class="<?= ($isExistingVideo && $existingUrl) ? '' : 'hidden' ?> w-full rounded-xl max-h-96 object-contain bg-black border border-outline-variant/30"></video>
-                    <button type="button" id="remove-cover-btn" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-surface/80 backdrop-blur text-on-surface flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-surface border border-outline-variant/30 shadow-sm z-10" title="Remove Media">
-                        <span class="material-symbols-outlined text-[20px]">delete</span>
+                    <button type="button" id="remove-cover-btn" class="absolute top-4 right-4 w-9 h-9 rounded-xl bg-surface/90 backdrop-blur text-error flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-surface border border-outline-variant/40 shadow-sm z-10" title="Remove Media">
+                        <span class="material-symbols-outlined text-[18px]">delete</span>
                     </button>
                 </div>
 
@@ -108,7 +108,7 @@
 <div id="preview-modal" class="fixed inset-0 z-[200] bg-surface overflow-y-auto hidden flex-col transition-opacity">
     <div class="sticky top-0 bg-surface/90 backdrop-blur border-b border-outline-variant/30 px-4 h-[68px] flex items-center justify-between z-10 shrink-0">
         <div class="font-title-md font-bold text-on-surface">Preview Mode</div>
-        <button type="button" id="close-preview-btn" class="px-5 py-2 rounded-full bg-on-surface text-surface font-title-md text-sm hover:opacity-80 transition-opacity">Close Preview</button>
+        <button type="button" id="close-preview-btn" class="btn-secondary px-5 py-2 text-sm">Close Preview</button>
     </div>
     <div class="max-w-2xl mx-auto w-full px-5 py-16">
         <h1 id="preview-title" class="text-4xl sm:text-[44px] font-black text-on-surface tracking-tight mb-4 leading-[1.2] editorial-font"></h1>

@@ -85,7 +85,7 @@
                                             </div>
                                         </a>
                                         <button type="button" 
-                                                class="follow-btn btn-follow px-3 py-1 rounded-full border font-sans text-xs font-semibold transition-all shrink-0 <?= $isWriterFollowing ? 'border-outline-variant bg-surface text-on-surface hover:border-error hover:text-error hover:bg-error-container/20' : 'bg-primary text-on-primary hover:opacity-90 border-transparent' ?>" 
+                                                class="follow-btn btn-follow btn-pill-follow <?= $isWriterFollowing ? 'following' : '' ?> text-xs shrink-0" 
                                                 data-user-id="<?= (int)$writer['id'] ?>" 
                                                 data-id="<?= (int)$writer['id'] ?>" 
                                                 data-scope="sidebar">
@@ -487,10 +487,10 @@
                         if (isProfileScope) {
                             if (isFollowed) {
                                 followBtn.textContent = 'Following';
-                                followBtn.className = 'follow-btn btn-follow px-5 py-1.5 rounded-full border border-outline-variant/50 font-title-md text-sm font-bold text-on-surface hover:border-error hover:text-error hover:bg-error-container/20 transition-all shadow-sm relative z-10';
+                                followBtn.className = 'follow-btn btn-follow btn-pill-follow following text-sm px-6 py-1.5 relative z-10';
                             } else {
                                 followBtn.textContent = 'Follow';
-                                followBtn.className = 'follow-btn btn-follow px-6 py-1.5 rounded-full bg-on-surface text-surface hover:opacity-80 font-title-md text-sm font-bold transition-all shadow-sm relative z-10';
+                                followBtn.className = 'follow-btn btn-follow btn-pill-follow text-sm px-6 py-1.5 relative z-10';
                             }
 
                             // Update follower count on profile header ONLY when following/unfollowing via profile hero button
@@ -502,10 +502,10 @@
                             // Scoped to hover card
                             if (isFollowed) {
                                 followBtn.textContent = 'Following';
-                                followBtn.className = 'follow-btn btn-follow px-4 py-1.5 rounded-full border border-outline-variant/50 bg-surface text-on-surface hover:border-error hover:text-error hover:bg-error-container/20 font-caption text-xs font-bold transition-all shadow-sm shrink-0';
+                                followBtn.className = 'follow-btn btn-follow btn-pill-follow following text-xs shrink-0';
                             } else {
                                 followBtn.textContent = 'Follow';
-                                followBtn.className = 'follow-btn btn-follow px-4 py-1.5 rounded-full bg-on-surface text-surface hover:opacity-85 font-caption text-xs font-bold transition-all shadow-sm shrink-0';
+                                followBtn.className = 'follow-btn btn-follow btn-pill-follow text-xs shrink-0';
                             }
 
                             const cardFollowerCount = followBtn.closest('.hover-card-popover, #profile-hover-card-popover')?.querySelector('.card-follower-count');
@@ -513,13 +513,13 @@
                                 cardFollowerCount.textContent = Number(data.follower_count).toLocaleString();
                             }
                         } else {
-                            // Scoped to the specific clicked sidebar button
+                            // Scoped to the specific clicked sidebar button or modal list
                             if (isFollowed) {
                                 followBtn.textContent = 'Following';
-                                followBtn.className = 'follow-btn btn-follow px-space-sm py-space-xs rounded-full border border-outline-variant bg-surface text-on-surface hover:border-error hover:text-error hover:bg-error-container/20 font-caption text-xs transition-colors shrink-0';
+                                followBtn.className = 'follow-btn btn-follow btn-pill-follow following text-xs shrink-0';
                             } else {
                                 followBtn.textContent = 'Follow';
-                                followBtn.className = 'follow-btn btn-follow px-space-sm py-space-xs rounded-full bg-surface-container border border-outline-variant text-on-surface hover:border-primary hover:text-primary font-caption text-xs transition-colors shrink-0';
+                                followBtn.className = 'follow-btn btn-follow btn-pill-follow text-xs shrink-0';
                             }
                         }
 
@@ -1285,10 +1285,10 @@
                 </div>
             </div>
             <div class="flex items-center justify-end gap-3 mt-2">
-                <button type="button" id="global-confirm-cancel-btn" class="px-5 py-2 rounded-full border border-outline-variant/40 bg-surface-container text-on-surface hover:bg-surface-container-high font-title-md text-sm font-medium transition-colors">
+                <button type="button" id="global-confirm-cancel-btn" class="btn-secondary px-5 py-2 text-sm">
                     Cancel
                 </button>
-                <button type="button" id="global-confirm-action-btn" class="px-5 py-2 rounded-full bg-error text-white hover:bg-error/90 font-title-md text-sm font-semibold transition-all shadow-md active:scale-95">
+                <button type="button" id="global-confirm-action-btn" class="btn-destructive px-5 py-2 text-sm">
                     Delete
                 </button>
             </div>
@@ -1336,11 +1336,11 @@
                 if (isDanger) {
                     iconContainer.className = 'w-12 h-12 rounded-full flex items-center justify-center shrink-0 bg-error/10 text-error';
                     iconEl.textContent = 'delete';
-                    actionBtn.className = 'px-5 py-2 rounded-full bg-error text-white hover:bg-error/90 font-title-md text-sm font-semibold transition-all shadow-md active:scale-95';
+                    actionBtn.className = 'btn-destructive px-5 py-2 text-sm';
                 } else {
                     iconContainer.className = 'w-12 h-12 rounded-full flex items-center justify-center shrink-0 bg-primary/10 text-primary';
                     iconEl.textContent = 'help';
-                    actionBtn.className = 'px-5 py-2 rounded-full bg-primary-container text-on-primary-container hover:bg-primary font-title-md text-sm font-semibold transition-all shadow-md active:scale-95';
+                    actionBtn.className = 'btn-primary px-5 py-2 text-sm';
                 }
 
                 if (confirmCleanup) {

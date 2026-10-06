@@ -71,7 +71,7 @@ $likedPosts = $data['liked_posts_list'] ?? [];
                 <p class="font-body-md text-sm text-on-surface-variant max-w-sm mb-6">
                     As you read articles on Blogggle, your progress will automatically be saved here so you can pick up where you left off.
                 </p>
-                <a href="<?= BASEURL ?>/home" class="px-5 py-2 rounded-full bg-primary text-on-primary font-title-md text-sm font-semibold hover:opacity-90 transition-opacity">
+                <a href="<?= BASEURL ?>/home" class="btn-primary px-5 py-2 text-sm">
                     Explore Stories
                 </a>
             </div>
@@ -139,7 +139,7 @@ $likedPosts = $data['liked_posts_list'] ?? [];
                 <p class="font-body-md text-sm text-on-surface-variant max-w-sm mb-6">
                     Click the bookmark icon on any story or note in your feed to save it for reading later.
                 </p>
-                <a href="<?= BASEURL ?>/home" class="px-5 py-2 rounded-full bg-primary text-on-primary font-title-md text-sm font-semibold hover:opacity-90 transition-opacity">
+                <a href="<?= BASEURL ?>/home" class="btn-primary px-5 py-2 text-sm">
                     Discover Stories
                 </a>
             </div>
@@ -163,7 +163,7 @@ $likedPosts = $data['liked_posts_list'] ?? [];
                 <p class="font-body-md text-sm text-on-surface-variant max-w-sm mb-6">
                     Stories you favorite will appear here so you can revisit your favorite perspectives.
                 </p>
-                <a href="<?= BASEURL ?>/home" class="px-5 py-2 rounded-full bg-primary text-on-primary font-title-md text-sm font-semibold hover:opacity-90 transition-opacity">
+                <a href="<?= BASEURL ?>/home" class="btn-primary px-5 py-2 text-sm">
                     Explore Feed
                 </a>
             </div>

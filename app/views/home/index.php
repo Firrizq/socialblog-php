@@ -46,11 +46,11 @@
                 </button>
             </div>
             <div class="flex items-center gap-2">
-                <a href="<?= BASEURL ?>/post/create" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors border border-outline-variant/40">
-                    <span class="material-symbols-outlined text-[15px]">history_edu</span>
+                <a href="<?= BASEURL ?>/post/create" class="btn-secondary px-3.5 py-1.5 text-xs">
+                    <span class="material-symbols-outlined text-[16px]">history_edu</span>
                     <span>Write Story</span>
                 </a>
-                <button type="button" onclick="openNoteModal()" class="px-4 py-1.5 rounded-full bg-primary text-on-primary text-xs font-bold hover:opacity-90 transition-all shadow-xs active:scale-95">
+                <button type="button" onclick="openNoteModal()" class="btn-primary px-4 py-1.5 text-xs">
                     Post Note
                 </button>
             </div>
@@ -554,11 +554,11 @@
                     </button>
                 </div>
 
-                <!-- Right side: Cancel & Post Buttons -->
+                <!-- Right side: Cancel, Draft & Post Buttons -->
                 <div class="flex items-center gap-2">
-                    <button type="button" onclick="closeNoteModal()" class="text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors px-3 py-1.5 rounded-lg hover:bg-surface-container">Cancel</button>
-                    <button type="submit" name="action" value="draft" class="text-sm font-medium text-primary hover:text-primary-fixed transition-colors px-3 py-1.5 rounded-lg hover:bg-surface-container border border-primary/30 active:scale-95">Draft</button>
-                    <button type="submit" name="action" value="publish" class="bg-primary text-on-primary hover:opacity-90 rounded-full px-6 py-2 font-bold shadow-xs transition-all active:scale-95 text-sm">Post</button>
+                    <button type="button" onclick="closeNoteModal()" class="btn-ghost px-3.5 py-1.5 text-xs">Cancel</button>
+                    <button type="submit" name="action" value="draft" class="btn-secondary px-3.5 py-1.5 text-xs">Draft</button>
+                    <button type="submit" name="action" value="publish" class="btn-primary px-5 py-1.5 text-xs">Post</button>
                 </div>
             </div>
         </form>

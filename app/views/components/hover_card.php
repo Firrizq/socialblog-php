@@ -40,12 +40,12 @@ $profileUrl = BASEURL . '/' . urlencode($user['username'] ?? '');
         <!-- Follow / Action Button -->
         <div class="relative z-10 pt-2">
             <?php if (!empty($is_owner)): ?>
-                <a href="<?= BASEURL ?>/profile/edit" class="inline-block px-3.5 py-1 rounded-full border border-outline-variant/40 bg-surface-container hover:bg-surface-container-high text-on-surface font-caption text-xs font-semibold transition-colors">
+                <a href="<?= BASEURL ?>/profile/edit" class="btn-secondary px-3.5 py-1 rounded-full text-xs font-semibold">
                     Edit profile
                 </a>
             <?php else: ?>
                 <button type="button" 
-                        class="follow-btn btn-follow px-4 py-1.5 rounded-full border font-caption text-xs font-bold transition-all shadow-sm shrink-0 <?= !empty($is_following) ? 'border-outline-variant/50 bg-surface text-on-surface hover:border-error hover:text-error hover:bg-error-container/20' : 'bg-on-surface text-surface hover:opacity-85' ?>" 
+                        class="follow-btn btn-follow btn-pill-follow <?= !empty($is_following) ? 'following' : '' ?> text-xs shrink-0" 
                         data-user-id="<?= (int)$user['id'] ?>" 
                         data-id="<?= (int)$user['id'] ?>" 
                         data-scope="card">
