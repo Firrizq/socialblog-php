@@ -95,7 +95,7 @@
     </div>
 
     <!-- Quill.js JS Script diletakkan di footer agar editor bisa jalan -->
-    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quill@1.3.6/dist/quill.min.js" crossorigin="anonymous"></script>
 
     <!-- FFmpeg.wasm & Client-Side Video Compressor -->
     <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js" crossorigin="anonymous"></script>

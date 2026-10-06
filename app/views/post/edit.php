@@ -22,6 +22,7 @@
         <div class="flex-1 flex items-center justify-end gap-2 sm:gap-3">
             <span id="word-count-badge" class="hidden md:flex items-center text-xs font-title-md text-on-surface-variant mr-3"><span id="draft-status" class="mr-2 text-primary font-bold"></span><span id="word-count-text">0 words</span></span>
             <button type="button" onclick="showToast('Saved to Drafts!', 'success');" class="hidden sm:block px-4 py-2 rounded-full text-on-surface-variant font-title-md text-sm hover:bg-surface-container-low transition-colors">Save Draft</button>
+            <button type="button" id="preview-btn" class="hidden sm:block px-4 py-2 rounded-full text-on-surface-variant font-title-md text-sm hover:bg-surface-container-low transition-colors">Preview</button>
             <button type="submit" form="story-form" id="publish-btn" class="px-5 py-2 rounded-full bg-primary text-on-primary font-title-md text-sm hover:opacity-90 transition-opacity shadow-sm font-bold flex items-center gap-2">
                 <span id="publish-btn-spinner" class="material-symbols-outlined text-[18px] animate-spin hidden">sync</span>
                 <span id="publish-btn-text">Save Changes</span>
@@ -54,8 +55,8 @@
             $existingUrl = !empty($existingCover) ? (str_starts_with($existingCover, 'http') ? $existingCover : BASEURL . htmlspecialchars($existingCover)) : '';
             ?>
             <!-- Dedicated Cover Media Uploader -->
-            <div id="cover-image-container" class="mb-10 w-full flex flex-col items-start">
-                <input type="file" name="images[]" id="cover-image-input" accept="image/png, image/jpeg, image/gif, video/mp4, video/webm, video/quicktime, video/ogg" class="hidden">
+            <div id="cover-image-container" class="mb-10 w-full flex flex-col items-start transition-all duration-200">
+                <input type="file" name="images[]" id="cover-image-input" accept="image/*, video/mp4, video/webm, video/ogg" class="hidden">
                 <!-- Flag to tell backend if the existing cover was kept or removed -->
                 <input type="hidden" name="existing_cover" id="existing_cover" value="<?= htmlspecialchars($existingCover) ?>">
                 
@@ -159,11 +160,17 @@
     /* Subtitle rendering inside content */
 </style>
 
+<!-- Quill.js WYSIWYG Editor (loaded with crossorigin="anonymous" to comply with COEP/COOP) -->
+<link href="https://cdn.jsdelivr.net/npm/quill@1.3.6/dist/quill.snow.css" rel="stylesheet" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/quill@1.3.6/dist/quill.min.js" crossorigin="anonymous"></script>
+
 <!-- FFmpeg.wasm for Client-Side Video Compression -->
 <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js" crossorigin="anonymous"></script>
 <script src="<?= BASEURL ?>/js/video-compressor.js"></script>
 
 <script>
+    let quill;
+
     document.addEventListener("DOMContentLoaded", function() {
         const BASE_URL = '<?= BASEURL ?>';
 
@@ -172,11 +179,6 @@
             const el = document.getElementById(id);
             if(el) { el.addEventListener('input', () => autoResize(el)); autoResize(el); }
         });
-
-        // Add custom SVG icons for Undo/Redo
-        const icons = Quill.import('ui/icons');
-        icons['undo'] = '<svg viewBox="0 0 18 18"><path class="ql-fill" d="M10.5,4A5.5,5.5,0,0,0,5,9.5H3L6,13l3-3.5H7A3.5,3.5,0,0,1,10.5,6a3.5,3.5,0,0,1,3.5,3.5A3.5,3.5,0,0,1,10.5,13V15A5.5,5.5,0,0,0,10.5,4Z"/></svg>';
-        icons['redo'] = '<svg viewBox="0 0 18 18"><path class="ql-fill" d="M7.5,4A5.5,5.5,0,0,1,13,9.5h2L12,13,9,9.5h2A3.5,3.5,0,0,0,7.5,6a3.5,3.5,0,0,0-3.5,3.5A3.5,3.5,0,0,0,7.5,13V15A5.5,5.5,0,0,1,7.5,4Z"/></svg>';
 
         // Image/Media upload handler for Quill Editor
         async function uploadImageToServer(file) {
@@ -263,73 +265,95 @@
         }
 
         // Full WYSIWYG Options
-        const toolbarOptions = {
-            container: [
-                ['undo', 'redo'],
-                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-                ['bold', 'italic', 'strike', 'code'],
-                [{ 'color': [] }, { 'background': [] }],
-                [{ 'script': 'sub'}, { 'script': 'super' }],
-                ['link', 'image', 'video', 'blockquote'],
-                [{ 'list': 'bullet' }, { 'list': 'ordered' }],
-                [{ 'align': [] }]
-            ],
-            handlers: {
-                'undo': function() { this.quill.history.undo(); },
-                'redo': function() { this.quill.history.redo(); },
-                'image': mediaHandler,
-                'video': mediaHandler
+        function initQuill() {
+            if (typeof Quill === 'undefined') {
+                console.warn('Quill library is still loading, retrying in 100ms...');
+                setTimeout(initQuill, 100);
+                return;
             }
-        };
+            if (quill) return;
 
-        const quill = new Quill('#editor-container', {
-            theme: 'snow',
-            placeholder: 'Tell your story...',
-            modules: { toolbar: toolbarOptions, history: { delay: 1000, maxStack: 100, userOnly: true } }
-        });
-
-        // Relocate Toolbar
-        const isMobile = window.innerWidth < 1024;
-        const toolbarTarget = isMobile ? '#mobile-toolbar-container' : '#toolbar-container';
-        const generatedToolbar = document.querySelector('.ql-toolbar');
-        const targetContainer = document.querySelector(toolbarTarget);
-        if(generatedToolbar && targetContainer) { targetContainer.appendChild(generatedToolbar); }
-
-        window.addEventListener('resize', function() {
-            const currentTarget = window.innerWidth < 1024 
-                ? document.querySelector('#mobile-toolbar-container') 
-                : document.querySelector('#toolbar-container');
-            if (generatedToolbar && currentTarget && generatedToolbar.parentElement !== currentTarget) {
-                currentTarget.appendChild(generatedToolbar);
-            }
-        });
-
-        // Paste event listener for images
-        quill.root.addEventListener('paste', function(e) {
-            const clipboardData = e.clipboardData || window.clipboardData;
-            if (clipboardData && clipboardData.items) {
-                for (let i = 0; i < clipboardData.items.length; i++) {
-                    if (clipboardData.items[i].type.indexOf('image') !== -1) {
-                        e.preventDefault();
-                        const file = clipboardData.items[i].getAsFile();
-                        uploadImageToServer(file);
-                        break;
-                    }
+            try {
+                const icons = Quill.import('ui/icons');
+                if (icons) {
+                    icons['undo'] = '<svg viewBox="0 0 18 18"><path class="ql-fill" d="M10.5,4A5.5,5.5,0,0,0,5,9.5H3L6,13l3-3.5H7A3.5,3.5,0,0,1,10.5,6a3.5,3.5,0,0,1,3.5,3.5A3.5,3.5,0,0,1,10.5,13V15A5.5,5.5,0,0,0,10.5,4Z"/></svg>';
+                    icons['redo'] = '<svg viewBox="0 0 18 18"><path class="ql-fill" d="M7.5,4A5.5,5.5,0,0,1,13,9.5h2L12,13,9,9.5h2A3.5,3.5,0,0,0,7.5,6a3.5,3.5,0,0,0-3.5,3.5A3.5,3.5,0,0,0,7.5,13V15A5.5,5.5,0,0,1,7.5,4Z"/></svg>';
                 }
-            }
-        });
 
-        // Extract Subtitle from existing HTML content
-        const rawContent = <?= json_encode($post['content'] ?? '') ?>;
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = rawContent;
-        const subtitleEl = tempDiv.querySelector('.story-subtitle');
-        if (subtitleEl && tempDiv.firstElementChild === subtitleEl) {
-            document.getElementById('subtitle-input').value = subtitleEl.innerText;
-            autoResize(document.getElementById('subtitle-input'));
-            subtitleEl.remove();
+                const toolbarOptions = {
+                    container: [
+                        ['undo', 'redo'],
+                        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                        ['bold', 'italic', 'strike', 'code'],
+                        [{ 'color': [] }, { 'background': [] }],
+                        [{ 'script': 'sub'}, { 'script': 'super' }],
+                        ['link', 'image', 'video', 'blockquote'],
+                        [{ 'list': 'bullet' }, { 'list': 'ordered' }],
+                        [{ 'align': [] }]
+                    ],
+                    handlers: {
+                        'undo': function() { this.quill.history.undo(); },
+                        'redo': function() { this.quill.history.redo(); },
+                        'image': mediaHandler,
+                        'video': mediaHandler
+                    }
+                };
+
+                quill = new Quill('#editor-container', {
+                    theme: 'snow',
+                    placeholder: 'Tell your story...',
+                    modules: { toolbar: toolbarOptions, history: { delay: 1000, maxStack: 100, userOnly: true } }
+                });
+
+                // Relocate Toolbar
+                const isMobile = window.innerWidth < 1024;
+                const toolbarTarget = isMobile ? '#mobile-toolbar-container' : '#toolbar-container';
+                const generatedToolbar = document.querySelector('.ql-toolbar');
+                const targetContainer = document.querySelector(toolbarTarget);
+                if(generatedToolbar && targetContainer) { targetContainer.appendChild(generatedToolbar); }
+
+                window.addEventListener('resize', function() {
+                    const currentTarget = window.innerWidth < 1024 
+                        ? document.querySelector('#mobile-toolbar-container') 
+                        : document.querySelector('#toolbar-container');
+                    const tb = document.querySelector('.ql-toolbar');
+                    if (tb && currentTarget && tb.parentElement !== currentTarget) {
+                        currentTarget.appendChild(tb);
+                    }
+                });
+
+                // Paste event listener for images
+                quill.root.addEventListener('paste', function(e) {
+                    const clipboardData = e.clipboardData || window.clipboardData;
+                    if (clipboardData && clipboardData.items) {
+                        for (let i = 0; i < clipboardData.items.length; i++) {
+                            if (clipboardData.items[i].type.indexOf('image') !== -1) {
+                                e.preventDefault();
+                                const file = clipboardData.items[i].getAsFile();
+                                uploadImageToServer(file);
+                                break;
+                            }
+                        }
+                    }
+                });
+
+                // Extract Subtitle from existing HTML content
+                const rawContent = <?= json_encode($post['content'] ?? '') ?>;
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = rawContent;
+                const subtitleEl = tempDiv.querySelector('.story-subtitle');
+                if (subtitleEl && tempDiv.firstElementChild === subtitleEl) {
+                    document.getElementById('subtitle-input').value = subtitleEl.innerText;
+                    autoResize(document.getElementById('subtitle-input'));
+                    subtitleEl.remove();
+                }
+                quill.clipboard.dangerouslyPasteHTML(tempDiv.innerHTML);
+            } catch (err) {
+                console.error('Failed to initialize Quill in edit view:', err);
+            }
         }
-        quill.clipboard.dangerouslyPasteHTML(tempDiv.innerHTML);
+
+        initQuill();
 
         // Form Submit Logic (Injecting subtitle back in)
         document.getElementById('story-form').addEventListener('submit', function(e) {
@@ -692,8 +716,18 @@
                 let dt = e.dataTransfer;
                 let files = dt.files;
                 if(files && files[0] && (files[0].type.startsWith('image/') || files[0].type.startsWith('video/'))) {
-                    coverInput.files = files;
-                    handleCoverMediaSelection(files[0]);
+                    const file = files[0];
+                    if (files.length > 1 && typeof showToast === 'function') {
+                        showToast('Only 1 cover media file allowed. Selected ' + file.name, 'info');
+                    }
+                    try {
+                        const newDt = new DataTransfer();
+                        newDt.items.add(file);
+                        coverInput.files = newDt.files;
+                    } catch (e) {
+                        coverInput.files = files;
+                    }
+                    handleCoverMediaSelection(file);
                 }
             }, false);
         }
