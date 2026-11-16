@@ -465,7 +465,7 @@ if (!$activeUser && !empty($_SESSION['user_id'])) {
             </div>
             <div class="flex items-baseline gap-1.5">
                 <span class="font-serif text-[26px] font-bold text-on-surface tracking-tight group-hover:text-primary transition-colors leading-none">Blogggle</span>
-                <span class="hidden sm:inline-block px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 rounded-md font-sans">Press</span>
+                <!-- <span class="hidden sm:inline-block px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 rounded-md font-sans">Press</span> -->
             </div>
         </a>
         <div class="flex items-center gap-2 sm:gap-3">
